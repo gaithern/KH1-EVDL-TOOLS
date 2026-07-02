@@ -1,0 +1,17 @@
+{
+  "tabs": [
+    {
+      "name": "Prompt",
+      "find": "  00000009  push            0x0             \n  660D000D  write_byte      [0xD66]           ; save_data2[0x26]\n  00000009  push            0x0             \n  1A020018  syscall         538               ; Erase_OBJ_effect\n  01000009  push            0x1             \n  6C000018  syscall         108               ; Motion_change_no_loop\n  1E000009  push            0x1E              ; 30\n  00000009  push            0x0             \n  61010018  syscall         353               ; Play_SE2\n  06000009  push            0x6             \n  08000018  syscall         8                 ; Set_wait_timer\n  01000009  push            0x1             \n  17020018  syscall         535               ; Play_OBJ_effect\n\n; Handle AP Up get in below code",
+      "replace": "  00000009  push            0x0             \n  660D000D  write_byte      [0xD66]           ; save_data2[0x26]\n  00000009  push            0x0             \n  1A020018  syscall         538               ; Erase_OBJ_effect\n  01000009  push            0x1             \n  6C000018  syscall         108               ; Motion_change_no_loop\n\n; Handle SE in below code\n;  1E000009  push            0x1E              ; 30\n;  00000009  push            0x0             \n;  61010018  syscall         353               ; Play_SE2\n\n  06000009  push            0x6             \n  08000018  syscall         8                 ; Set_wait_timer\n  01000009  push            0x1             \n  17020018  syscall         535               ; Play_OBJ_effect\n\n; Handle AP Up get in below code",
+      "regex": false,
+      "ignorecase": false,
+      "dotall": true,
+      "wildlabels": true,
+      "backup": false
+    }
+  ],
+  "globs": "asm/remastered/pc06.ard/*.evdl.asm",
+  "root": "C:\\Users\\gaith\\Documents\\GitHub\\KH1-RANDOMIZER",
+  "active_tab": 0
+}
