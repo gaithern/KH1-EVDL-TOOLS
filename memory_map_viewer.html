@@ -1,0 +1,309 @@
+<title>KH1 Save Memory Map</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #EDEFF3; --panel: #FFFFFF; --panel-2: #E3E6EC; --line: #CDD2DB;
+  --ink: #1B1F27; --ink-2: #4E5666; --ink-3: #7B8394;
+  --gold: #B8891A; --gold-soft: #F1E2B6;
+  --read: #3F7FE0; --write: #DD7A1F; --free: #D9DDE4; --ard: #B9BFCB;
+  --focus: #B8891A;
+  --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-head: "Rajdhani", "Bahnschrift", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15181E; --panel: #1D2129; --panel-2: #262B35; --line: #343A47;
+    --ink: #E6E8EC; --ink-2: #A9B0BE; --ink-3: #7C8496;
+    --gold: #D4A72C; --gold-soft: #4A3C14;
+    --read: #4C8DF0; --write: #E8862A; --free: #2A2F3A; --ard: #3E4553; --focus: #D4A72C;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15181E; --panel: #1D2129; --panel-2: #262B35; --line: #343A47;
+  --ink: #E6E8EC; --ink-2: #A9B0BE; --ink-3: #7C8496;
+  --gold: #D4A72C; --gold-soft: #4A3C14;
+  --read: #4C8DF0; --write: #E8862A; --free: #2A2F3A; --ard: #3E4553; --focus: #D4A72C;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--font-ui); padding-block: 0 24px; padding-inline: 16px; }
+h1, h2, h3 { font-family: var(--font-head); margin: 0; text-wrap: balance; }
+h1 { font-size: 26px; font-weight: 700; letter-spacing: .01em; }
+h2 { font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+code, .mono { font-family: var(--font-mono); font-size: 13px; }
+a { color: var(--gold); }
+.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px 24px; padding: 14px 0 12px; border-bottom: 1px solid var(--line); }
+.top .stats { display: flex; gap: 20px; flex-wrap: wrap; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.top .stats b { color: var(--ink); font-weight: 600; }
+.wrap { display: grid; grid-template-columns: 250px minmax(0, 1fr) 360px; gap: 16px; padding-top: 14px; align-items: start; }
+@media (max-width: 1100px) { .wrap { grid-template-columns: 1fr; } }
+.rail, .detail { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+input[type=text], select { font: inherit; color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; width: 100%; }
+input[type=text].mono { font-family: var(--font-mono); }
+input:focus-visible, select:focus-visible, button:focus-visible, .cell-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.row { display: flex; gap: 8px; }
+.row > * { flex: 1; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+button { font: inherit; color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+button.on { border-color: var(--gold); color: var(--gold); }
+.check { display: flex; align-items: center; gap: 8px; }
+.legend { display: grid; grid-template-columns: 14px 1fr; gap: 6px 8px; align-items: center; font-size: 13px; color: var(--ink-2); }
+.sw { width: 14px; height: 14px; border-radius: 2px; }
+.free-list { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow: auto; font-variant-numeric: tabular-nums; }
+.free-list button { text-align: left; font-family: var(--font-mono); font-size: 12.5px; padding: 4px 8px; display: flex; justify-content: space-between; }
+.free-list button span { color: var(--ink-3); }
+.grid-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px; overflow-x: auto; }
+.grid-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.grid-head .win { font-family: var(--font-mono); color: var(--ink-2); }
+canvas { display: block; image-rendering: pixelated; cursor: crosshair; }
+.tip { position: fixed; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 6px 9px; font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,.25); display: none; max-width: 340px; z-index: 5; }
+.tip .mono { font-size: 12px; }
+.detail h3 { font-size: 22px; font-family: var(--font-mono); font-weight: 500; }
+.detail .rva { color: var(--ink-3); font-size: 12.5px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { border-radius: 3px; padding: 2px 7px; font-size: 12px; font-family: var(--font-mono); background: var(--panel-2); border: 1px solid var(--line); }
+.tag.gold { background: var(--gold-soft); border-color: var(--gold); color: var(--ink); }
+.acc { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.acc th { text-align: left; font-weight: 500; color: var(--ink-3); font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+.acc td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; font-variant-numeric: tabular-nums; }
+.acc td.f { font-family: var(--font-mono); font-size: 12px; }
+.acc tr.ard td { color: var(--ink-3); }
+.acc .n { text-align: right; }
+.scripts { color: var(--ink-3); font-size: 11.5px; font-family: var(--font-mono); }
+.empty { color: var(--ink-3); }
+.pill { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11.5px; font-weight: 500; }
+.pill.r { background: color-mix(in srgb, var(--read) 22%, transparent); color: var(--read); }
+.pill.w { background: color-mix(in srgb, var(--write) 22%, transparent); color: var(--write); }
+.hint { font-size: 12.5px; color: var(--ink-3); }
+</style>
+
+<div class="top">
+  <h1>KH1 Save Memory Map</h1>
+  <div class="stats" id="stats"></div>
+</div>
+
+<div class="wrap">
+  <aside class="rail">
+    <div class="field">
+      <label>Window</label>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="from">From</label><input class="mono" type="text" id="from" value="0x0000"></div>
+      <div class="field"><label for="to">To</label><input class="mono" type="text" id="to" value="0x0FFF"></div>
+    </div>
+    <div class="field">
+      <label for="find">Find file, label, AP location</label>
+      <input class="mono" type="text" id="find" placeholder="tw23d.ev, CID_, 2656113">
+      <div class="hint" id="findhint"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="liveonly" checked> Ignore PS2 <code>.ard</code> copies</label>
+    <div class="field">
+      <label>Legend</label>
+      <div class="legend">
+        <div class="sw" style="background:var(--free)"></div><div>No script touches it</div>
+        <div class="sw" style="background:var(--read)"></div><div>Read only</div>
+        <div class="sw" style="background:var(--write)"></div><div>Written (darker = more)</div>
+        <div class="sw" style="background:var(--ard)"></div><div>Only the PS2 <code>.ard</code> copy touches it</div>
+        <div class="sw" style="background:var(--free);box-shadow:inset 0 0 0 2px var(--gold)"></div><div>Has a label, Lua symbol or AP location</div>
+        <div class="sw" style="background:var(--free);position:relative"><span style="position:absolute;left:5px;top:5px;width:4px;height:4px;border-radius:2px;background:var(--ink)"></span></div><div>Nonzero in the loaded save dump</div>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="shownz" checked> Mark bytes set in save dump <span class="hint" id="nzinfo"></span></label>
+    <div class="field">
+      <label>Free runs in window (<span id="freecount"></span>)</label>
+      <div class="row"><div class="field"><label for="minrun">Min bytes</label><input class="mono" type="text" id="minrun" value="1"></div></div>
+      <div class="free-list" id="freelist"></div>
+    </div>
+  </aside>
+
+  <section class="grid-wrap">
+    <div class="grid-head">
+      <h2>64 bytes per row</h2>
+      <div class="win" id="win"></div>
+    </div>
+    <canvas id="grid" tabindex="0" aria-label="Save memory heatmap"></canvas>
+  </section>
+
+  <aside class="detail" id="detail">
+    <h2>Byte</h2>
+    <div class="empty">Click a byte in the grid, or pick a free run.</div>
+  </aside>
+</div>
+<div class="tip" id="tip"></div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const SAVE2 = 0x1000, BASE_RVA = DATA.meta.base_rva;
+const bytes = new Map(Object.entries(DATA.bytes).map(([k, v]) => [parseInt(k, 16), v]));
+const NZ = new Map(Object.entries(DATA.nz || {}).map(([k, v]) => [parseInt(k, 16), v]));
+const REGIONS = DATA.regions || [];
+const maxOff = Math.max(...bytes.keys(), ...NZ.keys(), 0x1FFF);
+function regionsOf(off) { return REGIONS.filter(r => off >= r.start && off <= r.end).map(r => r.name); }
+let showNz = true;
+
+const cols = 64, cell = 12, gutter = 64, pad = 4;
+const canvas = document.getElementById('grid'), ctx = canvas.getContext('2d');
+const $ = id => document.getElementById(id);
+let win = { lo: 0, hi: 0x0FFF }, liveOnly = true, findSet = null, selected = null;
+
+function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function name(off) { return off >= SAVE2 ? `save_data2[0x${(off - SAVE2).toString(16).toUpperCase().padStart(3, '0')}]` : `save_data1[0x${off.toString(16).toUpperCase().padStart(3, '0')}]`; }
+function rva(off) { return 'KINGDOM HEARTS FINAL MIX.exe+' + (BASE_RVA + off).toString(16).toUpperCase(); }
+function accessors(e) { return liveOnly ? e.a.filter(x => x[1] !== 'ard') : e.a; }
+function counts(e) { let r = 0, w = 0; for (const x of accessors(e)) { r += x[2]; w += x[3]; } return { r, w }; }
+function tagged(e) { return e.t.l.length || e.t.s.length || e.t.p.length; }
+function hex4(n) { return '0x' + n.toString(16).toUpperCase().padStart(4, '0'); }
+
+function draw() {
+  const rows = Math.ceil((win.hi - win.lo + 1) / cols);
+  canvas.width = gutter + cols * cell + pad; canvas.height = rows * cell + pad;
+  ctx.fillStyle = css('--panel'); ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const free = css('--free'), read = css('--read'), write = css('--write'), ard = css('--ard'), gold = css('--gold'), ink3 = css('--ink-3');
+  ctx.font = '600 11px Rajdhani, sans-serif'; ctx.textBaseline = 'middle';
+  for (let r = 0; r < rows; r++) {
+    const start = win.lo + r * cols;
+    ctx.fillStyle = ink3; ctx.textAlign = 'right';
+    ctx.fillText(name(start).replace('save_data', 'sd').replace(/\]$/, ''), gutter - 8, r * cell + cell / 2);
+    for (let c = 0; c < cols; c++) {
+      const off = start + c; if (off > win.hi) break;
+      const e = bytes.get(off); const x = gutter + c * cell, y = r * cell;
+      let fill = free;
+      if (e) {
+        const { r: rr, w: ww } = counts(e);
+        if (ww) { ctx.globalAlpha = Math.min(1, 0.45 + 0.18 * Math.log2(1 + ww)); fill = write; }
+        else if (rr) { ctx.globalAlpha = Math.min(1, 0.45 + 0.18 * Math.log2(1 + rr)); fill = read; }
+        else if (e.a.length) fill = ard;
+      }
+      ctx.fillStyle = fill; ctx.fillRect(x, y, cell - 1, cell - 1); ctx.globalAlpha = 1;
+      if (e && tagged(e)) { ctx.strokeStyle = gold; ctx.lineWidth = 2; ctx.strokeRect(x + 1.5, y + 1.5, cell - 4, cell - 4); }
+      if (showNz && NZ.has(off)) { ctx.fillStyle = css('--ink'); ctx.fillRect(x + 4, y + 4, cell - 9, cell - 9); }
+      if (findSet && findSet.has(off)) { ctx.fillStyle = gold; ctx.fillRect(x + 3, y + 3, cell - 7, cell - 7); }
+      if (selected === off) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 2; ctx.strokeRect(x + 0.5, y + 0.5, cell - 2, cell - 2); }
+    }
+  }
+  $('win').textContent = `${name(win.lo)} – ${name(win.hi)}  (${win.hi - win.lo + 1} bytes)`;
+  freeRuns();
+}
+
+function offAt(ev) {
+  const b = canvas.getBoundingClientRect();
+  const x = ev.clientX - b.left - gutter, y = ev.clientY - b.top;
+  if (x < 0) return null;
+  const c = Math.floor(x / cell), r = Math.floor(y / cell);
+  if (c >= cols) return null;
+  const off = win.lo + r * cols + c;
+  return off <= win.hi ? off : null;
+}
+
+const tip = $('tip');
+canvas.addEventListener('mousemove', ev => {
+  const off = offAt(ev);
+  if (off == null) { tip.style.display = 'none'; return; }
+  const e = bytes.get(off);
+  let html = `<div class="mono">${name(off)}</div>`;
+  if (e) {
+    const { r, w } = counts(e);
+    html += `<div>${w} writes · ${r} reads · ${accessors(e).length} file(s)</div>`;
+    const t = [...e.t.l, ...e.t.s, ...e.t.p.map(p => 'AP ' + p.id)];
+    if (t.length) html += `<div class="mono">${t.join(', ')}</div>`;
+  } else html += `<div>no script access</div>`;
+  const reg = regionsOf(off); if (reg.length) html += `<div class="hint">in: ${reg.join(' · ')}</div>`;
+  if (NZ.has(off)) html += `<div class="hint">save dump: 0x${NZ.get(off).toString(16).toUpperCase().padStart(2, '0')}</div>`;
+  tip.innerHTML = html; tip.style.display = 'block';
+  tip.style.left = (ev.clientX + 14) + 'px'; tip.style.top = (ev.clientY + 14) + 'px';
+});
+canvas.addEventListener('mouseleave', () => tip.style.display = 'none');
+canvas.addEventListener('click', ev => { const off = offAt(ev); if (off != null) select(off); });
+canvas.addEventListener('keydown', ev => {
+  if (selected == null) return;
+  const d = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -cols, ArrowDown: cols }[ev.key];
+  if (d) { ev.preventDefault(); const n = selected + d; if (n >= win.lo && n <= win.hi) select(n); }
+});
+
+function select(off) {
+  selected = off; draw();
+  const e = bytes.get(off), d = $('detail');
+  let html = `<h2>Byte</h2><h3>${name(off)}</h3><div class="rva mono">${rva(off)}</div>`;
+  const reg = regionsOf(off);
+  if (reg.length) html += `<div class="hint">Inside: ${reg.join(' · ')}</div>`;
+  if (DATA.meta.dump) html += `<div>Save dump: ${NZ.has(off) ? `<span class="pill w">0x${NZ.get(off).toString(16).toUpperCase().padStart(2, '0')}</span> set` : '<span class="pill r">0x00</span> clear'}</div>`;
+  if (!e) { d.innerHTML = html + `<div class="empty">No script reads or writes this byte, and nothing labels it. ${reg.length ? 'It still sits inside an engine structure, so only a live check can call it free.' : ''}</div>`; return; }
+  const tags = [...e.t.l.map(x => `<span class="tag gold">${x}</span>`), ...e.t.s.map(x => `<span class="tag">Lua ${x}</span>`),
+    ...e.t.p.map(p => `<span class="tag gold" title="${p.name}">AP ${p.id} ${p.bit == null ? '≥ 0x' + p.value.toString(16).toUpperCase() : 'bit ' + p.bit}</span>`)];
+  if (tags.length) html += `<div class="tags">${tags.join('')}</div>`;
+  for (const p of e.t.p) html += `<div class="hint">${p.id}: ${p.name}</div>`;
+  const acc = accessors(e);
+  const { r, w } = counts(e);
+  html += `<div><span class="pill w">${w} writes</span> <span class="pill r">${r} reads</span></div>`;
+  if (!acc.length) html += `<div class="empty">Only the PS2 .ard copy touches it${liveOnly ? ' (hidden by the filter)' : ''}.</div>`;
+  else {
+    html += `<table class="acc"><tr><th>File</th><th class="n">W</th><th class="n">R</th><th>Bits</th></tr>`;
+    for (const [file, layer, rr, ww, bits, scripts] of acc.slice().sort((a, b) => (b[3] - a[3]) || (b[2] - a[2]))) {
+      html += `<tr class="${layer}"><td class="f">${file}<div class="scripts">${scripts.join(' ')}</div></td><td class="n">${ww}</td><td class="n">${rr}</td><td class="mono">${bits.join(',')}</td></tr>`;
+    }
+    html += `</table>`;
+  }
+  d.innerHTML = html;
+}
+
+function freeRuns() {
+  const min = parseInt($('minrun').value) || 1;
+  const list = $('freelist'); list.innerHTML = '';
+  let runs = [], start = null;
+  for (let off = win.lo; off <= win.hi + 1; off++) {
+    const e = bytes.get(off);
+    const used = off <= win.hi && e && (liveOnly ? accessors(e).length > 0 : e.a.length > 0);
+    if (!used && off <= win.hi) { if (start == null) start = off; }
+    else if (start != null) { runs.push([start, off - 1]); start = null; }
+  }
+  runs = runs.filter(([a, b]) => b - a + 1 >= min);
+  let total = 0;
+  for (const [a, b] of runs) {
+    total += b - a + 1;
+    const tag = [...Array(b - a + 1).keys()].some(i => { const e = bytes.get(a + i); return e && tagged(e); }) ? ' · tagged' : '';
+    const btn = document.createElement('button');
+    btn.innerHTML = `<span>${hex4(a)}${a === b ? '' : '–' + hex4(b)}</span><span>${b - a + 1}${tag}</span>`;
+    btn.onclick = () => select(a);
+    list.appendChild(btn);
+  }
+  $('freecount').textContent = `${runs.length} runs, ${total} bytes`;
+}
+
+function setWindow(lo, hi) {
+  win = { lo: Math.max(0, lo), hi: Math.min(maxOff, hi) };
+  $('from').value = hex4(win.lo); $('to').value = hex4(win.hi);
+  draw();
+}
+const presets = [['save_data1', 0, 0xFFF], ['TT flags', 0x100, 0x1FF], ['save_data2 low', SAVE2, SAVE2 + 0xFFF], ['save_data2 bits', SAVE2 + 0x5D00, SAVE2 + 0x63FF], ['everything', 0, maxOff]];
+for (const [label, lo, hi] of presets) {
+  const b = document.createElement('button'); b.textContent = label; b.onclick = () => setWindow(lo, hi); $('presets').appendChild(b);
+}
+$('from').addEventListener('change', () => setWindow(parseInt($('from').value, 16), parseInt($('to').value, 16)));
+$('to').addEventListener('change', () => setWindow(parseInt($('from').value, 16), parseInt($('to').value, 16)));
+$('minrun').addEventListener('input', freeRuns);
+$('liveonly').addEventListener('change', () => { liveOnly = $('liveonly').checked; draw(); if (selected != null) select(selected); });
+$('shownz').addEventListener('change', () => { showNz = $('shownz').checked; draw(); });
+$('nzinfo').textContent = DATA.meta.dump ? `(${DATA.meta.dump}: ${NZ.size} nonzero bytes)` : '(no dump loaded; pass --dump to the scanner)';
+if (!DATA.meta.dump) $('shownz').disabled = true;
+$('find').addEventListener('input', () => {
+  const q = $('find').value.trim().toLowerCase();
+  if (!q) { findSet = null; $('findhint').textContent = ''; draw(); return; }
+  findSet = new Set();
+  for (const [off, e] of bytes) {
+    const hit = e.a.some(x => x[0].toLowerCase().includes(q)) || e.t.l.some(x => x.toLowerCase().includes(q))
+      || e.t.s.some(x => x.toLowerCase().includes(q)) || e.t.p.some(p => String(p.id).includes(q) || p.name.toLowerCase().includes(q));
+    if (hit) findSet.add(off);
+  }
+  $('findhint').textContent = `${findSet.size} byte(s) match`;
+  const first = [...findSet].sort((a, b) => a - b)[0];
+  if (first != null && (first < win.lo || first > win.hi)) setWindow(first & ~0x3F, (first & ~0x3F) + 0x3FF); else draw();
+});
+const m = DATA.meta;
+$('stats').innerHTML = `<span><b>${m.files}</b> scripts</span><span><b>${m.accesses.toLocaleString()}</b> accesses</span><span><b>${bytes.size}</b> bytes touched or tagged</span><span>${m.lang} · ${m.generated}</span>`;
+setWindow(0x0000, 0x0FFF);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+</script>

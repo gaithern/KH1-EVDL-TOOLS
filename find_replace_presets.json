@@ -11,7 +11,7 @@
       "backup": false
     }
   ],
-  "globs": "asm/remastered/pc06.ard/*.evdl.asm",
-  "root": "C:\\Users\\gaith\\Documents\\GitHub\\KH1-RANDOMIZER",
+  "globs": "working/*.evdl.asm",
+  "root": "C:\\Users\\gaith\\Documents\\GitHub\\KH1-EVDL-TOOLS",
   "active_tab": 0
 }
