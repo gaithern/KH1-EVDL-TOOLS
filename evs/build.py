@@ -30,7 +30,10 @@ def build_file(evs_path, orig_path, out_path):
     store = None
     if file_type != 'ard':
         store = msgstore.store_for(out_path, [out_path.parent, orig_path.parent], out_path.parent)
+    lang.COMPILE_WARNINGS.clear()
     blocks = lang.compile_file_text(evs_path.read_text(encoding='utf-8'), store)
+    for w in lang.COMPILE_WARNINGS:
+        print(f'  warning: {evs_path.name}: {w}')
     if not blocks:
         raise ValueError(f'{evs_path.name}: no `kgr N {{ }}` blocks')
     streams = [blocks[i] for i in range(max(blocks) + 1)]

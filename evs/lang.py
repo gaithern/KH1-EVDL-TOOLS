@@ -69,6 +69,13 @@ def mem_text(width, var):
         return BIT_LABELS.get(var) or f'bit[{num(var)}]'
     if var in LABELS:
         return LABELS[var] if width == 'byte' else f'{LABELS[var]}.{width}'
+    return mem_raw(width, var)
+
+
+def mem_raw(width, var):
+    """A memory reference by address only (save_data2.word[0x3C4], bit[0x6AD8])."""
+    if width == 'bit':
+        return f'bit[{num(var)}]'
     if var < 0x900:
         region, off = 'save_data', var
     elif var < 0xB00:
@@ -834,7 +841,64 @@ def apply_names(names, threads):
     return local_alias
 
 
-def decompile(stream, stats=None, entities=None, world=None, messages=None, names=None):
+GLOBAL_NAME_RE = re.compile(r'\b[A-Z][A-Z0-9_]*\b')
+STRING_RE = re.compile(r'"(?:[^"\\]|\\.)*"')
+
+
+def global_value(name):
+    """Current value of a tool-defined global name: ('const', v) or ('mem', width, var), else None."""
+    if name in GLOBAL_CONSTS:
+        return ('const', GLOBAL_CONSTS[name])
+    if name in LABEL_VAR:
+        return ('mem', 'byte', LABEL_VAR[name])
+    if name in BIT_LABEL_NUM:
+        return ('mem', 'bit', BIT_LABEL_NUM[name])
+    return None
+
+
+def globals_block(text):
+    """`globals { NAME = value; }` for every tool-defined global name used in text (outside strings):
+    the file's record of what those names meant when it was written."""
+    used = {}
+    for name in GLOBAL_NAME_RE.findall(STRING_RE.sub('""', text)):
+        if name not in used:
+            g = global_value(name)
+            if g:
+                used[name] = g
+    if not used:
+        return ''
+    order = {'mem': 0, 'const': 1}
+    lines = [f'    {n} = {mem_raw(g[1], g[2]) if g[0] == "mem" else num(g[1])};'
+             for n, g in sorted(used.items(), key=lambda kv: (order[kv[1][0]], kv[0]))]
+    return 'globals {\n' + '\n'.join(lines) + '\n}\n\n'
+
+
+def parse_globals(lines):
+    """{name: ('const', v) | ('mem', width, var)} from a column-0 `globals { }` block."""
+    out = {}
+    if 'globals {' in lines:
+        i = lines.index('globals {') + 1
+        while lines[i] != '}':
+            name, _, val = lines[i].strip().rstrip(';').partition('=')
+            if name.strip():
+                out[name.strip()] = Parser(tokenize(val.strip())).expr()
+            i += 1
+    return out
+
+
+COMPILE_WARNINGS = []  # declared globals whose value differs from the tool's current tables
+
+
+def check_globals(decl):
+    for name, g in decl.items():
+        now = global_value(name)
+        if now is not None and now[1:] != g[1:] and not (now[0] == 'mem' and g[0] == 'mem' and now[2] == g[2]):
+            shown = lambda x: mem_raw(x[1], x[2]) if x[0] == 'mem' else num(x[1])
+            COMPILE_WARNINGS.append(f'{name} is {shown(g)} in this file but {shown(now)} in the current tables '
+                                    f'(the file\'s value is used)')
+
+
+def decompile(stream, stats=None, entities=None, world=None, messages=None, names=None, emit_globals=True):
     """entities: {entity id: ARD name} for the script's set; threads binding one get its name.
     world: the 2-letter prefix of the script's world (types area numbers)."""
     global _TNAME, _ENAME, _MSGS, _LOCAL_ALIAS
@@ -929,15 +993,14 @@ def decompile(stream, stats=None, entities=None, world=None, messages=None, name
     aliases = sorted(_MEM_ALIAS.items(), key=lambda kv: kv[1])
     used = [(k, a) for k, a in aliases if re.search(rf'\b{a}\b', body)]
     if used:
-        saved = dict(_MEM_ALIAS)
-        _MEM_ALIAS.clear()
-        decl = '\n'.join(f'    {a} = {mem_text(*k)};' for k, a in used)
-        _MEM_ALIAS.update(saved)
+        decl = '\n'.join(f'    {a} = {mem_raw(*k)};' for k, a in used)
         body = f'names {{\n{decl}\n}}\n\n' + body
     used = used_entities(body)
     if used:
         decl = '\n'.join(f'    {_ENAME[c]} = {num(c)};' for c in used)
         body = f'entities {{\n{decl}\n}}\n\n' + body
+    if emit_globals:
+        body = globals_block(body) + body
     return body
 
 
@@ -966,8 +1029,9 @@ def tokenize(text):
 
 
 class Parser:
-    def __init__(self, toks, names=None, consts=None, messages=None, aliases=None, thread=None):
+    def __init__(self, toks, names=None, consts=None, messages=None, aliases=None, thread=None, globals_=None):
         self.t = toks
+        self.globals = globals_ or {}
         self.names = names or {}
         a = aliases or {}
         self.mem_alias = a.get('mem', {})                   # name -> ('mem', width, var)
@@ -1165,6 +1229,13 @@ class Parser:
             return self.thread_ref(v)
         if v in self.names:
             return ('actor', self.names[v])
+        gbase, _, gwidth = v.partition('.')
+        if gbase in self.globals:
+            g = self.globals[gbase]
+            if g[0] == 'const' and not gwidth:
+                return g
+            if g[0] == 'mem':
+                return ('mem', 'bit' if g[1] == 'bit' else (gwidth or 'byte'), g[2])
         if v in self.consts:
             return ('const', self.consts[v])
         if v in GLOBAL_CONSTS:
@@ -1348,9 +1419,13 @@ class Emitter:
 HEAD_RE = re.compile(r'^(?:thread (\w+)(?: \[(\d+)\])?|(raw))( asm)? \{(?:\s*//.*)?$')
 
 
-def compile_text(text, messages=None):
+def compile_text(text, messages=None, file_globals=None):
     em = Emitter(messages)
     lines = text.split('\n')
+    glob = dict(file_globals or {})
+    own = parse_globals(lines)
+    check_globals(own)
+    glob.update(own)
     heads = [m for m in map(HEAD_RE.match, lines) if m and not m.group(3)]
     names = {m.group(1): i for i, m in enumerate(heads) if not m.group(1).isdigit()}
     consts = {}
@@ -1399,7 +1474,7 @@ def compile_text(text, messages=None):
                 em.emit(0, int(m.group(2)))
             em.asm(body)
         else:
-            entries = Parser(tokenize('\n'.join(body)), names, consts, messages, aliases, thread_no).entries()
+            entries = Parser(tokenize('\n'.join(body)), names, consts, messages, aliases, thread_no, glob).entries()
             cnt = int(m.group(2)) if m.group(2) else max(MIN_ENTRIES, max(entries, default=-1) + 1)
             em.emit(0, cnt)
             for k in range(cnt):
@@ -1426,20 +1501,23 @@ def decompile_file(path, only=None):
             continue
         msgs = ent.messages_for(path, k)
         txt = decompile(k['stream'], entities=ent.entities_for(path, k), world=ent.world_prefix(path), messages=msgs,
-                        names=ent.names_for(path, i))
+                        names=ent.names_for(path, i), emit_globals=False)
         for w in WARNINGS:
             print(f'warning: {path.name} kgr {i}: {w}', file=sys.stderr)
         if compile_text(txt, msgs) != k['stream']:
             raise AssertionError(f'round trip mismatch in KGR {i}')
         body = '\n'.join(INDENT + line if line else line for line in txt.rstrip('\n').split('\n'))
         parts.append(f'kgr {i} {{\n{body}\n}}')
-    return '\n\n'.join(parts) + '\n'
+    text = '\n\n'.join(parts) + '\n'
+    return globals_block(text) + text
 
 
 def compile_file_text(text, messages=None):
     """{kgr index: stream} for text made by decompile_file."""
     out = {}
     lines = text.split('\n')
+    file_globals = parse_globals(lines)
+    check_globals(file_globals)
     i = 0
     while i < len(lines):
         m = KGR_RE.match(lines[i])
@@ -1450,7 +1528,7 @@ def compile_file_text(text, messages=None):
         while lines[j] != '}':
             j += 1
         body = [line[len(INDENT):] if line.startswith(INDENT) else line for line in lines[i + 1:j]]
-        out[int(m.group(1))] = compile_text('\n'.join(body), messages)
+        out[int(m.group(1))] = compile_text('\n'.join(body), messages, file_globals)
         i = j + 1
     return out
 

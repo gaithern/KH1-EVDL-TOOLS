@@ -32,7 +32,7 @@
       "patterns": [
         { "match": "^\\s*(kgr)\\s+(\\d+)", "captures": { "1": { "name": "storage.type.kgr.evs" }, "2": { "name": "constant.numeric.evs" } } },
         { "match": "^\\s*(thread)\\s+(\\w+)", "captures": { "1": { "name": "storage.type.thread.evs" }, "2": { "name": "entity.name.type.thread.evs" } } },
-        { "match": "^\\s*(entities|names)\\s*(?=\\{)", "captures": { "1": { "name": "storage.type.declarations.evs" } } },
+        { "match": "^\\s*(globals|entities|names)\\s*(?=\\{)", "captures": { "1": { "name": "storage.type.declarations.evs" } } },
         { "match": "^\\s*(init|main|on_action|on_hit|on_talk|on_touch|on_lockon|entry_\\d+|[a-z_][a-z0-9_]*)\\s*(?=\\{\\s*$)", "captures": { "1": { "name": "entity.name.function.entry.evs" } } }
       ]
     },

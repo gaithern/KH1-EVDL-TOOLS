@@ -24,6 +24,14 @@ function blockEnd(lines, start, indent) {
 function parse(text) {
     const lines = text.split(/\r?\n/);
     const kgrs = [];
+    const globals = {};  // file-level `globals { NAME = value; }` (column 0)
+    const g = lines.indexOf('globals {');
+    if (g >= 0) {
+        for (let j = g + 1; j < lines.length && lines[j] !== '}'; j++) {
+            const m = DECL_RE.exec(lines[j]);
+            if (m) globals[m[1]] = j;
+        }
+    }
     const hasKgr = lines.some(l => KGR_RE.test(l));
     const kgrStarts = hasKgr
         ? lines.map((l, i) => [l, i]).filter(([l]) => KGR_RE.test(l)).map(([l, i]) => [+KGR_RE.exec(l)[1], i])
@@ -77,7 +85,7 @@ function parse(text) {
         }
         kgrs.push(kgr);
     }
-    return { lines, kgrs };
+    return { lines, kgrs, globals };
 }
 
 function at(doc, line) {
@@ -134,6 +142,8 @@ function definition(doc, line, col) {
     if (th) return th.line;
     if (thread && thread.decls[word] !== undefined) return thread.decls[word];
     if (kgr.decls[word] !== undefined) return kgr.decls[word];
+    const base = word.split('.')[0];
+    if (doc.globals[base] !== undefined) return doc.globals[base];
     if (thread) {
         const en = findEntry(thread, word);
         if (en && SLOTS.concat(Object.values(thread.aliases)).includes(word)) return en.line;

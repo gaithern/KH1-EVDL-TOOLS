@@ -3084,12 +3084,12 @@
  },
  {
   "region": "save_data2",
-  "offset": "0x67",
-  "var_id": "0xDA7",
+  "offset": "0x66",
+  "var_id": "0xDA6",
   "bit": null,
   "name": "BLUE_TRINITIES_ACTIVATED",
   "confidence": "high",
-  "meaning": "Number of blue Trinity marks performed.",
+  "meaning": "Number of blue Trinity marks performed (16-bit word; every script reads and writes it as a word at 0x66).",
   "values": {},
   "other_names": [],
   "sources": [

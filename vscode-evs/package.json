@@ -2,7 +2,7 @@
   "name": "kh1-evs",
   "displayName": "KH1 EVS",
   "description": "Syntax highlighting and navigation for EVS, the C-like view of Kingdom Hearts 1 event scripts (KH1-EVDL-TOOLS/evs)",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "kh1-evdl-tools",
   "engines": {
     "vscode": "^1.60.0"
