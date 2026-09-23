@@ -10734,5 +10734,48 @@
    "C:/Users/gaith/Documents/Obsidian/Kingdom Hearts 1/Kingdom Hearts 1/allset.set and world set-number tables.md:43: Room counts per world ... `7,12,9,26,10,20,11,1,21,17,13,7,11,12,1,17,39` (worlds 0-0x10)",
    "C:/Users/gaith/Documents/Obsidian/Kingdom Hearts 1/Kingdom Hearts 1/Finding scenes by dialog text in EVDLs.md:46: The per-room \"set number\" array = `worldFlagBase - 0xE4` = Steam `0x2DEB3CC` = EVDL var `0x11AC` (save_data2[0x46C])"
   ]
+ },
+ {
+  "region": "save_data",
+  "offset": "0x100",
+  "var_id": "0x100",
+  "bit": null,
+  "name": "DIVE_TO_THE_HEART_WEAPON_CHOSEN",
+  "confidence": "high",
+  "meaning": "Dream weapon picked at Dive to the Heart Station of Awakening; later Dive rooms (dh02, dh05) read it. Reset to 0 when the choice is declined (\"Maybe not\").",
+  "values": {
+   "0": "Dream Sword",
+   "1": "Dream Shield",
+   "2": "Dream Rod"
+  },
+  "other_names": [],
+  "sources": [
+   "evs"
+  ],
+  "evidence": [
+   "dh01c.ev KGR 5: set 0/1/2 when the sword/shield/rod is taken; switch on it picks Change_weapon 0x52/0x53/0x54",
+   "dh02_ard0/3 KGR 2, dh05_ard0/3 KGR 2: read"
+  ]
+ },
+ {
+  "region": "save_data",
+  "offset": "0x101",
+  "var_id": "0x101",
+  "bit": null,
+  "name": "DIVE_TO_THE_HEART_WEAPON_GIVEN_UP",
+  "confidence": "high",
+  "meaning": "Dream weapon given up at Dive to the Heart; with WEAPON_CHOSEN it selects Change_sora_parameters. Reset to 0 when the choice is declined.",
+  "values": {
+   "0": "Dream Sword",
+   "1": "Dream Shield",
+   "2": "Dream Rod"
+  },
+  "other_names": [],
+  "sources": [
+   "evs"
+  ],
+  "evidence": [
+   "dh01c.ev KGR 5: set 0/1/2 by pedestal area 0x64/0x65/0x66, read to pick Change_sora_parameters"
+  ]
  }
 ]

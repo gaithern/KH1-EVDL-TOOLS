@@ -226,7 +226,7 @@ GIFT_ARG = {SYS_ID['Get_item_from_gift_table']: 0, SYS_ID['Display_message_from_
             SYS_ID['Scale_window_from_gift']: 1}  # syscall -> index of its gift-table argument
 ITEM_ARG_SYSCALLS = {SYS_ID[n] for n in (  # first argument is an item id
     'Change_bag_items', 'Check_bag_item_count', 'Check_bag_item_count_only', 'Check_bag_item_count2',
-    'Get_item_type', 'Set_item_number_in_message')}
+    'Get_item_type', 'Set_item_number_in_message', 'Change_weapon')}
 GIFT_TABLE_ITEM_VAR = 0x1104  # save_data2[0x3C4], the gift index the rando's scripts pass around
 TRIGGER_EVENT = SYS_ID['Trigger_event']  # N < 100: KGR N of the set's script; N >= 100: WDT KGR N - 100
 
