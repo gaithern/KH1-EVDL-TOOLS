@@ -1,0 +1,18 @@
+{
+  "kgr 0": {
+    "threads": {
+      "21": "dialogue"
+    },
+    "entries": {
+      "21.12": "kairi_day1_rewards"
+    },
+    "vars": {
+      "runtime.dword[0x934]": "KAIRI_MATERIAL_1_MISSING"
+    },
+    "locals": {
+      "4": {
+        "local25": "choice"
+      }
+    }
+  }
+}

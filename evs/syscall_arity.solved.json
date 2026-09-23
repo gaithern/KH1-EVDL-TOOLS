@@ -1,0 +1,4510 @@
+{
+ "0": {
+  "name": "Open_window",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 47682
+ },
+ "1": {
+  "name": "Display_message",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 87142
+ },
+ "2": {
+  "name": "Close_window",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 70244
+ },
+ "3": {
+  "name": "Set_window_position",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 25900
+ },
+ "4": {
+  "name": "Set_window_size",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 45761
+ },
+ "5": {
+  "name": "Set_window_type",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 35539
+ },
+ "6": {
+  "name": "Set_window_opening_speed",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 36918
+ },
+ "7": {
+  "name": "Set_message_display_speed",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 4889
+ },
+ "8": {
+  "name": "Set_wait_timer",
+  "args": 1,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 365148
+ },
+ "9": {
+  "name": "Display_register_value",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 30983
+ },
+ "10": {
+  "name": "Set_char_ID",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 95097
+ },
+ "11": {
+  "name": "Move_char",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 5849
+ },
+ "12": {
+  "name": "Rotate_char",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 9748
+ },
+ "13": {
+  "name": "Change_motion",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 59929
+ },
+ "16": {
+  "name": "Get_char_pos_X",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 48
+ },
+ "17": {
+  "name": "Get_char_pos_Y",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 41
+ },
+ "18": {
+  "name": "Get_char_pos_Z",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 57
+ },
+ "19": {
+  "name": "Set_char_position",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 68142
+ },
+ "20": {
+  "name": "Wait_move_done",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 13854
+ },
+ "21": {
+  "name": "Show_char",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 23664
+ },
+ "22": {
+  "name": "Hide_char",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 26182
+ },
+ "23": {
+  "name": "Show_char_shadow",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 14645
+ },
+ "24": {
+  "name": "Hide_char_shadow",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 15582
+ },
+ "25": {
+  "name": "Collision_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 23879
+ },
+ "26": {
+  "name": "Collision_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -2,
+  "uses": 38741
+ },
+ "27": {
+  "name": "Fade_in",
+  "args": 1,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 9118
+ },
+ "28": {
+  "name": "Fade_out",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 7954
+ },
+ "29": {
+  "name": "White_in",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1660
+ },
+ "30": {
+  "name": "White_out",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 2565
+ },
+ "31": {
+  "name": "Blur_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 865
+ },
+ "32": {
+  "name": "Blur_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 2656
+ },
+ "33": {
+  "name": "Wait_message_end",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 19728
+ },
+ "34": {
+  "name": "Play_camera_motion",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 23456
+ },
+ "35": {
+  "name": "Set_camera_position",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 4840
+ },
+ "36": {
+  "name": "Set_camera_focus_position",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 8810
+ },
+ "37": {
+  "name": "Rotate_camera",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3524
+ },
+ "38": {
+  "name": "Set_camera_distance",
+  "args": 1,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 3844
+ },
+ "39": {
+  "name": "Set_camera_fov",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 5646
+ },
+ "44": {
+  "name": "Get_camera_rot_Y",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 63
+ },
+ "45": {
+  "name": "Get_camera_rot_Z",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 6
+ },
+ "46": {
+  "name": "Get_camera_distance",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 72
+ },
+ "48": {
+  "name": "Start_effect",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 2813
+ },
+ "49": {
+  "name": "Move_camera_focus",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 2070
+ },
+ "50": {
+  "name": "Move_camera_rotation",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 2095
+ },
+ "51": {
+  "name": "Move_camera_distance",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 2028
+ },
+ "52": {
+  "name": "Move_camera_fov",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 2616
+ },
+ "53": {
+  "name": "Char_jump",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 59
+ },
+ "54": {
+  "name": "Char_ctrl_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 7730
+ },
+ "55": {
+  "name": "Char_ctrl_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 22926
+ },
+ "56": {
+  "name": "Motion_ctrl_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 21910
+ },
+ "57": {
+  "name": "Motion_ctrl_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 30827
+ },
+ "58": {
+  "name": "Change_motion_interp",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 13143
+ },
+ "59": {
+  "name": "Change_map",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 486
+ },
+ "60": {
+  "name": "Change_area",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 7941
+ },
+ "62": {
+  "name": "Group_display_on",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 6654
+ },
+ "63": {
+  "name": "Group_display_off",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 9204
+ },
+ "68": {
+  "name": "Random_value",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 4858
+ },
+ "69": {
+  "name": "Turn_char",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 56272
+ },
+ "72": {
+  "name": "Add_light",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 39
+ },
+ "73": {
+  "name": "Light_type",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 52
+ },
+ "74": {
+  "name": "Light_position",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 10
+ },
+ "75": {
+  "name": "Light_direction",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 10
+ },
+ "76": {
+  "name": "Light_color",
+  "args": 5,
+  "returns": 0,
+  "min_depth": 5,
+  "uses": 89
+ },
+ "78": {
+  "name": "Spot_light_angle",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 10
+ },
+ "79": {
+  "name": "Remove_light",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 50
+ },
+ "80": {
+  "name": "Set_window_tail_type",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 32920
+ },
+ "81": {
+  "name": "Set_window_tail_location",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 7308
+ },
+ "82": {
+  "name": "Set_window_tail_rotation",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 7294
+ },
+ "83": {
+  "name": "Set_window_close_speed",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 36960
+ },
+ "84": {
+  "name": "Widescreen_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 441
+ },
+ "85": {
+  "name": "Widescreen_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 552
+ },
+ "86": {
+  "name": "Change_motion_frame",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 12941
+ },
+ "87": {
+  "name": "Pause_motion",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1215
+ },
+ "88": {
+  "name": "Enter_selection_mode",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 966
+ },
+ "89": {
+  "name": "Wait_selection",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 931
+ },
+ "90": {
+  "name": "Change_char_color",
+  "args": 5,
+  "returns": 0,
+  "min_depth": 5,
+  "uses": 23794
+ },
+ "91": {
+  "name": "Restore_char_color",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 2597
+ },
+ "92": {
+  "name": "Load_event_motion",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 4075
+ },
+ "93": {
+  "name": "Wait_file_load",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 4094
+ },
+ "94": {
+  "name": "Set_event_motion",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 15031
+ },
+ "95": {
+  "name": "Set_battle_motion",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 14070
+ },
+ "96": {
+  "name": "Hide_body_parts",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 1581
+ },
+ "97": {
+  "name": "Show_body_parts",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 309
+ },
+ "98": {
+  "name": "Wait_turn_end",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 13067
+ },
+ "99": {
+  "name": "Turn_to_position",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 6645
+ },
+ "100": {
+  "name": "Save_crossfade_image",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 8435
+ },
+ "101": {
+  "name": "Start_crossfade",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 8422
+ },
+ "102": {
+  "name": "Camera_vibration",
+  "args": 5,
+  "returns": 0,
+  "min_depth": 5,
+  "uses": 1941
+ },
+ "103": {
+  "name": "Wait_motion_end",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 26278
+ },
+ "104": {
+  "name": "Char_bg_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 14198
+ },
+ "105": {
+  "name": "Char_bg_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 22486
+ },
+ "106": {
+  "name": "Wait_event_camera_end",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 3658
+ },
+ "107": {
+  "name": "Wait_message_end_ID",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 30784
+ },
+ "108": {
+  "name": "Motion_change_no_loop",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 29470
+ },
+ "109": {
+  "name": "Start_texture_animation",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 39046
+ },
+ "110": {
+  "name": "Motion_change_no_loop_interp",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 4459
+ },
+ "111": {
+  "name": "Motion_change_no_loop_frame",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 6246
+ },
+ "112": {
+  "name": "Gauge_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -2,
+  "uses": 25830
+ },
+ "113": {
+  "name": "Gauge_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 32238
+ },
+ "114": {
+  "name": "Command_display_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -2,
+  "uses": 25899
+ },
+ "115": {
+  "name": "Command_display_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 32239
+ },
+ "117": {
+  "name": "Change_blur_color",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 2
+ },
+ "122": {
+  "name": "Change_char_scale",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 11490
+ },
+ "123": {
+  "name": "Play_partial_motion",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 9708
+ },
+ "124": {
+  "name": "Play_voice",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 12678
+ },
+ "125": {
+  "name": "Stop_voice",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 204
+ },
+ "126": {
+  "name": "Trigger_event",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 4582
+ },
+ "127": {
+  "name": "Get_world_number",
+  "args": 0,
+  "returns": 1,
+  "min_depth": -1,
+  "uses": 13653
+ },
+ "128": {
+  "name": "Get_area_number",
+  "args": 0,
+  "returns": 1,
+  "min_depth": -1,
+  "uses": 9635
+ },
+ "129": {
+  "name": "Get_set_number",
+  "args": 0,
+  "returns": 1,
+  "min_depth": -1,
+  "uses": 11984
+ },
+ "132": {
+  "name": "Set_attribute_on",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 8249
+ },
+ "133": {
+  "name": "Set_attribute_off",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 13544
+ },
+ "134": {
+  "name": "Write_set_number",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 7700
+ },
+ "135": {
+  "name": "Keyhole_fade_out",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 68
+ },
+ "139": {
+  "name": "Widescreen_on_quick",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1396
+ },
+ "140": {
+  "name": "Widescreen_off_quick",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1227
+ },
+ "141": {
+  "name": "Weapon_display_on",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 4407
+ },
+ "142": {
+  "name": "Weapon_display_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 8648
+ },
+ "143": {
+  "name": "Stage_destruction_effect",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "146": {
+  "name": "Check_map_landing",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 64
+ },
+ "148": {
+  "name": "Play_camera_motion_local_rot",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 948
+ },
+ "149": {
+  "name": "Force_quit_script",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 11
+ },
+ "150": {
+  "name": "All_char_ctrl_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 10540
+ },
+ "151": {
+  "name": "All_char_ctrl_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 11272
+ },
+ "152": {
+  "name": "Check_char_on_stage",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 1675
+ },
+ "154": {
+  "name": "Restore_camera",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 3628
+ },
+ "155": {
+  "name": "Add_bg_light",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 13
+ },
+ "156": {
+  "name": "Restore_camera_default",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 1460
+ },
+ "157": {
+  "name": "Move_noturn",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 3903
+ },
+ "158": {
+  "name": "Set_valid_key_input",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 119
+ },
+ "159": {
+  "name": "Clear_valid_key_input",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 129
+ },
+ "160": {
+  "name": "Switch_to_battle_mode",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1053
+ },
+ "161": {
+  "name": "Switch_to_normal_mode",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1371
+ },
+ "162": {
+  "name": "Clear_event_effect",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 311
+ },
+ "163": {
+  "name": "Start_resident_effect",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 25031
+ },
+ "164": {
+  "name": "Clear_resident_effect",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "165": {
+  "name": "Load_event_effect",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 478
+ },
+ "166": {
+  "name": "Wait_event_effect_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 891
+ },
+ "167": {
+  "name": "Change_resident_effect_coords",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 14682
+ },
+ "168": {
+  "name": "Blur_on2",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1449
+ },
+ "169": {
+  "name": "Blur_off2",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 3005
+ },
+ "170": {
+  "name": "Blur_type",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1463
+ },
+ "171": {
+  "name": "Blur_distance",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1452
+ },
+ "172": {
+  "name": "Get_pad_buttons",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "173": {
+  "name": "Get_pad_trigger",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 2121
+ },
+ "175": {
+  "name": "Face_actor",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 7924
+ },
+ "177": {
+  "name": "Open_window_no_close",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 16068
+ },
+ "178": {
+  "name": "Activate_title_effect",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 105
+ },
+ "179": {
+  "name": "Start_talk_camera",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 2234
+ },
+ "180": {
+  "name": "End_talk_camera",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1961
+ },
+ "181": {
+  "name": "Load_model",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3410
+ },
+ "182": {
+  "name": "Wait_model_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 3399
+ },
+ "183": {
+  "name": "Display_model",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 23626
+ },
+ "184": {
+  "name": "Rotate_blur",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 49
+ },
+ "185": {
+  "name": "Move_blur",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 409
+ },
+ "186": {
+  "name": "Clear_loaded_effect_ID",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3394
+ },
+ "187": {
+  "name": "Clear_resident_effect_ID",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 13516
+ },
+ "188": {
+  "name": "Set_loaded_effect_location",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 1469
+ },
+ "189": {
+  "name": "Set_loaded_effect_location_bone",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 873
+ },
+ "190": {
+  "name": "Play_SE",
+  "args": 5,
+  "returns": 0,
+  "min_depth": 5,
+  "uses": 376
+ },
+ "191": {
+  "name": "Stop_SE",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 873
+ },
+ "192": {
+  "name": "Get_distance_2axis",
+  "args": 5,
+  "returns": 0,
+  "min_depth": 5,
+  "uses": 425
+ },
+ "193": {
+  "name": "Get_distance_3axis",
+  "args": 7,
+  "returns": 0,
+  "min_depth": 7,
+  "uses": 4
+ },
+ "194": {
+  "name": "Get_actor_distance_2axis",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 371
+ },
+ "195": {
+  "name": "Get_actor_distance_3axis",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 1512
+ },
+ "196": {
+  "name": "Set_resident_effect_location_bone",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 3624
+ },
+ "197": {
+  "name": "Get_current_command",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 6
+ },
+ "198": {
+  "name": "Set_command_speak_range",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 2445
+ },
+ "199": {
+  "name": "Set_command_check_range",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 12535
+ },
+ "200": {
+  "name": "Enable_menu_display",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 40
+ },
+ "201": {
+  "name": "Disable_menu_display",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 521
+ },
+ "202": {
+  "name": "Get_angle_actor_to_coord",
+  "args": 3,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 6757
+ },
+ "203": {
+  "name": "Get_angle_between_actors",
+  "args": 2,
+  "returns": 1,
+  "min_depth": 2,
+  "uses": 4987
+ },
+ "205": {
+  "name": "Fade_image_out",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 4
+ },
+ "206": {
+  "name": "Set_image_offset",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 8
+ },
+ "208": {
+  "name": "Set_camera_speed",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1617
+ },
+ "209": {
+  "name": "Set_motion_speed",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 7421
+ },
+ "210": {
+  "name": "Set_effect_speed",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1
+ },
+ "211": {
+  "name": "Set_object_far_clip",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 30
+ },
+ "214": {
+  "name": "Backload_test_event_motion",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 6
+ },
+ "215": {
+  "name": "Set_frame_color",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 5
+ },
+ "216": {
+  "name": "Start_frame_coloring",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 5
+ },
+ "217": {
+  "name": "Stop_frame_coloring",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 9
+ },
+ "218": {
+  "name": "Turn_head_angle",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 921
+ },
+ "219": {
+  "name": "Turn_head_coords",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 6440
+ },
+ "220": {
+  "name": "Turn_head_actor",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 448
+ },
+ "221": {
+  "name": "Restore_head",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 5269
+ },
+ "222": {
+  "name": "Open_shop_buy",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 65
+ },
+ "223": {
+  "name": "Wait_shop_close",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 59
+ },
+ "224": {
+  "name": "Move_jump",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 3140
+ },
+ "228": {
+  "name": "Hide_timer",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 72
+ },
+ "229": {
+  "name": "Start_timer_up",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 60
+ },
+ "230": {
+  "name": "Start_timer_down",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 62
+ },
+ "231": {
+  "name": "Pause_timer",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 575
+ },
+ "232": {
+  "name": "Restart_timer",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 663
+ },
+ "233": {
+  "name": "Stop_timer",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 1306
+ },
+ "234": {
+  "name": "Set_max_counter",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 52
+ },
+ "235": {
+  "name": "Inc_counter",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 403
+ },
+ "237": {
+  "name": "Hide_counter",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 12
+ },
+ "238": {
+  "name": "Start_minigame",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 567
+ },
+ "239": {
+  "name": "End_minigame",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 720
+ },
+ "240": {
+  "name": "Show_ranking",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 79
+ },
+ "241": {
+  "name": "Start_hercules_event",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 7
+ },
+ "242": {
+  "name": "Reset_timer",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 80
+ },
+ "243": {
+  "name": "Message_to_battle_script",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 3362
+ },
+ "244": {
+  "name": "Load_image",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 27
+ },
+ "245": {
+  "name": "Wait_image_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 11
+ },
+ "246": {
+  "name": "Display_image",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 33
+ },
+ "247": {
+  "name": "Hide_image",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 35
+ },
+ "248": {
+  "name": "Scroll_image_Y",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 4
+ },
+ "249": {
+  "name": "Load_BGM",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 513
+ },
+ "250": {
+  "name": "Wait_BGM_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1921
+ },
+ "251": {
+  "name": "Play_BGM",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1722
+ },
+ "252": {
+  "name": "Restore_BGM",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 626
+ },
+ "253": {
+  "name": "Check_bag_item_count",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 911
+ },
+ "254": {
+  "name": "Set_loaded_effect_start_frame",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 419
+ },
+ "255": {
+  "name": "Set_resident_effect_start_frame",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 607
+ },
+ "256": {
+  "name": "Load_voice",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 2456
+ },
+ "257": {
+  "name": "Wait_voice_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 2537
+ },
+ "258": {
+  "name": "Change_bag_items",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 3895
+ },
+ "260": {
+  "name": "Start_vibration",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 550
+ },
+ "261": {
+  "name": "Stop_vibration",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 226
+ },
+ "262": {
+  "name": "Clipping_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 249
+ },
+ "263": {
+  "name": "Clipping_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1052
+ },
+ "264": {
+  "name": "Set_motion_null_to_char_pos",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1646
+ },
+ "265": {
+  "name": "Set_char_run_speed",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 12
+ },
+ "266": {
+  "name": "Reset_char_run_speed",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 10
+ },
+ "267": {
+  "name": "Change_char_weight",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1284
+ },
+ "268": {
+  "name": "Open_shop_sell",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 23
+ },
+ "269": {
+  "name": "Add_party_member",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1943
+ },
+ "270": {
+  "name": "Remove_party_member",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 385
+ },
+ "274": {
+  "name": "Go_to_world_map",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 37
+ },
+ "278": {
+  "name": "Game_over",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "279": {
+  "name": "Quick_save",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 78
+ },
+ "280": {
+  "name": "Move_slow",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 435
+ },
+ "281": {
+  "name": "Get_part_from_party",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 11759
+ },
+ "282": {
+  "name": "Display_black_image",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 4
+ },
+ "284": {
+  "name": "Push_actor_coord_X",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 41436
+ },
+ "285": {
+  "name": "Push_actor_coord_Y",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 50375
+ },
+ "286": {
+  "name": "Push_actor_coord_Z",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 41254
+ },
+ "287": {
+  "name": "Push_actor_rotation",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 4173
+ },
+ "289": {
+  "name": "Push_motion_frames",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 8769
+ },
+ "290": {
+  "name": "Push_actor_coord_X2",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 14082
+ },
+ "291": {
+  "name": "Push_actor_coord_Y2",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 22965
+ },
+ "292": {
+  "name": "Push_actor_coord_Z2",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 14082
+ },
+ "293": {
+  "name": "Push_actor_rotation2",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 242
+ },
+ "298": {
+  "name": "Cancel_movement",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 8712
+ },
+ "299": {
+  "name": "Move_to_actor_pos",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 178
+ },
+ "300": {
+  "name": "Enable_game_over",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 479
+ },
+ "301": {
+  "name": "Disable_game_over",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 557
+ },
+ "303": {
+  "name": "End_keyhole_fade",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 68
+ },
+ "304": {
+  "name": "Set_sky_initial_rotation",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 14
+ },
+ "305": {
+  "name": "Get_minigame_menu_selection",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 560
+ },
+ "306": {
+  "name": "Set_char_initial_state",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 19727
+ },
+ "307": {
+  "name": "Call_sin",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 18020
+ },
+ "308": {
+  "name": "Call_cos",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 17717
+ },
+ "310": {
+  "name": "Check_battle_or_normal_mode",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 5726
+ },
+ "311": {
+  "name": "Get_camera_viewpoint_X",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 6
+ },
+ "312": {
+  "name": "Get_camera_viewpoint_Y",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 160
+ },
+ "313": {
+  "name": "Get_camera_viewpoint_Z",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 6
+ },
+ "314": {
+  "name": "Get_attack_type_ID",
+  "args": 0,
+  "returns": 1,
+  "min_depth": -2,
+  "uses": 3187
+ },
+ "315": {
+  "name": "Erase_all_map_objects",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 947
+ },
+ "316": {
+  "name": "Show_all_map_objects",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 201
+ },
+ "317": {
+  "name": "Fade_in_3D",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 504
+ },
+ "318": {
+  "name": "Fade_out_3D",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 454
+ },
+ "319": {
+  "name": "Discard_object_data",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 19143
+ },
+ "320": {
+  "name": "Enable_targeting",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 9278
+ },
+ "321": {
+  "name": "Disable_targeting",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 24184
+ },
+ "322": {
+  "name": "Get_motion_number",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 400
+ },
+ "323": {
+  "name": "Add_HP",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 45
+ },
+ "324": {
+  "name": "Add_MP",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 26
+ },
+ "325": {
+  "name": "Wait_all_enemies_defeated",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 273
+ },
+ "326": {
+  "name": "Enable_magic_command",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 69
+ },
+ "327": {
+  "name": "Disable_magic_command",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 36
+ },
+ "328": {
+  "name": "Enable_item_command",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 45
+ },
+ "329": {
+  "name": "Disable_item_command",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 12
+ },
+ "330": {
+  "name": "Enable_summon_command",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1091
+ },
+ "331": {
+  "name": "Disable_summon_command",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 627
+ },
+ "332": {
+  "name": "Set_counter_value",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 192
+ },
+ "335": {
+  "name": "Make_not_invincible",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 9051
+ },
+ "336": {
+  "name": "Make_invincible",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 14764
+ },
+ "337": {
+  "name": "Make_pressable",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 5044
+ },
+ "338": {
+  "name": "Make_non_pressable",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 9565
+ },
+ "339": {
+  "name": "Set_treasure_flag",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 641
+ },
+ "340": {
+  "name": "Get_treasure_flag",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 5413
+ },
+ "341": {
+  "name": "Get_treasure_number",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "342": {
+  "name": "Get_treasure_type",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "343": {
+  "name": "Get_treasure_value",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "344": {
+  "name": "Erase_treasure",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "345": {
+  "name": "Get_treasure_ID",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "346": {
+  "name": "Enemy_ctrl_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 716
+ },
+ "347": {
+  "name": "Enemy_ctrl_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1748
+ },
+ "348": {
+  "name": "Activate_battle_effects",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1
+ },
+ "349": {
+  "name": "Set_battle_effect_to_bone",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 1
+ },
+ "350": {
+  "name": "Set_party",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 715
+ },
+ "351": {
+  "name": "Move_smooth_rot",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 141
+ },
+ "352": {
+  "name": "Change_game_speed",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 2056
+ },
+ "353": {
+  "name": "Play_SE2",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 35153
+ },
+ "354": {
+  "name": "Set_little_mermaid_water_speed",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 28
+ },
+ "355": {
+  "name": "Get_comm_ID",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 1474
+ },
+ "356": {
+  "name": "Get_comm_Num",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 1583
+ },
+ "357": {
+  "name": "Set_comm_work",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 1601
+ },
+ "360": {
+  "name": "Disable_battle_event_box",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 920
+ },
+ "361": {
+  "name": "Enable_battle_event_box",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 795
+ },
+ "362": {
+  "name": "Disable_all_battle_event_boxes",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 7034
+ },
+ "363": {
+  "name": "Enable_all_battle_event_boxes",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 5869
+ },
+ "364": {
+  "name": "Set_item_number_in_message",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3893
+ },
+ "365": {
+  "name": "Set_window_width_auto",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 24031
+ },
+ "366": {
+  "name": "Get_party_count",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 139
+ },
+ "367": {
+  "name": "Display_prize",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 104
+ },
+ "368": {
+  "name": "Hide_prize",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 599
+ },
+ "369": {
+  "name": "Delete_prize",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 8
+ },
+ "370": {
+  "name": "Return_to_title",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 15
+ },
+ "371": {
+  "name": "Change_effect_rotation",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 182
+ },
+ "372": {
+  "name": "Change_effect_scale",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 143
+ },
+ "373": {
+  "name": "Change_resident_effect_rotation",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 2694
+ },
+ "374": {
+  "name": "Change_resident_effect_scale",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 5747
+ },
+ "375": {
+  "name": "Make_not_invincible_actor",
+  "args": 1,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 4071
+ },
+ "376": {
+  "name": "Make_invincible_actor",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3794
+ },
+ "377": {
+  "name": "Make_inoperable",
+  "args": 1,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 16068
+ },
+ "378": {
+  "name": "Make_operable",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 25962
+ },
+ "379": {
+  "name": "Get_char_current_area",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 580
+ },
+ "380": {
+  "name": "End_effect_loop",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 974
+ },
+ "381": {
+  "name": "End_resident_effect_loop",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 2808
+ },
+ "382": {
+  "name": "Add_event_box",
+  "args": 7,
+  "returns": 0,
+  "min_depth": 7,
+  "uses": 241
+ },
+ "383": {
+  "name": "Count_objects_by_part",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 30
+ },
+ "384": {
+  "name": "Load_event_SE",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 1848
+ },
+ "385": {
+  "name": "Wait_event_SE_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1848
+ },
+ "386": {
+  "name": "Delete_event_box",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 218
+ },
+ "387": {
+  "name": "Get_char_HP",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 132
+ },
+ "388": {
+  "name": "Get_char_MP",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 4
+ },
+ "389": {
+  "name": "Write_set_number_from_table",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3458
+ },
+ "390": {
+  "name": "Start_BGSE",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 8
+ },
+ "391": {
+  "name": "Stop_BGSE",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 91
+ },
+ "392": {
+  "name": "Call_name_input",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 12
+ },
+ "393": {
+  "name": "Get_char_weight",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 291
+ },
+ "394": {
+  "name": "Hold_camera_info",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 8097
+ },
+ "395": {
+  "name": "Get_camera_info",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 4153
+ },
+ "399": {
+  "name": "Map_display_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 2
+ },
+ "400": {
+  "name": "Set_camera_parameters",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 95
+ },
+ "401": {
+  "name": "Reset_camera_parameters",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 59
+ },
+ "402": {
+  "name": "Stealth_on",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 106
+ },
+ "403": {
+  "name": "Stealth_off",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 105
+ },
+ "404": {
+  "name": "Get_motion_number_actor",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 3637
+ },
+ "405": {
+  "name": "Load_waveform",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 459
+ },
+ "406": {
+  "name": "Wait_waveform_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1881
+ },
+ "407": {
+  "name": "Party_gauge_on",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 16
+ },
+ "408": {
+  "name": "Party_gauge_off",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 230
+ },
+ "409": {
+  "name": "Restore_SE",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 2293
+ },
+ "410": {
+  "name": "Wait_restore_music",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 833
+ },
+ "411": {
+  "name": "Get_ground_color_from_area",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 5
+ },
+ "412": {
+  "name": "Set_ground_color_to_polygon",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 17
+ },
+ "413": {
+  "name": "Quick_save_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 354
+ },
+ "414": {
+  "name": "Quick_save_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 295
+ },
+ "415": {
+  "name": "Stop_BGM",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 2630
+ },
+ "416": {
+  "name": "Add_battle_item",
+  "args": 2,
+  "returns": 0,
+  "min_depth": -44,
+  "uses": 167
+ },
+ "417": {
+  "name": "Pad_ctrl_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 11381
+ },
+ "418": {
+  "name": "Pad_ctrl_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 16946
+ },
+ "419": {
+  "name": "GetLength_2",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 11962
+ },
+ "421": {
+  "name": "GetLengthA_2",
+  "args": 2,
+  "returns": 1,
+  "min_depth": 2,
+  "uses": 30
+ },
+ "422": {
+  "name": "GetLength3A_2",
+  "args": 2,
+  "returns": 1,
+  "min_depth": 2,
+  "uses": 352
+ },
+ "423": {
+  "name": "Char_request_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 2095
+ },
+ "424": {
+  "name": "Char_request_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1877
+ },
+ "425": {
+  "name": "Stop_SE_all",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "426": {
+  "name": "Erase_all_enemies",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 137
+ },
+ "427": {
+  "name": "Change_BGM_volume",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 7721
+ },
+ "431": {
+  "name": "Motion_sound_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 17
+ },
+ "432": {
+  "name": "Motion_sound_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 51
+ },
+ "433": {
+  "name": "Ground_sound_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 731
+ },
+ "434": {
+  "name": "Ground_sound_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 448
+ },
+ "435": {
+  "name": "Play_effect_sound",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 13
+ },
+ "436": {
+  "name": "Stop_effect_sound",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 25
+ },
+ "437": {
+  "name": "Show_object_from_CALLNUM",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 228
+ },
+ "438": {
+  "name": "Check_Sora_on_ground",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 3668
+ },
+ "439": {
+  "name": "Get_enemies_killed",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 68
+ },
+ "440": {
+  "name": "Reset_enemies_killed",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 41
+ },
+ "441": {
+  "name": "Disable_battle_mode_entry",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 4001
+ },
+ "442": {
+  "name": "Enable_battle_mode_entry",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 3895
+ },
+ "443": {
+  "name": "Wait_voice_finish",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3915
+ },
+ "444": {
+  "name": "Increase_money",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 10
+ },
+ "445": {
+  "name": "Load_next_map_texture",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 6613
+ },
+ "446": {
+  "name": "Set_effect_rotation_from_bone",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 533
+ },
+ "447": {
+  "name": "Set_effect_rotation_from_bone2",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 1417
+ },
+ "448": {
+  "name": "Enemy_view_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "452": {
+  "name": "Get_MAPOBJ_BG_color",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 10331
+ },
+ "453": {
+  "name": "Get_distance_to_nearest_enemy",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 204
+ },
+ "454": {
+  "name": "Set_special_command",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 10043
+ },
+ "455": {
+  "name": "Get_special_command_count",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 4824
+ },
+ "457": {
+  "name": "Get_enemies_in_zone",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 1378
+ },
+ "458": {
+  "name": "Load_magic",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 468
+ },
+ "459": {
+  "name": "Wait_magic_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 468
+ },
+ "460": {
+  "name": "Get_magic_level",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 91
+ },
+ "461": {
+  "name": "Load_all_objects_zone",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 877
+ },
+ "462": {
+  "name": "Wait_zone_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 877
+ },
+ "464": {
+  "name": "Move_jump_frame",
+  "args": 6,
+  "returns": 0,
+  "min_depth": 6,
+  "uses": 376
+ },
+ "465": {
+  "name": "Change_hercules_ranking",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 1812
+ },
+ "466": {
+  "name": "Enable_accel_zone",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 316
+ },
+ "467": {
+  "name": "Disable_accel_zone",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 364
+ },
+ "470": {
+  "name": "Init_battle_script",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 120
+ },
+ "471": {
+  "name": "Init_all_enemy_battle_scripts",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1636
+ },
+ "472": {
+  "name": "Get_attack_type_received",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 1638
+ },
+ "473": {
+  "name": "Get_map_object_damage",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 495
+ },
+ "475": {
+  "name": "Set_message_numerical_work",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 216
+ },
+ "477": {
+  "name": "Disable_event_skipping",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 40
+ },
+ "478": {
+  "name": "Release_object_CALLNUM",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 129
+ },
+ "479": {
+  "name": "Set_growth_type_1",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 6
+ },
+ "480": {
+  "name": "Set_growth_type_2",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 108
+ },
+ "481": {
+  "name": "Change_sora_parameters",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 6
+ },
+ "482": {
+  "name": "Set_magic_minus_flag",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 8
+ },
+ "483": {
+  "name": "Set_item_minus_flag",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 8
+ },
+ "484": {
+  "name": "Set_special_minus_flag",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 9
+ },
+ "485": {
+  "name": "Change_weapon",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 46
+ },
+ "486": {
+  "name": "Force_event_pose",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 327
+ },
+ "487": {
+  "name": "Force_no_event_pose",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 141
+ },
+ "488": {
+  "name": "Open_gummy_menu",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 6
+ },
+ "489": {
+  "name": "Start_movie",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 29
+ },
+ "490": {
+  "name": "Wait_movie_end",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 29
+ },
+ "491": {
+  "name": "Write_other_world_set_number",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 70
+ },
+ "492": {
+  "name": "Clear_history",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 54
+ },
+ "493": {
+  "name": "Set_save_point_flag",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 320
+ },
+ "494": {
+  "name": "Get_save_point_flag",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 36
+ },
+ "495": {
+  "name": "Delete_save_point",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 39
+ },
+ "496": {
+  "name": "Start_map_change",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 356
+ },
+ "497": {
+  "name": "Wait_name_input",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 12
+ },
+ "498": {
+  "name": "Add_party_menu_command",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 189
+ },
+ "499": {
+  "name": "Set_polygon_attribute",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 1401
+ },
+ "500": {
+  "name": "Set_polygon_kind",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 63
+ },
+ "501": {
+  "name": "Set_polygon_ground",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 111
+ },
+ "502": {
+  "name": "Get_time_since_start",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 29
+ },
+ "503": {
+  "name": "Learn_magic",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 726
+ },
+ "504": {
+  "name": "Change_song_bank",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 27
+ },
+ "505": {
+  "name": "Wait_music_jump",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 27
+ },
+ "508": {
+  "name": "Sky2_display_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 134
+ },
+ "509": {
+  "name": "Change_FOG",
+  "args": 8,
+  "returns": 0,
+  "min_depth": 8,
+  "uses": 304
+ },
+ "510": {
+  "name": "Set_FOG_default",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 59
+ },
+ "511": {
+  "name": "Enter_event_mode",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 40912
+ },
+ "512": {
+  "name": "Exit_event_mode",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -2,
+  "uses": 28687
+ },
+ "513": {
+  "name": "Event_camera_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 10268
+ },
+ "514": {
+  "name": "Event_camera_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 17957
+ },
+ "515": {
+  "name": "MOVE_NOTURN",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 21298
+ },
+ "516": {
+  "name": "ROT",
+  "args": 4,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 6868
+ },
+ "517": {
+  "name": "Check_map_changeable",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 3262
+ },
+ "518": {
+  "name": "Add_char_to_dictionary",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 839
+ },
+ "519": {
+  "name": "Check_char_in_dictionary",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 95
+ },
+ "520": {
+  "name": "Add_dalmatian",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 18
+ },
+ "521": {
+  "name": "Check_dalmatian",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 2382
+ },
+ "522": {
+  "name": "Update_minigame_record",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 181
+ },
+ "523": {
+  "name": "Get_minigame_record",
+  "args": 2,
+  "returns": 1,
+  "min_depth": 2,
+  "uses": 149
+ },
+ "524": {
+  "name": "Set_story_flag",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 221
+ },
+ "525": {
+  "name": "Get_story_flag",
+  "args": 2,
+  "returns": 1,
+  "min_depth": 2,
+  "uses": 24
+ },
+ "526": {
+  "name": "Add_anthem_report",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 78
+ },
+ "528": {
+  "name": "Open_party_menu",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 107
+ },
+ "529": {
+  "name": "Remove_char_from_dictionary",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 189
+ },
+ "530": {
+  "name": "Remove_story_flag",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 166
+ },
+ "532": {
+  "name": "Change_camera_sora_distance",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 36
+ },
+ "533": {
+  "name": "Get_camera_sora_distance",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 60
+ },
+ "534": {
+  "name": "Set_battle_message_return",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1285
+ },
+ "535": {
+  "name": "Play_OBJ_effect",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 623
+ },
+ "538": {
+  "name": "Erase_OBJ_effect",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1272
+ },
+ "539": {
+  "name": "Underwater_camera_on",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 177
+ },
+ "540": {
+  "name": "Underwater_camera_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 179
+ },
+ "541": {
+  "name": "Get_char_action",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 283
+ },
+ "542": {
+  "name": "Fade_out_MAP_group",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 792
+ },
+ "543": {
+  "name": "Fade_in_MAP_group",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 996
+ },
+ "544": {
+  "name": "Load_world_map_char",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 57
+ },
+ "545": {
+  "name": "Wait_world_map_char_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 57
+ },
+ "546": {
+  "name": "Open_world_map_window",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 59
+ },
+ "547": {
+  "name": "Close_world_map_window",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 59
+ },
+ "548": {
+  "name": "Set_world_map_char",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 59
+ },
+ "549": {
+  "name": "Set_world_map_char_motion",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 90
+ },
+ "551": {
+  "name": "Display_world_map_message",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 169
+ },
+ "552": {
+  "name": "sys_552",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 20
+ },
+ "553": {
+  "name": "sys_553",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 11
+ },
+ "554": {
+  "name": "Scatter_map_gimmick_prizes",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 2770
+ },
+ "556": {
+  "name": "Feel_icon_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 12
+ },
+ "557": {
+  "name": "Feel_icon_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 20
+ },
+ "558": {
+  "name": "sys_558",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3
+ },
+ "559": {
+  "name": "Acquire_ability",
+  "args": 65,
+  "returns": 0,
+  "min_depth": -439,
+  "uses": 112
+ },
+ "560": {
+  "name": "Set_gummy_name_message",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 145
+ },
+ "563": {
+  "name": "Set_summon_name_message",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 38
+ },
+ "566": {
+  "name": "Load_BGM_motion_bank2",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 1408
+ },
+ "567": {
+  "name": "Load_wave_motion_bank2",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 1422
+ },
+ "568": {
+  "name": "Learn_summon",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 38
+ },
+ "570": {
+  "name": "Add_gummy",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 151
+ },
+ "571": {
+  "name": "Restore_HP_MP",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 4058
+ },
+ "572": {
+  "name": "Wait_limit_skill_end",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 710
+ },
+ "573": {
+  "name": "Wait_summon_end",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 89
+ },
+ "574": {
+  "name": "sys_574",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3
+ },
+ "575": {
+  "name": "Wait_SE_finish",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 7
+ },
+ "576": {
+  "name": "Wait_battle_icon_display",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 764
+ },
+ "577": {
+  "name": "Wait_restore_SE",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 41
+ },
+ "578": {
+  "name": "Transfer_object_SE",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 41
+ },
+ "579": {
+  "name": "Wait_object_SE_transfer",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 41
+ },
+ "580": {
+  "name": "Clear_object_SE",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 499
+ },
+ "581": {
+  "name": "Play_effect_bound_bone",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 74
+ },
+ "583": {
+  "name": "Get_item_from_gift_table",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 996
+ },
+ "584": {
+  "name": "Movie_standby",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 29
+ },
+ "585": {
+  "name": "Wait_movie_standby",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 29
+ },
+ "586": {
+  "name": "Set_game_clear_flag",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 5
+ },
+ "587": {
+  "name": "Get_game_clear_flag",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 290
+ },
+ "589": {
+  "name": "Remove_gauge_fadeout",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 111
+ },
+ "591": {
+  "name": "Remove_command_fadeout",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 37
+ },
+ "592": {
+  "name": "Remove_invincibility",
+  "args": 0,
+  "returns": 0,
+  "min_depth": -1,
+  "uses": 16388
+ },
+ "593": {
+  "name": "Make_party_invincible",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 25103
+ },
+ "594": {
+  "name": "Set_world_map_flag",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 166
+ },
+ "596": {
+  "name": "Read_set_number",
+  "args": 2,
+  "returns": 1,
+  "min_depth": 2,
+  "uses": 238
+ },
+ "597": {
+  "name": "Start_map_effect",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 3690
+ },
+ "601": {
+  "name": "Clear_map_effect",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 4829
+ },
+ "605": {
+  "name": "Display_message_from_gift_table",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 996
+ },
+ "606": {
+  "name": "Change_char_color_from_map_table",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 3944
+ },
+ "609": {
+  "name": "Start_weapon_effect",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 11
+ },
+ "610": {
+  "name": "Clear_weapon_effect",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 21
+ },
+ "611": {
+  "name": "Change_permanent_effect_color",
+  "args": 5,
+  "returns": 0,
+  "min_depth": 5,
+  "uses": 28
+ },
+ "612": {
+  "name": "Start_map_change_rewrite_set",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 440
+ },
+ "613": {
+  "name": "Get_char_level",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 12
+ },
+ "618": {
+  "name": "Extract_set_BG_color",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 8114
+ },
+ "619": {
+  "name": "Bind_effect_to_null",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 6
+ },
+ "621": {
+  "name": "Enable_blur_no_update",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 34
+ },
+ "623": {
+  "name": "Widescreen_on_frame",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 16
+ },
+ "624": {
+  "name": "Widescreen_off_frame",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 52
+ },
+ "625": {
+  "name": "Set_special_command_range",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 8053
+ },
+ "626": {
+  "name": "Change_appear_flag",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 3129
+ },
+ "627": {
+  "name": "sys_627",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 96
+ },
+ "628": {
+  "name": "Gummy_shop_buy",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 20
+ },
+ "629": {
+  "name": "Gummy_shop_sell",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 5
+ },
+ "630": {
+  "name": "sys_630",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 7
+ },
+ "631": {
+  "name": "sys_631",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 1
+ },
+ "632": {
+  "name": "sys_632",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 20
+ },
+ "633": {
+  "name": "Set_hercules_victory_flag",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 4
+ },
+ "634": {
+  "name": "Get_hercules_victory_flag",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 2096
+ },
+ "635": {
+  "name": "Set_magic_name_message_multi",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 468
+ },
+ "636": {
+  "name": "Change_char_action",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 579
+ },
+ "637": {
+  "name": "Play_effect_bound_bone2",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 418
+ },
+ "638": {
+  "name": "Get_dalmatians_collected",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 30
+ },
+ "639": {
+  "name": "Show_feel_icon",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 122
+ },
+ "640": {
+  "name": "Hide_feel_icon",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 767
+ },
+ "641": {
+  "name": "Speed_fix_MOVE_NOTURN",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 1011
+ },
+ "642": {
+  "name": "Load_BGM_on_map_change",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 623
+ },
+ "643": {
+  "name": "No_BGM_load_on_map_change",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 196
+ },
+ "644": {
+  "name": "Get_item_type",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 2719
+ },
+ "646": {
+  "name": "Wait_hercules_ranking_close",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 86
+ },
+ "647": {
+  "name": "Play_battle_voice",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 65
+ },
+ "648": {
+  "name": "Enable_gummies_in_item_menu",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 6
+ },
+ "649": {
+  "name": "Get_counter_value",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 35
+ },
+ "651": {
+  "name": "Restore_music_fadein",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 81
+ },
+ "652": {
+  "name": "Play_music_fadein",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 215
+ },
+ "653": {
+  "name": "sys_653",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 16
+ },
+ "654": {
+  "name": "Apply_effect_to_bone_pos",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 94
+ },
+ "655": {
+  "name": "Rotate_effect_to_bone_angle",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 84
+ },
+ "657": {
+  "name": "Load_weapon",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 32
+ },
+ "658": {
+  "name": "Wait_weapon_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 32
+ },
+ "659": {
+  "name": "Fade_out_SE",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 1039
+ },
+ "660": {
+  "name": "Show_minigame_info",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 404
+ },
+ "661": {
+  "name": "Hide_minigame_info",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 537
+ },
+ "662": {
+  "name": "End_DH_stage_destruction",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "664": {
+  "name": "sys_664",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 145
+ },
+ "665": {
+  "name": "sys_665",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 18
+ },
+ "666": {
+  "name": "sys_666",
+  "args": 5,
+  "returns": 0,
+  "min_depth": 5,
+  "uses": 1
+ },
+ "668": {
+  "name": "sys_668",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 16
+ },
+ "669": {
+  "name": "sys_669",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 19
+ },
+ "670": {
+  "name": "sys_670",
+  "args": 5,
+  "returns": 0,
+  "min_depth": 5,
+  "uses": 5
+ },
+ "671": {
+  "name": "sys_671",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 29
+ },
+ "672": {
+  "name": "sys_672",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 83
+ },
+ "673": {
+  "name": "Synthesis_shop_menu_open",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 3
+ },
+ "674": {
+  "name": "sys_674",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1
+ },
+ "675": {
+  "name": "sys_675",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 14
+ },
+ "676": {
+  "name": "sys_676",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 14
+ },
+ "678": {
+  "name": "Minigame_limit_on",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 479
+ },
+ "679": {
+  "name": "Minigame_limit_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 506
+ },
+ "680": {
+  "name": "Cancel_ignore_sound",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 208
+ },
+ "681": {
+  "name": "Set_jiminy_memo_flag",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 8
+ },
+ "684": {
+  "name": "Equip_accessory",
+  "args": -8,
+  "returns": 1,
+  "min_depth": -45,
+  "uses": 22
+ },
+ "685": {
+  "name": "Equip_ability",
+  "args": -501,
+  "returns": 1,
+  "min_depth": -502,
+  "uses": 88
+ },
+ "686": {
+  "name": "sys_686",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 1
+ },
+ "690": {
+  "name": "Get_enemies_killed_all",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 6
+ },
+ "692": {
+  "name": "Get_hercules_team",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "693": {
+  "name": "Get_hercules_ranking",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 864
+ },
+ "694": {
+  "name": "sys_694",
+  "args": 2,
+  "returns": 1,
+  "min_depth": 2,
+  "uses": 12
+ },
+ "695": {
+  "name": "Scale_window_from_gift",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 121
+ },
+ "699": {
+  "name": "Play_effect_bound_bone4",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 409
+ },
+ "700": {
+  "name": "Enable_flight",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 177
+ },
+ "702": {
+  "name": "Enable_polygon_touch_event",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 125
+ },
+ "703": {
+  "name": "Disable_polygon_touch_event",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 68
+ },
+ "706": {
+  "name": "Apply_effect_to_bone_pos2",
+  "args": 4,
+  "returns": 0,
+  "min_depth": 4,
+  "uses": 3
+ },
+ "708": {
+  "name": "Wait_button_press",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 49
+ },
+ "709": {
+  "name": "Gummi_ship_event_message",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 49
+ },
+ "710": {
+  "name": "Stop_all_enemy_scripts",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 511
+ },
+ "711": {
+  "name": "Run_all_enemy_scripts",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 526
+ },
+ "712": {
+  "name": "Gummi_ship_tutorial",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 10
+ },
+ "713": {
+  "name": "Get_sora_gameover_motion",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 19
+ },
+ "714": {
+  "name": "Load_system_music",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 44
+ },
+ "715": {
+  "name": "Wait_system_music_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 44
+ },
+ "716": {
+  "name": "Load_nightmare_effects",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 7
+ },
+ "717": {
+  "name": "Wait_nightmare_effects_load",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "718": {
+  "name": "Get_equipped_weapon",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 13
+ },
+ "719": {
+  "name": "Disable_battle_field_music_switch",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 391
+ },
+ "720": {
+  "name": "Enable_battle_field_music_switch",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 57
+ },
+ "721": {
+  "name": "BeEvSetStickVal",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 4
+ },
+ "722": {
+  "name": "Check_weapon_displayed",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 11
+ },
+ "723": {
+  "name": "Slow_wait",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 6
+ },
+ "725": {
+  "name": "Restore_BGM2",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 200
+ },
+ "726": {
+  "name": "Restore_music_fadein2",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 7
+ },
+ "727": {
+  "name": "Set_shadow_steal_flag",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 16
+ },
+ "728": {
+  "name": "Get_synthesiser_progress",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 13
+ },
+ "729": {
+  "name": "Set_BG_color_to_drawing",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 1836
+ },
+ "730": {
+  "name": "Stop_SE_3D",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 148
+ },
+ "731": {
+  "name": "Color_change_no_invalidate_floor",
+  "args": 5,
+  "returns": 0,
+  "min_depth": 5,
+  "uses": 289
+ },
+ "732": {
+  "name": "Disable_ability",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 71
+ },
+ "733": {
+  "name": "Unlock_ability_disable",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 61
+ },
+ "734": {
+  "name": "Load_map_team_effect",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 413
+ },
+ "735": {
+  "name": "Fill_gummy_parts",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 22
+ },
+ "736": {
+  "name": "BeEvCheckWait",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 128
+ },
+ "739": {
+  "name": "Hide_party_weapons",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 458
+ },
+ "740": {
+  "name": "Change_raft_name_highwind",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 10
+ },
+ "742": {
+  "name": "Get_player_continues_entering_map",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 115
+ },
+ "743": {
+  "name": "Set_minigame_played_flag",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 268
+ },
+ "744": {
+  "name": "Check_shared_ability_taken",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 996
+ },
+ "745": {
+  "name": "WmEvCheckObjMotion",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 6
+ },
+ "746": {
+  "name": "Get_treasure_chest_full_flag",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "747": {
+  "name": "Check_bag_item_count_only",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 1081
+ },
+ "749": {
+  "name": "Enemy_bg_impact_off",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 964
+ },
+ "750": {
+  "name": "WmEvStartWinTexAnime2",
+  "args": 3,
+  "returns": 0,
+  "min_depth": 3,
+  "uses": 20
+ },
+ "751": {
+  "name": "Show_battle_counter_ending",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 7
+ },
+ "752": {
+  "name": "Check_bag_item_count2",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 96
+ },
+ "753": {
+  "name": "Get_window_X",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 14
+ },
+ "754": {
+  "name": "Get_window_Y",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 14
+ },
+ "755": {
+  "name": "Check_expert_mode",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 9
+ },
+ "756": {
+  "name": "White_in_3D",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 8
+ },
+ "757": {
+  "name": "White_out_3D",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 1,
+  "uses": 7
+ },
+ "758": {
+  "name": "Check_easy_mode",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 3
+ },
+ "759": {
+  "name": "Set_event_skip_flag",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 54
+ },
+ "760": {
+  "name": "Get_event_skip_flag",
+  "args": 1,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 50
+ },
+ "761": {
+  "name": "Open_event_skip_menu",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 48
+ },
+ "762": {
+  "name": "Get_event_skip_menu_selection",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 50
+ },
+ "763": {
+  "name": "Get_jiminy_memo_complete",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 0,
+  "uses": 4
+ },
+ "5120": {
+  "name": "sys_5120",
+  "args": 1,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "7168": {
+  "name": "sys_7168",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "7680": {
+  "name": "sys_7680",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "1579027": {
+  "name": "sys_1579027",
+  "args": -1,
+  "returns": 1,
+  "min_depth": -2,
+  "uses": 1
+ },
+ "1710615": {
+  "name": "sys_1710615",
+  "args": 0,
+  "returns": 0,
+  "min_depth": 0,
+  "uses": 1
+ },
+ "2102806": {
+  "name": "sys_2102806",
+  "args": -1,
+  "returns": 1,
+  "min_depth": -2,
+  "uses": 1
+ },
+ "2169619": {
+  "name": "sys_2169619",
+  "args": 0,
+  "returns": 1,
+  "min_depth": 1,
+  "uses": 1
+ },
+ "4199680": {
+  "name": "sys_4199680",
+  "args": -1,
+  "returns": 1,
+  "min_depth": -2,
+  "uses": 1
+ },
+ "14104271": {
+  "name": "sys_14104271",
+  "args": 2,
+  "returns": 0,
+  "min_depth": 2,
+  "uses": 1
+ }
+}

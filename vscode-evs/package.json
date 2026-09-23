@@ -1,0 +1,39 @@
+{
+  "name": "kh1-evs",
+  "displayName": "KH1 EVS",
+  "description": "Syntax highlighting and navigation for EVS, the C-like view of Kingdom Hearts 1 event scripts (KH1-EVDL-TOOLS/evs)",
+  "version": "0.0.2",
+  "publisher": "kh1-evdl-tools",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "evs",
+        "aliases": [
+          "KH1 EVS",
+          "evs"
+        ],
+        "extensions": [
+          ".evs"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "evs",
+        "scopeName": "source.evs",
+        "path": "./syntaxes/evs.tmLanguage.json"
+      }
+    ]
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:evs"
+  ]
+}
