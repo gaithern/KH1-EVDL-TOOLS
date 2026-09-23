@@ -33,5 +33,30 @@
   "name": "Push_actor_rotation2",
   "args": 1,
   "returns": 1
+ },
+ "416": {
+  "name": "Add_battle_item",
+  "args": 2,
+  "returns": 1
+ },
+ "559": {
+  "name": "Acquire_ability",
+  "args": 2,
+  "returns": 0
+ },
+ "684": {
+  "name": "Equip_accessory",
+  "args": 2,
+  "returns": 0
+ },
+ "685": {
+  "name": "Equip_ability",
+  "args": 2,
+  "returns": 0
+ },
+ "527": {
+  "name": "Check_anthem_report",
+  "args": 1,
+  "returns": 1
  }
 }

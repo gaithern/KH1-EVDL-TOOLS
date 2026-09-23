@@ -54,7 +54,9 @@ INTR_ID = {v: k for k, v in INTR_NAME.items()}
 
 
 class Fail(Exception):
-    pass
+    def __init__(self, msg, pc=None):
+        super().__init__(msg)
+        self.pc = pc  # instruction the decompiler stopped at
 
 
 def num(n):
@@ -278,6 +280,8 @@ def expr_text(e, top=True):
     if k == 'bin':
         s = f'{expr_text(e[2], False)} {BINOP[e[1]]} {expr_text(e[3], False)}'
         return s if top else f'({s})'
+    if k in ('keep', 'nop'):
+        return f'__{"push" if k == "keep" else "nop"}({expr_text(e[1])})'
     if k == 'call':
         return f'{SYS_NAME.get(e[1], f"sys_{e[1]}")}({", ".join(expr_text(a) for a in e[2])})'
     if k == 'intr':
@@ -458,21 +462,31 @@ def build_stmts(ins, s, e, targets):
     out = []
 
     def need_empty():
-        if st:
-            raise Fail(f'stack not empty at {et.OPCODES[ins[pc][0]]} {SYS_NAME.get(ins[pc][1], ins[pc][1]) if ins[pc][0] == 24 else ""}')
+        # values nobody used stay on the stack: a call shows as a plain statement, anything else as __push(x)
+        for x in st:
+            out.append(('expr', x if x[0] == 'call' else ('keep', x)))
+        st.clear()
 
     def pop(n):
         if len(st) < n:
-            raise Fail(f'stack underflow at {et.OPCODES[ins[pc][0]]} {SYS_NAME.get(ins[pc][1], ins[pc][1]) if ins[pc][0] == 24 else ""}')
+            raise Fail(f'stack underflow at {et.OPCODES[ins[pc][0]]} {SYS_NAME.get(ins[pc][1], ins[pc][1]) if ins[pc][0] == 24 else ""}', pc)
         args = st[len(st) - n:] if n else []
         del st[len(st) - n:]
         return args
 
+    nop = False
     for pc in range(s, e):
         if pc in targets and pc != s - 1:
+            if nop:
+                raise Fail('jump target after nop', pc)
             need_empty()
             out.append(('label', f'L{pc}'))
         oc, iv = ins[pc]
+        if nop and not (oc in (9, 21, 10) or oc in WIDTH):
+            raise Fail('nop inside an expression', pc)
+        if oc == 0 and iv == 0 and st:  # nop between pushes: kept as __nop(next value)
+            nop = True
+            continue
         if oc == 9:
             st.append(('const', iv))
         elif oc == 21:
@@ -481,7 +495,12 @@ def build_stmts(ins, s, e, targets):
             st.append(('local', iv))
         elif oc in WIDTH:
             st.append(('mem', WIDTH[oc], iv))
-        elif oc == 1:
+        if oc in (9, 21, 10) or oc in WIDTH:
+            if nop:
+                st[-1] = ('nop', st[-1])
+                nop = False
+            continue
+        if oc == 1:
             if iv in BINOP:
                 a, b = pop(2)
                 st.append(('bin', iv, a, b))
@@ -1225,6 +1244,8 @@ class Parser:
         if v.startswith('__alu'):
             a = self.args()
             return ('bin', int(v[5:]), a[0], a[1])
+        if v in ('__push', '__nop'):
+            return ('keep' if v == '__push' else 'nop', self.args()[0])
         if re.fullmatch(r'thread_\d+', v):
             return self.thread_ref(v)
         if v in self.names:
@@ -1305,6 +1326,10 @@ class Emitter:
             self.expr(e[2]); self.emit(1, e[1])
         elif k == 'bin':
             self.expr(e[2]); self.expr(e[3]); self.emit(1, e[1])
+        elif k == 'keep':
+            self.expr(e[1])
+        elif k == 'nop':
+            self.emit(0, 0); self.expr(e[1])
         elif k == 'call':
             for a in e[2]:
                 self.expr(a)
