@@ -108,7 +108,7 @@ def decode(stream):
             for i in range(0, len(stream) - 3, 4)]
 
 
-# entry names (see the vault note "EVDL scripting"). init/main hold for every thread; the
+# entry names. init/main hold for every thread; the
 # event slots are only named in threads that bind an actor (Set_char_ID in init), since the
 # engine dispatches events to the thread whose id matches the entity.
 SLOT = {0: 'init', 1: 'main', 3: 'on_action', 4: 'on_hit', 5: 'on_talk', 6: 'on_touch', 7: 'on_lockon'}

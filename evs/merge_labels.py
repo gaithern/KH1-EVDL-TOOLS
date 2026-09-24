@@ -69,7 +69,7 @@ def main(paths):
         best = max(usable, key=lambda c: (RANK.get(c['conf'], 0), len(agree[c['name']]), SOURCE_PREF[c['src']]))
         conf = max(RANK.get(c['conf'], 0) for c in usable if c['name'] == best['name'])
         if region == 'save_data2' and off in ROOM_TABLE and best['name'].endswith('_SET_NUMBER'):
-            conf = 3  # derived from the engine's room-count table (vault: allset.set note)
+            conf = 3  # derived from the engine's room-count table (allset.set)
         entry = dict(region=region, offset=f'0x{off:X}', var_id=f'0x{var:X}', bit=bit, name=best['name'],
                      confidence={3: 'high', 2: 'medium', 1: 'low'}[conf],
                      meaning=' | '.join(dict.fromkeys(c['meaning'] for c in usable if c['meaning'])),
