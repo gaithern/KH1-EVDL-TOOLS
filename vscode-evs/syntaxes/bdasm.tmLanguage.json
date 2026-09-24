@@ -1,0 +1,124 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "KH1 BD disassembly",
+  "scopeName": "source.bdasm",
+  "patterns": [
+    { "include": "#block-header" },
+    { "include": "#label-def" },
+    { "include": "#raw-line" },
+    { "include": "#fold-line" },
+    { "include": "#comment" },
+    { "include": "#listing" }
+  ],
+  "repository": {
+    "block-header": {
+      "comment": "; ===== ex_2020.bd  (folded)  block@0x...  code@0x... =====",
+      "match": "^(;\\s*=+\\s*)(\\S+\\.bd)(.*?)(=+)\\s*$",
+      "captures": {
+        "1": { "name": "markup.heading.bdasm" },
+        "2": { "name": "markup.heading.bdasm entity.name.section.bdasm" },
+        "3": { "name": "markup.heading.bdasm" },
+        "4": { "name": "markup.heading.bdasm" }
+      }
+    },
+    "label-def": {
+      "comment": "@L042C:  ; sub, called 1x",
+      "match": "^(@L[0-9A-F]+)(:)(\\s*;\\s*(sub)\\b.*)?",
+      "captures": {
+        "1": { "name": "entity.name.function.label.bdasm" },
+        "2": { "name": "punctuation.separator.bdasm" },
+        "3": { "name": "comment.line.semicolon.bdasm" },
+        "4": { "name": "storage.type.function.bdasm" }
+      }
+    },
+    "raw-line": {
+      "comment": "      139E  43 56 64 03       store          [glob+868]      ; comment",
+      "begin": "^(\\s+)([0-9A-F]{4})(\\s{2})((?:[0-9a-f]{2} ){1,6})\\s*([a-z][a-z0-9]*(?:\\.[a-z0-9]+)*)(?=\\s)",
+      "end": "$",
+      "beginCaptures": {
+        "2": { "name": "comment.address.bdasm" },
+        "4": { "name": "comment.bytes.bdasm" },
+        "5": { "name": "keyword.other.mnemonic.bdasm" }
+      },
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#operand" }
+      ]
+    },
+    "fold-line": {
+      "comment": "      1C98  SendEventComm(200, 10)",
+      "begin": "^(\\s+)([0-9A-F]{4})(\\s{2})(?![0-9a-f]{2} )",
+      "end": "$",
+      "beginCaptures": {
+        "2": { "name": "comment.address.bdasm" }
+      },
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#expr" }
+      ]
+    },
+    "comment": {
+      "begin": ";",
+      "end": "$",
+      "name": "comment.line.semicolon.bdasm",
+      "patterns": [
+        { "match": "->\\s*(anim\\d{4})", "captures": { "1": { "name": "string.other.anim.bdasm" } } },
+        { "match": "-{3,}.*?-{3,}", "name": "comment.line.divider.bdasm" }
+      ]
+    },
+    "listing": {
+      "comment": "block list printed with no block argument",
+      "match": "^\\s*(\\d+)\\s+(\\S+\\.bd)\\s+(0x[0-9A-Fa-f]+)\\s+(0x[0-9A-Fa-f]+)",
+      "captures": {
+        "1": { "name": "constant.numeric.bdasm" },
+        "2": { "name": "entity.name.section.bdasm" },
+        "3": { "name": "constant.numeric.hex.bdasm" },
+        "4": { "name": "constant.numeric.hex.bdasm" }
+      }
+    },
+    "expr": {
+      "patterns": [
+        { "include": "#label-ref" },
+        { "name": "keyword.control.bdasm", "match": "\\b(if|else|while|goto|return|tailcall|call|end|abort)\\b" },
+        { "name": "support.class.native.unnamed.bdasm", "match": "\\bNATIVE_t\\d+_0x[0-9a-f]+(?=\\()" },
+        { "name": "entity.name.function.native.bdasm", "match": "\\b[A-Za-z_]\\w*\\??(?=\\()" },
+        { "include": "#memory" },
+        { "name": "variable.language.self.bdasm", "match": "\\bself\\b" },
+        { "name": "invalid.deprecated.unknown.bdasm", "match": "\\?(?![\\w(])" },
+        { "include": "#number" },
+        { "name": "keyword.operator.bdasm", "match": "==|!=|<=|>=|&&|\\|\\||<<|>>|[-+*/%&|^!<>=]" }
+      ]
+    },
+    "operand": {
+      "patterns": [
+        { "include": "#label-ref" },
+        { "match": "\\b(t\\d+)\\s+(#0x[0-9a-f]+)", "captures": { "1": { "name": "support.class.native.unnamed.bdasm" }, "2": { "name": "support.class.native.unnamed.bdasm" } } },
+        { "match": "\\[(self|glob|loc|heap|imm)(?:([+-])(\\d+))?\\]", "captures": {
+            "1": { "name": "variable.other.constant.memory.bdasm" },
+            "2": { "name": "keyword.operator.bdasm" },
+            "3": { "name": "constant.numeric.bdasm" } } },
+        { "match": "\\b(locals|x)(=?)(\\d+)", "captures": { "1": { "name": "variable.parameter.bdasm" }, "3": { "name": "constant.numeric.bdasm" } } },
+        { "name": "constant.numeric.bdasm", "match": "#-?(0x[0-9a-fA-F]+|\\d+(\\.\\d+)?f?)" },
+        { "include": "#number" }
+      ]
+    },
+    "memory": {
+      "patterns": [
+        { "match": "\\b(globblk|glob)(\\[)(\\d+)(\\])", "captures": {
+            "1": { "name": "variable.other.constant.global.bdasm" },
+            "3": { "name": "constant.numeric.bdasm" } } },
+        { "match": "\\b(heapblk|heap)(\\[)(\\d+)(\\])", "captures": {
+            "1": { "name": "variable.language.heap.bdasm" },
+            "3": { "name": "constant.numeric.bdasm" } } },
+        { "match": "\\b(locblk|loc)(\\[)(\\d+)(\\])", "captures": {
+            "1": { "name": "variable.other.local.bdasm" },
+            "3": { "name": "constant.numeric.bdasm" } } },
+        { "match": "\\b(imm)(\\[)(-?\\d+)(\\])", "captures": {
+            "1": { "name": "variable.other.local.bdasm" },
+            "3": { "name": "constant.numeric.bdasm" } } }
+      ]
+    },
+    "label-ref": { "name": "entity.name.label.bdasm", "match": "@L[0-9A-F]+\\b" },
+    "number": { "name": "constant.numeric.bdasm", "match": "(?<![\\w.])-?(0x[0-9a-fA-F]+|\\d+(\\.\\d+)?f?)\\b" }
+  }
+}

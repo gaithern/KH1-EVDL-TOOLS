@@ -1,0 +1,1269 @@
+{
+ "_comment": "KH1 behavior-script native verb table. The 'table:index' -> 'name' mapping is BUILD-INDEPENDENT: it works for both the Steam and Epic (EGS) versions, because the indices live in the .bd bytecode (game logic), not in the executable. The 'func_steam' addresses are provenance ONLY (where each verb was found in the STEAM build, image base 0x140000000) and are NOT used by kh1_bd_disasm.py. They do NOT apply to the EGS build; add 'func_egs' alongside if you re-derive there. Names ending in '?' are best-guess; names left null are not yet identified.",
+ "_build_note": "func_steam addresses: KINGDOM HEARTS FINAL MIX.exe (Steam / HD 1.5+2.5 ReMIX), image base 0x140000000.",
+ "0:0x02": {
+  "func_steam": "0x1402B9840",
+  "name": "SinDeg"
+ },
+ "0:0x05": {
+  "func_steam": "0x1402B98E0",
+  "name": null
+ },
+ "0:0x06": {
+  "func_steam": "0x1402B99C0",
+  "name": "VecLength",
+  "_note": "Ghidra-confirmed, not a guess: resolves the arg handle then calls FUN_1402a9240, which decompiles to `sqrtf(ABS(Dot(v,v)))` - literally vector magnitude. Matches usage across many enemies: always follows a VecSub(delta, a, b)-shaped call and either feeds a distance threshold compare or is tailcalled directly as a GetDistance(a,b)-style helper's return value."
+ },
+ "0:0x07": {
+  "func_steam": "0x1402B99F0",
+  "name": "VecAdd"
+ },
+ "0:0x08": {
+  "func_steam": "0x1402B9A40",
+  "name": "VecSub"
+ },
+ "0:0x0a": {
+  "func_steam": "0x1402B9AD0",
+  "name": "RotateDeg"
+ },
+ "0:0x0c": {
+  "func_steam": "0x1402B9F50",
+  "name": "BlendMotion",
+  "_note": "A THIRD motion-change verb, easy to miss when grepping only for SetMotion/QueueMotion (0x0d/0x0e) - confirmed by decompiling its trampoline (FUN_1402B9F50) down to FUN_14029F7C0, which calls the SAME resolver (FUN_1402A01E0) SetMotion/QueueMotion use and pushes into the SAME action queue (FUN_1402A02E0) with a non-zero computed blend/crossfade duration - vs SetMotion/QueueMotion which zero that field. Also short-circuits (returns without re-queuing) if the target motion_id is already the one currently playing, unlike SetMotion which always restarts. Args are (actor, motion_id, blend_duration_in_frames) - NOT packed with flags in the high bits the way SetMotion/QueueMotion's 2nd arg is. Found live in ex_2020.bd's @L0DDA (called at medium range and as bonus rolls elsewhere in Combat) as NATIVE_t0_0xc(globblk[0], 203, 8f) - motion_id 203 resolves to anim0048, the SAME finisher the close-range windups (0x0e/QueueMotion) lead into - i.e. @L0DDA is a real attack trigger, not a taunt/vocalize call as first guessed from the surrounding face-target+wait pattern alone. See project_ai_motion_id_resolution.md for the full correction."
+ },
+ "0:0x0d": {
+  "func_steam": "0x1402B9F80",
+  "name": "SetMotion",
+  "_note": "Overwrites the actor's CURRENT motion slot (engine: FUN_14029F980, single-slot). 2nd arg packs a motion_id (low 16 bits) + flags (high 16). motion_id resolves through a per-enemy-type table (FUN_1402A01E0) to a local .mset animation index 0-51 - see project memory project_ai_motion_id_resolution.md for the resolution chain and a live-verified example table for Shadow (ex_2020)."
+ },
+ "0:0x0e": {
+  "func_steam": "0x1402B9FB0",
+  "name": "QueueMotion",
+  "_note": "APPENDS a follow-up motion to play after the current one finishes (engine: FUN_14029FA30, multi-slot queue) - NOT an alternative/overwrite of 0x0d. Same motion_id packing/resolution as SetMotion (0:0x0d). A behavior block's SetMotion+QueueMotion pair is a two-step sequence (\"play X now, then Y next\"), which is why the same motion_id can appear as either verb's argument across different blocks without being inconsistent."
+ },
+ "0:0x0f": {
+  "func_steam": "0x1402BB560",
+  "name": "AttachSubObj?",
+  "_note": "Ghidra: resolves arg0, calls FUN_1402ae5b0(resolved, arg1, arg2) directly and returns the wrapped handle - the generic/direct form of the same call 0:0x4b (AttachStatusEffect?) wraps with a fixed self-field and a hardcoded 20000. Notable call site: the VERY FIRST instruction of BOTH of Red Nocturne's suffixed blocks (ex_2110_00.bd / ex_2110_01.bd) - already identified in project_ai_motion_id_resolution.md as 'a strong shape match for a separately-spawned projectile's own flight-control script' - is `loc[4] = NATIVE_t0_0xf(heapblk[1], 7, 20000)` in block _00 and `(heapblk[1], 11, 20000)` in block _01. Reads as CreateLinkedObj(owner, type_id, lifetime) -> handle, with type 7 vs 11 plausibly two variants of the fireball object. Directly relevant to that memory's still-open question of where the fireball's damage actually lands - worth a live breakpoint on func_steam next, since this is the object creation point for whatever the projectile actually is."
+ },
+ "0:0x10": {
+  "func_steam": "0x1402BB590",
+  "name": "SetVec"
+ },
+ "0:0x12": {
+  "func_steam": "0x1402B9BF0",
+  "name": "MoveByVel"
+ },
+ "0:0x14": {
+  "func_steam": "0x1402B9670",
+  "name": "GetObj?"
+ },
+ "0:0x16": {
+  "func_steam": "0x1402BBA00",
+  "name": "GetActor"
+ },
+ "0:0x17": {
+  "func_steam": "0x1402BBA20",
+  "name": "MakeAttack"
+ },
+ "0:0x19": {
+  "func_steam": "0x1402B98C0",
+  "name": "RandFloat01"
+ },
+ "0:0x33": {
+  "func_steam": "0x1402BA320",
+  "name": "GetActionState"
+ },
+ "0:0x37": {
+  "func_steam": "0x1402BB7A0",
+  "name": "SetRotation"
+ },
+ "0:0x4a": {
+  "func_steam": "0x1402BB8B0",
+  "name": "SpawnObj"
+ },
+ "0:0x4c": {
+  "func_steam": "0x1402BBAC0",
+  "name": "ObjOp2"
+ },
+ "0:0x8b": {
+  "func_steam": "0x1402BAD60",
+  "name": "IsFacingSora?"
+ },
+ "0:0x91": {
+  "func_steam": "0x1402BB9B0",
+  "name": null
+ },
+ "0:0x04": {
+  "func_steam": "0x1402B9ED0",
+  "name": "GetTargetEntity?",
+  "_note": "Ghidra: resolves its arg through the EXISTING labeled function fnc_select_tgt_entity(selector), then re-wraps the result as a handle. Cross-enemy survey (kh1_bd_verb_survey.py) found this in 138/500 enemies - always glob[N] = NATIVE_t0_0x4(0 or 1), or a packed tailcall NATIVE_t0_0x4((65536 | locblk[0])). Likely GetTargetEntity(selector) with the selector picking which target slot (0/1) or packing mode bits. Not deep-decompiled past fnc_select_tgt_entity."
+ },
+ "0:0x09": {
+  "func_steam": "0x1402B9A90",
+  "name": "VecNormalize?",
+  "_note": "Ghidra: single vector arg; both operands to its callee FUN_1402a93d0 resolve to the SAME handle (there's only one arg), i.e. an in-place op on one vector. Sits immediately next to VecAdd(0x07)/VecSub(0x08)/VecLength(0x06) in the funcptr table and address range. Usage across 128/500 enemies always follows a VecSub-computed delta (e.g. NATIVE_t0_0x9(loc[32])), matching a normalize-the-delta idiom. FUN_1402a93d0 itself not decompiled - confirm before relying on it."
+ },
+ "0:0x0b": {
+  "func_steam": "0x1402B9EF0",
+  "name": "FaceTarget?",
+  "_note": "Ghidra: resolves self + a target/point arg, computes atan2f(dx,dz)-style angle, stores it into self+0x150 (a facing/yaw field), THEN calls an apply function (FUN_140297e10) to actually turn - the apply call is what distinguishes it from 0x24 (GetAngleToTarget?, compute+store only, never applies). 124/500 enemies, e.g. NATIVE_t0_0xb(self, globblk[4][12])."
+ },
+ "0:0x13": {
+  "func_steam": "0x1402B9FE0",
+  "name": "QueryPosition?",
+  "_note": "Ghidra: 4-arg native (self, query_id, extra, out_ref); resolves self and out_ref as handles, calls FUN_14029eb20(self, query_id, extra, out). 121/500 enemies call it as NATIVE_t0_0x13(self, 32771, 0.0, loc[16]) - 32771 = 0x8003, the SAME magic number docs/enemy_ai/mdls_bd_format_and_ai.md section 10 already identified as 'position query' inside KH1_BuildHitContext's own dispatch. Strong evidence this is the generic query-dispatch verb AI scripts use to ask the engine for a position (and possibly other 0x80xx query codes elsewhere, not yet surveyed)."
+ },
+ "0:0x20": {
+  "func_steam": "0x1402BA0A0",
+  "name": null,
+  "_note": "Ghidra: 2 handle args, no return; resolves both then calls FUN_1402b0590(a,b), not decompiled further. 114/500 enemies, e.g. NATIVE_t0_0x20(locblk[0], loc[16]). No usage-shape hypothesis yet - candidate for a follow-up decompile pass."
+ },
+ "0:0x21": {
+  "func_steam": null,
+  "name": null,
+  "_note": "Ghidra has NO function defined at the funcptr this table entry points to (0x1402b97c0) - needs create_function or a live breakpoint to inspect. 138/500 enemies (same frequency as 0x04/0x05, i.e. called from nearly every script) - HIGH PRIORITY for live CheatEngine confirmation. Args are always 4 raw ints with no self/handle, e.g. NATIVE_t0_0x21(3480, 3408, 3470, 0) / (2542, 0, 2476, 0) - the clustering of close numeric values plus a trailing 0 flag looks like it could be a text/subtitle/SFX-cue trigger (3 candidate IDs + a mode flag), but that's a shape guess only, not evidence."
+ },
+ "0:0x22": {
+  "func_steam": "0x1402B9710",
+  "name": "AttachOrReplaceObj?",
+  "_note": "Ghidra: resolves self; if a handle is already present it's torn down first (FUN_1402bd390), then a new one is created via FUN_1402bd640(arg1, arg2) and the result re-wrapped and returned - a 'replace whatever's currently attached' pattern, structurally similar to SpawnObj (0x4a) but for a persistent single-slot attachment rather than a one-shot spawn. 138/500 enemies, e.g. heap[8] = NATIVE_t0_0x22(heapblk[8], 0, locblk[4])."
+ },
+ "0:0x24": {
+  "func_steam": "0x1402BA110",
+  "name": "GetAngleToTarget?",
+  "_note": "Ghidra: resolves self + a target arg, fills a local vector via FUN_140386ad0, computes atan2f, stores into self+0x150 (facing/yaw field) - but unlike 0x0b (FaceTarget?) never calls an apply/turn function afterward, so this looks like a pure query/set-desired-angle without actually turning yet. 131/500 enemies, e.g. NATIVE_t0_0x24(locblk[0], loc[16])."
+ },
+ "0:0x28": {
+  "func_steam": "0x1402BA1A0",
+  "name": null,
+  "_note": "Ghidra: 3 args (2 handles + 1 passthrough), returns a value via FUN_140299d60(a,b,arg2). Not decompiled further; 106/500 enemies, e.g. loc[20] = NATIVE_t0_0x28(locblk[0], locblk[12], locblk[8]). No usage-shape hypothesis yet."
+ },
+ "0:0x2c": {
+  "func_steam": "0x1402BA210",
+  "name": "ApplyHitOutcome?",
+  "_note": "Ghidra: its callee FUN_1402beee0 is a large state-machine keyed on a sub-mode nibble (values 9/10/11/12 handled distinctly), touches HP-ish float fields on a linked object (param_1[0x1b]) with *60.0 scaling, and every exit path ends by calling the EXISTING labeled function fnc_handle_hp_prize before returning - i.e. this is closely tied to applying a hit/state outcome and possibly awarding an HP prize, echoing the already-documented fnc_handle_mp_prize in the KH1_ApplyDamage_FireOnHitScript pipeline (docs/enemy_ai/mdls_bd_format_and_ai.md section 10). 123/500 enemies, e.g. loc[8] = NATIVE_t0_0x2c(self, locblk[0]). Exact semantics of the sub-mode values not chased down - good live-confirm candidate."
+ },
+ "0:0x2d": {
+  "func_steam": "0x1402BBDF0",
+  "name": "TriggerEffect?",
+  "_note": "Ghidra: resolves self + one more arg, calls FUN_1402a58e0(a,b), no return. 137/500 enemies, always called as NATIVE_t0_0x2d(self, imm[-NNNN]) with a large signed-immediate 2nd arg (e.g. -6026, -4646, -16570) - the immediate is likely an effect/sound ID living in the .bd's own compact 16-bit signed immediate slot, not a computed value. Shape matches a fire-and-forget 'play this effect/sound' call; exact ID meaning unconfirmed."
+ },
+ "0:0x30": {
+  "func_steam": "0x1402BBE30",
+  "name": "DispatchReactionTable?",
+  "_note": "Ghidra: 4 args, returns a value via FUN_1402b8250(self, arg1, arg2, arg3). Matches the mechanism project_ai_motion_id_resolution.md already documented from a live trace of Shadow's script: 'reached via an indirect/computed jump-table call (NATIVE_t0_0x30), shaped like an on-hit/flinch-reaction handler'. 115/500 enemies, e.g. loc[20] = NATIVE_t0_0x30(heapblk[0], ((locblk[12] * 20) + heapblk[4]), locblk[8], locblk[4]) - the '* 20' scaling of an index looks like it's computing an offset into a jump/reaction table."
+ },
+ "0:0x31": {
+  "func_steam": "0x1402BBE80",
+  "name": null,
+  "_note": "Ghidra: 2 handle args, no return; resolves both then calls FUN_140292ae0(a,b,0). 138/500 enemies, e.g. NATIVE_t0_0x31(locblk[0], 0) / (locblk[0], locblk[4]) - 2nd arg is sometimes the literal 0 and sometimes another handle, so it's not a fixed-role parameter. No confident usage-shape hypothesis yet."
+ },
+ "0:0x32": {
+  "func_steam": "0x1402BA290",
+  "name": "SetVectorSafe?",
+  "_note": "Ghidra: NaN-guards a full 4-float (x,y,z,w) vector (zeroes it if any component is NaN), then resolves self and calls FUN_1402b7f20(self, field_id, vec). Looks like a defensively-guarded 'write this vector into actor field N' setter, sibling to SetVec (0x10) but 4-component and NaN-safe. 103/500 enemies, e.g. NATIVE_t0_0x32(locblk[0], locblk[8], locblk[4])."
+ },
+ "0:0x3d": {
+  "func_steam": "0x1402BB870",
+  "name": null,
+  "_note": "Ghidra: 2 handle args, no return, calls FUN_1402ada80(a,b) - address sits right next to FUN_1402ada20 (the callee behind 0x91's timed-task-allocation shape), suggesting a cluster of related 'timed action' helpers, but not decompiled deep enough to name confidently. 116/500 enemies, e.g. NATIVE_t0_0x3d(locblk[12], loc[16])."
+ },
+ "0:0x42": {
+  "func_steam": null,
+  "name": null,
+  "_note": "Ghidra has NO function defined at the funcptr this table entry points to (0x1402b9910) - needs create_function or a live breakpoint. 134/500 enemies (one of the most-used verbs found in the survey) - HIGH PRIORITY for live CheatEngine confirmation. Single arg, no return; usage examples show the arg as an unresolved '?' (came from an untracked earlier push), so no shape hypothesis yet."
+ },
+ "0:0x4b": {
+  "func_steam": "0x1402BA410",
+  "name": "AttachStatusEffect?",
+  "_note": "Ghidra: resolves self via a field at self+0x68 (an existing attached-effect slot), calls FUN_1402ae5b0(resolved, flagbits, 20000) - the SAME callee as 0:0xf (AttachSubObj?), just with the target field and the 20000 lifetime/pool-size constant baked in rather than passed by the script. Bits 0x800 (bit 11) and 0x1000 (bit 12) of the flag arg are checked afterward to set 'infinite duration'(0xffff)/'enabled'(|1) style fields on the created sub-object. 129/500 enemies, always called as NATIVE_t0_0x4b(self, 2048) or (self, 2049) - both values have bit 0x800 set. Reads like 'attach a persistent status/aura effect to self with these flags'."
+ },
+ "0:0x4d": {
+  "func_steam": "0x1402BC340",
+  "name": null,
+  "_note": "Ghidra: 3 handle args, returns FUN_140299530(...) + 1 (the +1 suggests 0 is reserved as a 'not found' sentinel, i.e. this may return an index). 109/500 enemies, used directly as a boolean-ish condition, e.g. if (!((NATIVE_t0_0x4d(locblk[0], loc[32], loc[16]) - 0) ==0)). No confident name yet."
+ },
+ "0:0x64": {
+  "func_steam": "0x1402B9D10",
+  "name": null,
+  "_note": "Ghidra: 2 handle args, returns a value via FUN_1402a8c70(a,b). 121/500 enemies; survey examples show it called 3x in a row with the SAME two args writing to different local destinations (loc[56]/loc[48]/loc[52]), which could be an unrolled per-axis vector-component getter, but that's unconfirmed - FUN_1402a8c70 not decompiled."
+ },
+ "0:0x69": {
+  "func_steam": "0x1402BC600",
+  "name": "GetPlayerActor?",
+  "_note": "Ghidra: takes ZERO args, wraps the FIXED global address 0x142db7b50 into a handle and returns it - a singleton getter, not a per-actor query. That address is exactly 8 bytes after g_pCurrentScriptActor (0x142db7b48, see docs/enemy_ai/mdls_bd_format_and_ai.md section 7.4/9.1) i.e. likely a sibling global in the same struct, plausibly the player/Sora actor pointer. 121/500 enemies, e.g. glob[32] = NATIVE_t0_0x69() cached once and reused - same self-slot-caching convention as the self actor handle."
+ },
+ "0:0x72": {
+  "func_steam": "0x1402BA950",
+  "name": "GetActionMode?",
+  "_note": "Ghidra: resolves self, follows a nested handle at self+0x130, returns a 16-bit field from THAT resolved object at +0x4c. Matches project_ai_motion_id_resolution.md's Shadow/Red Nocturne trace notes referencing an 'IsFacingSora? + mode==301' counter-attack-setup check that was never previously named. 100/500 enemies, e.g. if (!((NATIVE_t0_0x72(self) - 301) ==0)) - this IS that mode-flag getter."
+ },
+ "0:0x7a": {
+  "func_steam": "0x1402BC640",
+  "name": "SpawnPrizeDrops?",
+  "_note": "UPDATED after decompiling the shared callee (see 0:0xd7): FUN_1402abc40 loops 7 slots spawning drop/prize particles with randomized offsets (fnc_generate_rand_float_0_to_1 scatter), then rolls per-item drop chance and calls the EXISTING labeled fnc_spawn_prize - this is death/hit prize-drop spawning, not a generic gated action. This verb calls it with mode = (DAT_14298c9a0 != 0) i.e. 0 or 1 chosen by an internal global flag (never the '2' branch 0xd7 can't reach either). 120/500 enemies, e.g. NATIVE_t0_0x7a(locblk[4], loc[16])."
+ },
+ "0:0x81": {
+  "func_steam": "0x1402BAC20",
+  "name": "SetActorFlag_0x80000?",
+  "_note": "Ghidra: resolves self, unconditionally sets bit 0x80000 in field self+0x374 - a fixed single-purpose flag setter (no dynamic value/2nd arg). 127/500 enemies, e.g. NATIVE_t0_0x81(self). Exact meaning of that specific bit/field not chased down."
+ },
+ "0:0xa4": {
+  "func_steam": null,
+  "name": null,
+  "_note": "Ghidra has NO function defined at the funcptr this table entry points to (0x1402bc940) - needs create_function or a live breakpoint. 108/500 enemies, always called with the SAME literal arg (24), no return, e.g. NATIVE_t0_0xa4(24) - the fixed-constant-arg shape suggests a mode/category selector rather than a per-call value. Candidate for live confirmation."
+ },
+ "0:0xa5": {
+  "func_steam": null,
+  "name": null,
+  "_note": "Ghidra has NO function defined at the funcptr this table entry points to (0x1402bc950) - needs create_function or a live breakpoint. 105/500 enemies, always called with the SAME literal arg (1), no return, e.g. NATIVE_t0_0xa5(1). Often appears right alongside 0xa4(24) in the same scripts - possibly a paired mode-setup call. Candidate for live confirmation."
+ },
+ "0:0xa7": {
+  "func_steam": "0x1402BC960",
+  "name": "GiveExp?",
+  "_note": "Ghidra: resolves self, calls the EXISTING labeled function fnc_____handle_exp(self, arg1) directly - the label name alone is strong evidence this is an EXP-award verb. 122/500 enemies, e.g. NATIVE_t0_0xa7(heapblk[1][26], heapblk[1])."
+ },
+ "0:0xce": {
+  "func_steam": "0x1402BC300",
+  "name": "SetControllerVibration?",
+  "_note": "Ghidra: single float arg (an angle-looking value), calls FUN_1400d2af0(0, 0, angle*4) and again with player-index 1 - a completely different code region (0x1400d2af0) from the rest of the AI verb cluster, consistent with an input/rumble subsystem call for both controller ports. 98/500 enemies, always called with the same literal 180.0, e.g. NATIVE_t0_0xce(180.0)."
+ },
+ "0:0xad": {
+  "func_steam": "0x1402BC100",
+  "name": null,
+  "_note": "Ghidra: single arg (self), no return; calls FUN_1402b89f0(self), not decompiled further. 117/500 enemies, e.g. NATIVE_t0_0xad(self). NOTE: distinct from the already-named 0:0xac (IsActionDone?) despite the similar single-self-arg shape - 0xac returns a value (arity [1,1], used as a boolean in a wait-loop) while 0xad does not (arity [1,0]), so they cannot be the same kind of call."
+ },
+ "0:0xd7": {
+  "func_steam": "0x1402BC6B0",
+  "name": "SpawnPrizeDropsForced?",
+  "_note": "Same callee as 0:0x7a (FUN_1402abc40, the drop/prize-spawn loop that ends in fnc_spawn_prize) but with mode HARD-CODED to 1 instead of a dynamic global flag - i.e. this is the 'always mode 1' variant of the same prize-drop call. 98/500 enemies, e.g. NATIVE_t0_0xd7(locblk[4], loc[16])."
+ },
+ "0:0x2b": {
+  "func_steam": "0x1402BA1E0",
+  "name": "GetMotionDuration?",
+  "_note": "Ghidra: resolves self, calls FUN_14029eed0(self, motion_id) and returns the wrapped result. Usage args are real motion_ids from the SAME numbering project_ai_motion_id_resolution.md already resolves (e.g. 204 -> anim0049 for Shadow), and the result is consistently used as `NATIVE_t0_0x2b(self, motion_id) - 2.0` - subtracting a small constant looks like accounting for blend-out frames. 95/500 enemies, e.g. loc[60] = (NATIVE_t0_0x2b(self, 204) - 2.0). Likely returns the motion's frame/duration length; not confirmed against a live frame count."
+ },
+ "0:0x5d": {
+  "func_steam": "0x1402B9CD0",
+  "name": "VecScale?",
+  "_note": "Ghidra: resolves its single vector arg TWICE (the same in-place-op shape as VecNormalize/0x09) then calls FUN_140386d00(v, v, scalar) - an in-place vector operation taking one extra scalar parameter. 92/500 enemies, e.g. NATIVE_t0_0x5d(loc[32], 0.5) / (loc[48], 3000.0) - fits the Vec* cluster (VecAdd/VecSub/VecLength/VecNormalize) as a scale-by-scalar op."
+ },
+ "0:0x7d": {
+  "func_steam": "0x1402BABA0",
+  "name": "SetTurnSpeedDeg?",
+  "_note": "Ghidra: resolves self, follows a nested linked object at self+0x6c (a movement/steering component), converts the 2nd arg from degrees to radians (`arg/180.0 * PI`) and stores it into that sub-object's field +0xd0. Usage args are all fractions of 360 (2.8125=360/128, 5.625=360/64, 11.25=360/32) - i.e. per-tick turn-rate presets. 79/500 enemies, e.g. NATIVE_t0_0x7d(self, 5.625)."
+ },
+ "0:0x76": {
+  "func_steam": "0x1402BAA80",
+  "name": "GetVelocity?",
+  "_note": "Ghidra: resolves self and a 2nd handle, calls FUN_140386d10(other, self+0x10, self+0x490) - passes two of self's own fields (a position-like field at +0x10, another at +0x490) alongside the 2nd handle into the callee, filling the 2nd handle as an OUT vector. Confirmed by usage seen in Red Nocturne: NATIVE_t0_0x76(self, loc[16]) is immediately followed by VecLength(loc[16]) compared against (speed * frametime * 0.5) - i.e. this fills loc[16] with something whose magnitude is compared to 'how far I'd move in half a frame', consistent with a current-velocity query. 75/500 enemies."
+ },
+ "1:0x03": {
+  "func_steam": "0x140394DE0",
+  "name": "CancelTimedTask?",
+  "_note": "Ghidra: resolves its single arg; if non-null, resolves it again and writes 1 into a byte at +0x10, then ALWAYS returns a wrapped null handle regardless. The lone arg's expected type plus the always-null return read like 'mark this timed task as done/cancelled', possibly the counterpart to the timed-task allocation seen behind 0:0x91 (which also lives in the t1/SetTimedMove-adjacent cluster). 80/500 enemies, e.g. NATIVE_t1_0x3(locblk[88])."
+ },
+ "0:0x61": {
+  "func_steam": "0x1402BB900",
+  "name": "DestroyObj?",
+  "_note": "Ghidra: resolves its single arg; if non-null, calls thunk_FUN_1401ec470(handle) (a teardown-shaped call), then ALWAYS returns a wrapped null handle regardless. Usage matches an 'obj = Destroy(obj)' idiom that clears the reference after destroying it, e.g. loc[8] = NATIVE_t0_0x61(locblk[8]). 74/500 enemies."
+ },
+ "0:0x5e": {
+  "func_steam": null,
+  "name": "ScheduleCallback?",
+  "_note": "Already solved via live Ghidra trace in a prior session (see project_ai_motion_id_resolution.md, Red Nocturne section): traced 4 levels deep (FUN_14028f6d0 -> FUN_1402bcec0) and found it's a deferred script-callback scheduler that re-enters the .bd interpreter later, rather than a direct action call - this is why an enemy can appear to have 'no attack' in its script even when it clearly attacks in-game (Red Nocturne's fireball damage was never chased past this call). 71/500 enemies, e.g. NATIVE_t0_0x5e(self, 2, 0, imm[-8306], 0). func_steam not re-derived this session; see the referenced memory for the two known engine addresses."
+ },
+ "0:0xac": {
+  "func_steam": null,
+  "name": "IsActionDone?",
+  "_note": "Best-guess from usage only, NOT Ghidra-verified. Arity [1,1] (takes self, returns a value). In Red Nocturne (ex_2110.bd), both call sites appear as `while (!NATIVE_t0_0xac(self)) { ...; return }` immediately after starting an action - once right after SetMotion/QueueMotion, once right after picking one of two attack subroutines - i.e. a spin-and-yield-per-frame gate that waits for the just-started motion/action to finish before falling back into the combat loop. Confirm via live breakpoint on func_steam (t0 base 0x140529180 + 0xac*0x10) before trusting the name for anything load-bearing."
+ },
+ "0:0xb2": {
+  "func_steam": "0x1402B9750",
+  "name": "ClearChainFlags?"
+ },
+ "0:0xd5": {
+  "func_steam": "0x1402BBC10",
+  "name": "SetFlag2"
+ },
+ "1:0x0a": {
+  "func_steam": "0x140394EE0",
+  "name": "GetRotation"
+ },
+ "1:0x0e": {
+  "func_steam": "0x140395100",
+  "name": "SetTimedMove"
+ },
+ "_arity_t0": [
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   5,
+   1
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   4,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   6,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   4,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   0,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   4,
+   1
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   4,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   5,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   4,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   4,
+   1
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   5,
+   0
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   4,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   4,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   4,
+   0
+  ],
+  [
+   5,
+   0
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   0,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   0,
+   0
+  ],
+  [
+   0,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   0,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   1
+  ]
+ ],
+ "_arity_t1": [
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   5,
+   0
+  ],
+  [
+   2,
+   1
+  ]
+ ],
+ "_arity_note": "_arity_tN[index] = [argcount, returns_value]. Used by the --fold view. Build-independent (game logic).",
+ "0:0x7b": {
+  "func_steam": null,
+  "name": "SendEventComm",
+  "_note": "Usage-verified, not Ghidra-traced. Sends a message (comm ID, num) from the .bd script to the room's EVDL event scripts, which poll for it with Get_comm_ID()/Get_comm_Num(). Found in Sabor (tz_3000.bd, Deep Jungle Tree House tz01): NATIVE_t0_0x7b(200..205, 10) breaks the floor holes mo_ana_1..3 (0xC8-0xCA), junk pile mo_junk_1 (0xCB) and front walls mo_kabe_1/2 (0xCC/0xCD); every tz01 set script has a thread waiting for exactly (id, 0xA). Also seen with other num values (e.g. (301,51)..(304,54)). See Obsidian note 'Tree House Sabor floor holes'."
+ },
+ "0:0x54": {
+  "func_steam": "0x1402BA510",
+  "name": "IsInZone",
+  "_note": "Ghidra-confirmed. IsInZone(actor, zone_id) -> 0/1. FUN_1402ba510 -> FUN_1402a9e40 tests bit (zone_id-1) of FUN_1402a9960(actor), which overlaps the actor's AABB with every box in the room's zone table (global DAT_142d60c90) and ORs 1<<(id-1) per hit (entries with flags&2 always count). Zone table comes from the current ARD set section: magic 'ZN\u0000\u001e', u8 count @+4, then 0x30-byte entries from +0x10 (u8 id, u8 flags, ..., min xyz f32 @+0x10, max xyz f32 @+0x20). No table in the set -> always 0. Used by Sabor (tz_3000.bd, Tree House set 15) to pick which wall/junk pile to break when a hit puts him into his reaction state (mode 1) inside zones 5/6/7, and to track which of 4 perches (zones 1-4) he's on."
+ }
+}

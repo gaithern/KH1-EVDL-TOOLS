@@ -214,6 +214,7 @@ function activate(context) {
                 }).flat();
             },
         }));
+    require('./bdasm').register(context, vscode);
 }
 
 module.exports = { activate, deactivate() {}, parse, definition, references };

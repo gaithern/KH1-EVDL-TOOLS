@@ -1,0 +1,132 @@
+; ===== ex_3000_04.bd  (folded)  block@0x3BA500  code@0x3BA518 =====
+       0018  loc[0] = ?
+       0036  SpawnObj(heapblk[1], 25, 20000, heap[0])
+       0052  loc[8] = SpawnObj(heapblk[1], 26, 20000, heap[0])
+       0068  loc[12] = MakeAttack(GetActor(), globblk[0][4], heapblk[1])
+       0076  SetFlag2(locblk[12], 3)
+       00B0  ObjOp2(locblk[12], heap[0])
+       00CE  call L0A76(globblk[0][3], globblk[0][3], globblk[0], heapblk[1], locblk[12][20], 10f, locblk[12], locblk[12], (heapblk[1] or 64), locblk[12][2], globblk[0][3], heapblk[1], loc[32], 0f, 1f, 0f, 0f)
+       00D2  ?
+       00E2  MoveByVel(heap[0], loc[32], 50f)
+       00EC  SetVec(locblk[8], heap[0])
+       00F2  call L0492(locblk[8])
+       0116  locblk[12][4]
+       0116  heap[0]
+       0116  heapblk[4]
+       0116  locblk[12]
+       0116  locblk[12]
+       0116  (heapblk[1] or 4)
+       0116  return
+       011C  call L0A64(locblk[12])
+       0120  if (!(?)) goto L012C
+       0124  goto L0130
+       0128  goto L012C
+L012C: 012C  goto L00D4
+       0136  loc[16] = heapblk[4]
+       0158  call L081A(heap[0], loc[16][1], loc[16][1], (heapblk[1] sub 1000f), loc[16][1], loc[16])
+       0178  SpawnObj(heapblk[1], 27, 20000, loc[16])
+       0182  call L07CE(globblk[0][3], heap[16], heap[0])
+       0192  GetObj?(heap[16], 639)
+       019C  loc[76] = heapblk[1]
+       01AC  call L0882(heap[0][1], 180f, 200f)
+       01B2  loc[72] = -?
+       01BC  loc[80] = 0f
+       01CE  if (!(((locblk[80] sub 30f) <0))) goto L0242
+       0204  SetVec(locblk[8], heap[0])
+       020A  call L0492(heap[0][1], ((SinDeg(((locblk[80] div 30f) mul 90f)) mul locblk[72]) add locblk[76]), locblk[8])
+       022E  locblk[12][4]
+       022E  heap[0]
+       022E  heapblk[4]
+       022E  locblk[12]
+       022E  locblk[12]
+       022E  (heapblk[1] or 4)
+       022E  return
+       023E  goto L01C0
+       0248  if (!(!heapblk[32])) goto L027A
+       0250  call L0492(loc[80], loc[80], (heapblk[1] add NATIVE_t0_0x5()), locblk[8])
+       0266  locblk[12]
+       0266  locblk[12]
+       0266  (heapblk[1] or 4)
+       0266  return
+       0276  goto L0242
+       0284  loc[48] = heapblk[4]
+       029E  loc[32] = heapblk[4]
+       02AA  VecSub(loc[32], loc[48])
+       02B8  call L0882(loc[80], loc[80], (heapblk[1] add NATIVE_t0_0x5()), globblk[0], heapblk[1][4], loc[48][1], heap[0][1], heapblk[1], heap[0], 3f, 5f)
+       02BC  loc[64] = ?
+       02C6  loc[68] = 0f
+       02D0  loc[80] = 30f
+       02E2  if (!(((0f sub locblk[80]) <0))) goto L03BA
+       0308  if (!(((locblk[64] sub locblk[68]) <0))) goto L0318
+       0310  loc[68] = locblk[64]
+       0314  goto L0318
+       031E  if (!(!heapblk[36])) goto L0330
+       032A  RotateDeg(loc[32], locblk[68])
+       032C  goto L0346
+       0340  RotateDeg(loc[32], (locblk[68] mul -1f))
+       0342  goto L0346
+       034C  heap[0] = heapblk[4]
+       0358  VecAdd(heap[0], loc[32])
+       035E  call L0492(loc[68], loc[68], (heapblk[1] add (0.1f mul NATIVE_t0_0x5())), loc[48], locblk[8])
+       036A  SetVec(locblk[8], heap[0])
+       038C  locblk[12][4]
+       038C  heap[0]
+       038C  heapblk[4]
+       038C  locblk[12]
+       038C  locblk[12]
+       038C  (heapblk[1] or 4)
+       038C  return
+       03A0  if (!(((GetActionState(heapblk[1]) sub 231) !=0))) goto L03B6
+       03B2  goto L03B6
+L03B6: 03B6  goto L02D4
+       03C4  SetFlag2(locblk[12], 0)
+       03D0  NATIVE_t0_0x91(locblk[8], 8f)
+       03EC  SpawnObj(heapblk[1], 51, 20000, heap[0])
+       0400  loc[12] = MakeAttack(GetActor(), globblk[0][4], heapblk[1])
+       042E  ObjOp2(locblk[12], heap[0])
+       0444  loc[80] = 0f
+       0456  if (!(((locblk[80] sub 30f) <0))) goto L048E
+       047A  globblk[0]
+       047A  loc[80]
+       047A  loc[80]
+       047A  (heapblk[1] sub NATIVE_t0_0x5())
+       047A  globblk[0][3]
+       047A  globblk[0]
+       047A  heapblk[1]
+       047A  locblk[12]
+       047A  locblk[12]
+       047A  (heapblk[1] or 192)
+       047A  locblk[12][2]
+       047A  globblk[0][3]
+       047A  heapblk[1]
+       047A  locblk[12][3]
+       047A  300f
+       047A  locblk[12][4]
+       047A  heap[0]
+       047A  heapblk[4]
+       047A  locblk[12]
+       047A  locblk[12]
+       047A  (heapblk[1] or 4)
+       047A  return
+       048A  goto L0448
+L048E: 048E  ClearChainFlags?()
+       0490  tailcall (heapblk[1] add NATIVE_t0_0x5())
+L0492: 0492  loc[0] = loc[80]
+       049E  GetRotation(locblk[0], loc[16])
+       04C0  SetRotation(locblk[0], loc[16])
+       04C2  tailcall (heapblk[1] add (0.008727f mul NATIVE_t0_0x5()))
+       04C4  loc[0] = loc[16][1]
+       04CE  heap[32] = 1
+       04D2  tailcall loc[16][1]
+       04D4  loc[4] = loc[80]
+       04D8  loc[8] = ?
+       04DC  loc[0] = ?
+       04E6  heap[0] = heapblk[4]
+       04F0  heap[32] = 0
+       04F8  heap[36] = locblk[4]
+       04FC  tailcall locblk[8]
+       04FE  loc[0] = ?
+       051C  SpawnObj(heapblk[1], 29, 20000, heap[0])
+       053C  SetTimedMove(20f, 4f, 0f, 4f, 1)
+       0554  loc[32] = MakeAttack(0, globblk[0][5], heapblk[1])
+

@@ -1,0 +1,223 @@
+; ===== ex_2020.bd  (folded)  block@0x2BD80  code@0x2C8B6 =====
+       0B36  return
+       0B38  return
+       0B3A  return
+       0B48  call L1B38(globblk[0], globblk[0][31], heapblk[1])
+       0B4C  call L22C2()
+       0B5A  call L1EDC(glob[32], 1456)
+       0B5E  tailcall ?
+       0B6A  call L1F30(glob[32], 1)
+       0B6E  abort
+       0B70  tailcall ?
+       0B7E  call L1B38(globblk[0], globblk[0][29], heapblk[1])
+       0B82  call L22C2()
+       0B90  call L1EDC(glob[32], 1483)
+       0B94  tailcall ?
+       0B96  call L1D5A()
+       0B9A  loc[0] = ?
+       0BAC  if (!(((locblk[0] sub 450f) <0))) goto L0BB8
+       0BB0  call L0C6A()
+       0BB4  goto L0BDA
+       0BC6  if (!(((locblk[0] sub 800f) <0))) goto L0BD2
+       0BCA  call L0C5A()
+       0BCE  goto L0BDA
+L0BD2: 0BD2  call L0C1E()
+       0BD6  goto L0BDA
+       0BF0  call L1E84(glob[48], 1, 3000f, 2)
+       0BF4  loc[4] = ?
+       0C06  call L19CA(globblk[0], locblk[4], 4)
+       0C0A  call L22C2()
+       0C18  call L1F30(glob[32], 1)
+       0C1C  tailcall ?
+L0C1E: 0C1E  call L0DDA()
+       0C22  call L1D5A()
+       0C2E  call L1036((? mul 0.5f))
+       0C34  loc[0] = NATIVE_t0_0x19()
+       0C46  if (!(((locblk[0] sub 0.1f) <0))) goto L0C58
+       0C50  call L0FC4(800f)
+       0C54  goto L0C58
+L0C58: 0C58  tailcall ?
+       0C60  call L0FC4(450f)
+       0C64  call L0DDA()
+       0C68  tailcall ?
+L0C6A: 0C6A  call L1D5A()
+       0C6E  loc[4] = ?
+       0C80  if (!(((locblk[4] sub 150f) <0))) goto L0C8C
+       0C84  call L0F18()
+       0C88  goto L0CF6
+       0C9A  if (!(((locblk[4] sub 300f) <0))) goto L0CCA
+       0CA0  loc[0] = NATIVE_t0_0x19()
+       0CB2  if (!(((locblk[0] sub 0.9f) <0))) goto L0CBE
+       0CB6  call L0F6E()
+       0CBA  goto L0CC6
+L0CBE: 0CBE  call L0E12()
+       0CC2  goto L0CC6
+L0CC6: 0CC6  goto L0CF6
+       0CCC  loc[0] = NATIVE_t0_0x19()
+       0CDE  if (!(((locblk[0] sub 0.3f) <0))) goto L0CEA
+       0CE2  call L0DDA()
+       0CE6  goto L0CF2
+L0CEA: 0CEA  call L0E12()
+       0CEE  goto L0CF2
+L0CF2: 0CF2  goto L0CF6
+       0CF8  loc[0] = NATIVE_t0_0x19()
+       0D0A  if (!(((locblk[0] sub 0.8f) <0))) goto L0D16
+       0D0E  call L0DDA()
+       0D12  goto L0D16
+       0D18  loc[0] = NATIVE_t0_0x19()
+       0D2A  if (!(((locblk[0] sub 0.7f) <0))) goto L0D36
+       0D2E  call L0FEA()
+       0D32  goto L0D36
+L0D36: 0D36  tailcall ?
+       0D3C  call L22B0(globblk[0])
+       0D4A  call L1EDC(glob[32], 1704)
+       0D4E  tailcall ?
+L0D50: 0D50  call L0DC4()
+       0D54  call L0D5E()
+       0D58  goto L0D50
+       0D5C  tailcall ?
+L0D5E: 0D5E  call L1328()
+       0D72  call L1F70(loc[16], 300f, 500f)
+       0D80  VecAdd(loc[16], globblk[0][4])
+       0D92  call L1F70(loc[0], 700f, 1000f)
+       0DA0  VecAdd(loc[0], globblk[0][4])
+       0DAC  call L1056(loc[16], 0f)
+       0DBA  call L1056(loc[0], 0f)
+       0DBE  call L114A()
+       0DC2  tailcall ?
+       0DD4  call L1BC4(300f, 400f, glob[16])
+       0DD8  tailcall ?
+       0DE6  call L2302(globblk[0], globblk[0][29], heapblk[1])
+       0DFA  NATIVE_t0_0xc(globblk[0], 203, 8f)
+       0E08  call L1FB6(15f, 75f)
+       0E0C  call L1CD4()
+       0E10  tailcall ?
+       0E14  loc[20] = GetActor()
+       0E30  call L17D4(150f, 8f, 100f, 20f)
+       0E3A  loc[16] = 0f
+       0E50  if (!(((heapblk[1] sub 2) ==0))) goto L0F16
+       0E60  loc[0] = heapblk[4]
+       0E6E  VecSub(loc[0], globblk[0][4])
+       0E74  NATIVE_t0_0x9(loc[0])
+       0E7E  NATIVE_t0_0x24(globblk[0], loc[0])
+       0EAA  if (!(((locblk[16] sub 16f) >=0))) goto L0F02
+       0EBC  MakeAttack(globblk[0], locblk[20], imm[-1252])
+       0ECC  MakeAttack(globblk[0], locblk[20], imm[-1380])
+       0EE4  NATIVE_t0_0xd(globblk[0], 16777417, 0f, 0f)
+       0EFC  NATIVE_t0_0xe(globblk[0], 1073741830, 0f, 0f)
+       0EFE  goto L0F02
+       0F10  globblk[0][28]
+       0F10  globblk[0][29]
+       0F10  heapblk[1][4]
+       0F10  loc[0][3]
+       0F10  8f
+       0F10  globblk[0][8]
+       0F10  loc[0]
+       0F10  heapblk[4]
+       0F10  loc[16]
+       0F10  loc[16]
+       0F10  (heapblk[1] add NATIVE_t0_0x5())
+       0F10  return
+       0F12  goto L0E3E
+L0F16: 0F16  tailcall ?
+L0F18: 0F18  call L1D74()
+       0F28  call L2302(globblk[0], globblk[0][29], heapblk[1])
+       0F38  MakeAttack(globblk[0], GetActor(), imm[-1600])
+       0F50  NATIVE_t0_0xd(globblk[0], 16777420, 8f, 0f)
+       0F68  NATIVE_t0_0xe(globblk[0], 1073742027, 8f, 0f)
+       0F6A  return
+       0F6C  tailcall ?
+L0F6E: 0F6E  call L1D74()
+       0F7E  call L2302(globblk[0], globblk[0][29], heapblk[1])
+       0F8E  MakeAttack(globblk[0], GetActor(), imm[-1798])
+       0FA6  NATIVE_t0_0xd(globblk[0], 16777416, 8f, 0f)
+       0FBE  NATIVE_t0_0xe(globblk[0], 1073742027, 8f, 0f)
+       0FC0  return
+       0FC2  tailcall ?
+L0FC4: 0FC4  loc[0] = ?
+       0FE2  call L2374(globblk[0], 1, 120f, 10f, locblk[0])
+       0FE6  ?
+       0FE8  tailcall ?
+L0FEA: 0FEA  call L1328()
+       0FFE  call L1F70(loc[0], 200f, 300f)
+       100C  VecAdd(loc[0], globblk[0][4])
+       1018  call L1056(loc[0], 100f)
+       102C  call L1056(globblk[0][29], heapblk[1][4], 150f)
+       1030  call L114A()
+       1034  tailcall ?
+L1036: 1036  loc[0] = ?
+       103A  call L1328()
+       104C  call L1056(globblk[0][29], heapblk[1][4], locblk[0])
+       1050  call L114A()
+       1054  tailcall ?
+L1056: 1056  loc[0] = ?
+       105A  loc[4] = ?
+       1064  loc[8] = 60f
+       1076  if (!(((locblk[8] sub 0f) >0))) goto L10C4
+       107E  call L10C6(locblk[4])
+       1082  loc[12] = ?
+       1094  loc[8]
+       1094  loc[8]
+       1094  (heapblk[1] sub NATIVE_t0_0x5())
+       1094  return
+       109C  call L160C(3f)
+       10A2  if (?) goto L10B4
+L10B4: 10B4  if (!((? lor ((locblk[12] sub locblk[0]) <0)))) goto L10C0
+       10B8  goto L10C4
+       10BC  goto L10C0
+L10C0: 10C0  goto L1068
+L10C4: 10C4  tailcall ?
+L10C6: 10C6  loc[0] = ?
+       10D0  loc[16] = heapblk[4]
+       10DE  VecSub(loc[16], globblk[0][4])
+       10F2  RotateDeg(loc[16], (SinDeg(globblk[56]) mul 60f))
+       10FE  VecAdd(loc[16], globblk[0][4])
+       1140  loc[4] = NATIVE_t0_0x28(globblk[0], loc[16], 2)
+       1148  tailcall locblk[4]
+L114A: 114A  call L1D74(locblk[0], glob[56], glob[56], (heapblk[1] add ((NATIVE_t0_0x19() mul 2f) add 3f)), globblk[0][27], heapblk[1][3], 6f)
+       1164  NATIVE_t0_0x75(globblk[0], 0, 0, 4)
+       117C  NATIVE_t0_0x74(globblk[0], 0, 0, 8)
+       118C  if (!(((globblk[64] sub 0) ==0))) goto L11AE
+       1194  call L1E72(globblk[0])
+       1198  call L232C()
+       11A6  call L2570(globblk[0], 30f)
+       11AA  goto L11AE
+       11C4  NATIVE_t0_0xd(globblk[0], 69, 0f, 0f)
+       11DC  NATIVE_t0_0xe(globblk[0], 0, 8f, 0f)
+       11E8  call L24DA(globblk[0], 1)
+       11F6  call L24BE(globblk[0], 2)
+       1204  call L24BE(globblk[0], 256)
+       1212  call L24DA(globblk[0], 16)
+       122A  loc[4] = (NATIVE_t0_0x2b(globblk[0], 69) sub 30f)
+       1234  loc[0] = 0f
+       1244  if (!(((locblk[0] sub locblk[4]) <0))) goto L12BE
+       1256  if (!(((globblk[64] sub 0) ==0))) goto L126A
+       125E  call L1E72(globblk[0])
+       1262  call L2302()
+       1266  goto L1296
+       1278  call L259C(globblk[0][29], heapblk[1], 0)
+       127E  if (!((? !=0))) goto L1292
+       1286  call L1E72(globblk[0])
+       128A  call L2302()
+       128E  goto L1292
+L1292: 1292  goto L1296
+       12B8  loc[0]
+       12B8  loc[0]
+       12B8  (heapblk[1] add NATIVE_t0_0x5())
+       12B8  globblk[0][16][1]
+       12B8  (locblk[0] div locblk[4])
+       12B8  return
+       12BA  goto L1238
+       12C4  glob[64] = 1
+       12E2  call L24BE(globblk[0][16][1], 1f, globblk[0], 16)
+       12F0  call L24BE(globblk[0], 32)
+       1302  if (!(((globblk[68] sub 1) !=0))) goto L1318
+       1310  call L24BE(globblk[0], 64)
+       1314  goto L1318
+       131E  glob[60] = 0
+       1322  call L1D74()
+       1326  tailcall ?
+L1328: 1328  call L1D74()
+       1332  glob[60] = 1
+       134C  NATIVE_t0_0xd(globblk[0], 70, 8f, 0f)
+
