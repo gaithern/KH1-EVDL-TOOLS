@@ -40,8 +40,7 @@ this enemy's AI actually do, and what does each attack look like" — entirely o
   - `python enemy_ai/kh1_bd_disasm.py <file.mdls>` → lists the behavior blocks in the model.
   - `python enemy_ai/kh1_bd_disasm.py <file.mdls> <block|all> [--fold]` → raw instruction listing,
     or `--fold` for readable pseudocode (`push a; push b; Verb()` → `Verb(a, b)`). Native verbs
-    are named from `kh1_bd_verbs.json`; see `docs/enemy_ai/reading_the_disassembly.md` for how
-    to read the output.
+    are named from `kh1_bd_verbs.json`.
   - Save the output as `.bdasm` to get highlighting, an outline and label navigation from the
     `vscode-evs/` extension.
 - **`kh1_bd_verbs.json`** — Native-verb table (name, arg count, engine address and evidence
@@ -55,14 +54,14 @@ this enemy's AI actually do, and what does each attack look like" — entirely o
   - `python enemy_ai/kh1_motion_ids.py <file.mdls> [<file2.mdls> ...] [--json out.json]`
   - The enemy's `.mset` must sit alongside its `.mdls` with the same basename.
 
-See `docs/enemy_ai/` for the bytecode format writeup and worked examples.
+Worked example outputs are in `docs/enemy_ai/examples/`.
 
 ## `animation/` — `.mdls`/`.mset` model and skeletal animation
 
 A from-scratch reimplementation of KH1's skeletal animation format: mesh/skeleton parsing,
 keyframe sampling, and the game's own IK dispatch. **Not needed for the `enemy_ai/` tools** —
-those resolve motion IDs to animation *indices* without posing a skeleton. See
-`docs/animation/`. Currently has one known unresolved bug (Branch-A joint orientation).
+those resolve motion IDs to animation *indices* without posing a skeleton. Currently has one
+known unresolved bug (Branch-A joint orientation).
 
 - **`kh1_mdls_parse.py`** — Parses `.mdls` model files: mesh, skeleton/joint hierarchy, textures.
 - **`kh1_mset_motion.py`** — Parses `.mset` motion records (also the `MMTN` blocks of map

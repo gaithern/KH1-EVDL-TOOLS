@@ -79,7 +79,7 @@
     "expr": {
       "patterns": [
         { "include": "#label-ref" },
-        { "name": "keyword.control.bdasm", "match": "\\b(if|else|while|goto|return|tailcall|call|end|abort)\\b" },
+        { "name": "keyword.control.bdasm", "match": "\\b(if|else|while|goto|return|yield|call|abort)\\b" },
         { "name": "support.class.native.unnamed.bdasm", "match": "\\bNATIVE_t\\d+_0x[0-9a-f]+(?=\\()" },
         { "name": "entity.name.function.native.bdasm", "match": "\\b[A-Za-z_]\\w*\\??(?=\\()" },
         { "include": "#memory" },
@@ -118,7 +118,7 @@
             "3": { "name": "constant.numeric.bdasm" } } }
       ]
     },
-    "label-ref": { "name": "entity.name.label.bdasm", "match": "@L[0-9A-F]+\\b" },
+    "label-ref": { "name": "entity.name.label.bdasm", "match": "@[LD][0-9A-F]+\\b|&data_[0-9A-F]+\\b" },
     "number": { "name": "constant.numeric.bdasm", "match": "(?<![\\w.])-?(0x[0-9a-fA-F]+|\\d+(\\.\\d+)?f?)\\b" }
   }
 }

@@ -26,9 +26,8 @@ There is no motion *name* recoverable anywhere in the shipped game data - .mset 
 _dic.mset are dense binary keyframe/bone blobs with no embedded strings (confirmed
 by an exhaustive printable-ASCII scan). This recovers the numeric IDs, where each one
 is used, AND (new) the resolved local animation index via kh1_motion_dict.py, using
-the SAME-basename .mset file next to the input .mdls - see docs/mdls_bd_format_and_ai.md
-for the full .bd trace and project_ai_motion_id_resolution.md for the resolver's
-derivation and live-verification.
+the SAME-basename .mset file next to the input .mdls (kh1_motion_dict.py documents how
+the resolver works).
 
 Usage:
   python kh1_motion_ids.py <file.mdls> [<file2.mdls> ...] [--json out.json]

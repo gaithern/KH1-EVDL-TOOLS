@@ -112,7 +112,7 @@
  "0:0x13": {
   "func_steam": "0x1402B9FE0",
   "name": "QueryPosition?",
-  "_note": "Ghidra: 4-arg native (self, query_id, extra, out_ref); resolves self and out_ref as handles, calls FUN_14029eb20(self, query_id, extra, out). 121/500 enemies call it as NATIVE_t0_0x13(self, 32771, 0.0, loc[16]) - 32771 = 0x8003, the SAME magic number docs/enemy_ai/mdls_bd_format_and_ai.md section 10 already identified as 'position query' inside KH1_BuildHitContext's own dispatch. Strong evidence this is the generic query-dispatch verb AI scripts use to ask the engine for a position (and possibly other 0x80xx query codes elsewhere, not yet surveyed)."
+  "_note": "Ghidra: 4-arg native (self, query_id, extra, out_ref); resolves self and out_ref as handles, calls FUN_14029eb20(self, query_id, extra, out). 121/500 enemies call it as NATIVE_t0_0x13(self, 32771, 0.0, loc[16]) - 32771 = 0x8003, the SAME magic number already identified as 'position query' inside KH1_BuildHitContext's own dispatch. Strong evidence this is the generic query-dispatch verb AI scripts use to ask the engine for a position (and possibly other 0x80xx query codes elsewhere, not yet surveyed)."
  },
  "0:0x20": {
   "func_steam": "0x1402BA0A0",
@@ -142,7 +142,7 @@
  "0:0x2c": {
   "func_steam": "0x1402BA210",
   "name": "ApplyHitOutcome?",
-  "_note": "Ghidra: its callee FUN_1402beee0 is a large state-machine keyed on a sub-mode nibble (values 9/10/11/12 handled distinctly), touches HP-ish float fields on a linked object (param_1[0x1b]) with *60.0 scaling, and every exit path ends by calling the EXISTING labeled function fnc_handle_hp_prize before returning - i.e. this is closely tied to applying a hit/state outcome and possibly awarding an HP prize, echoing the already-documented fnc_handle_mp_prize in the KH1_ApplyDamage_FireOnHitScript pipeline (docs/enemy_ai/mdls_bd_format_and_ai.md section 10). 123/500 enemies, e.g. loc[8] = NATIVE_t0_0x2c(self, locblk[0]). Exact semantics of the sub-mode values not chased down - good live-confirm candidate."
+  "_note": "Ghidra: its callee FUN_1402beee0 is a large state-machine keyed on a sub-mode nibble (values 9/10/11/12 handled distinctly), touches HP-ish float fields on a linked object (param_1[0x1b]) with *60.0 scaling, and every exit path ends by calling the EXISTING labeled function fnc_handle_hp_prize before returning - i.e. this is closely tied to applying a hit/state outcome and possibly awarding an HP prize, echoing the already-documented fnc_handle_mp_prize in the KH1_ApplyDamage_FireOnHitScript pipeline. 123/500 enemies, e.g. loc[8] = NATIVE_t0_0x2c(self, locblk[0]). Exact semantics of the sub-mode values not chased down - good live-confirm candidate."
  },
  "0:0x2d": {
   "func_steam": "0x1402BBDF0",
@@ -170,9 +170,9 @@
   "_note": "Ghidra: 2 handle args, no return, calls FUN_1402ada80(a,b) - address sits right next to FUN_1402ada20 (the callee behind 0x91's timed-task-allocation shape), suggesting a cluster of related 'timed action' helpers, but not decompiled deep enough to name confidently. 116/500 enemies, e.g. NATIVE_t0_0x3d(locblk[12], loc[16])."
  },
  "0:0x42": {
-  "func_steam": null,
-  "name": null,
-  "_note": "Ghidra has NO function defined at the funcptr this table entry points to (0x1402b9910) - needs create_function or a live breakpoint. 134/500 enemies (one of the most-used verbs found in the survey) - HIGH PRIORITY for live CheatEngine confirmation. Single arg, no return; usage examples show the arg as an unresolved '?' (came from an untracked earlier push), so no shape hypothesis yet."
+  "func_steam": "0x1402B9910",
+  "name": "DebugNop",
+  "_note": "Ghidra-confirmed (bytes at the funcptr): the engine function is a bare RET (c2 00 00) - a debug print/assert compiled out of the retail build. Declared argcount 1, so the VM pops one stack item, but scripts call it with nothing pushed (e.g. Sabor tz_3000 @L3158: `if (@L336E(x,0)==0) DebugNop()`), which is why its arg always looked like an unresolved '?'. kh1_bd_disasm treats it as consuming nothing (STUB_VERBS) so stack analysis follows the compiler's intent. 134/500 enemies."
  },
  "0:0x4b": {
   "func_steam": "0x1402BA410",
@@ -192,7 +192,7 @@
  "0:0x69": {
   "func_steam": "0x1402BC600",
   "name": "GetPlayerActor?",
-  "_note": "Ghidra: takes ZERO args, wraps the FIXED global address 0x142db7b50 into a handle and returns it - a singleton getter, not a per-actor query. That address is exactly 8 bytes after g_pCurrentScriptActor (0x142db7b48, see docs/enemy_ai/mdls_bd_format_and_ai.md section 7.4/9.1) i.e. likely a sibling global in the same struct, plausibly the player/Sora actor pointer. 121/500 enemies, e.g. glob[32] = NATIVE_t0_0x69() cached once and reused - same self-slot-caching convention as the self actor handle."
+  "_note": "Ghidra: takes ZERO args, wraps the FIXED global address 0x142db7b50 into a handle and returns it - a singleton getter, not a per-actor query. That address is exactly 8 bytes after g_pCurrentScriptActor (0x142db7b48) i.e. likely a sibling global in the same struct, plausibly the player/Sora actor pointer. 121/500 enemies, e.g. glob[32] = NATIVE_t0_0x69() cached once and reused - same self-slot-caching convention as the self actor handle."
  },
  "0:0x72": {
   "func_steam": "0x1402BA950",
@@ -1187,6 +1187,18 @@
   [
    1,
    1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   2,
+   1
   ]
  ],
  "_arity_t1": [
@@ -1253,13 +1265,33 @@
   [
    2,
    1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   5,
+   0
+  ],
+  [
+   5,
+   0
+  ],
+  [
+   1,
+   0
   ]
  ],
- "_arity_note": "_arity_tN[index] = [argcount, returns_value]. Used by the --fold view. Build-independent (game logic).",
+ "_arity_note": "_arity_tN[index] = [argcount, returns_value]. Used by the --fold view. Build-independent (game logic). t0 has 0xE2 entries (0x00-0xE1); t1 has 0x15 entries (0x00-0x14). Verified 2026-09-24 against the Steam exe's tables (t0 @0x140529180, t1 @0x1405752D0, registry @0x140529FA0): every entry matches; t0 0xDF-0xE1 and t1 0x10-0x14 were missing from the original harvest.",
  "0:0x7b": {
   "func_steam": null,
   "name": "SendEventComm",
-  "_note": "Usage-verified, not Ghidra-traced. Sends a message (comm ID, num) from the .bd script to the room's EVDL event scripts, which poll for it with Get_comm_ID()/Get_comm_Num(). Found in Sabor (tz_3000.bd, Deep Jungle Tree House tz01): NATIVE_t0_0x7b(200..205, 10) breaks the floor holes mo_ana_1..3 (0xC8-0xCA), junk pile mo_junk_1 (0xCB) and front walls mo_kabe_1/2 (0xCC/0xCD); every tz01 set script has a thread waiting for exactly (id, 0xA). Also seen with other num values (e.g. (301,51)..(304,54)). See Obsidian note 'Tree House Sabor floor holes'."
+  "_note": "Usage-verified, not Ghidra-traced. Sends a message (comm ID, num) from the .bd script to the room's EVDL event scripts, which poll for it with Get_comm_ID()/Get_comm_Num(). Found in Sabor (tz_3000.bd, Deep Jungle Tree House tz01): NATIVE_t0_0x7b(200..205, 10) breaks the floor holes mo_ana_1..3 (0xC8-0xCA), junk pile mo_junk_1 (0xCB) and front walls mo_kabe_1/2 (0xCC/0xCD); every tz01 set script has a thread waiting for exactly (id, 0xA). Also seen with other num values (e.g. (301,51)..(304,54))."
  },
  "0:0x54": {
   "func_steam": "0x1402BA510",

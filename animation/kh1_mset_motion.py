@@ -186,7 +186,7 @@ def parse_motion_record(data, off):
         # (instance+0x1b0 resolved) - this is the actual render skeleton. tracks2 (list2)
         # writes into a separate scratch buffer living in the motion record itself
         # (record+0x30), which feeds FUN_1401db080/FUN_1401db4d0 into DAT_142ef1f50 - a
-        # different mechanism entirely (see mdls_mset_model_and_animation_format.md §2.5),
+        # different mechanism entirely,
         # not the skinning pose. Keep them separate rather than merging: an earlier version
         # of the baker merged tracks1+tracks2 into one per-joint pose, which visibly
         # stretched limbs on the joints tracks2 happens to touch (2-9/10 in Shadow's file).

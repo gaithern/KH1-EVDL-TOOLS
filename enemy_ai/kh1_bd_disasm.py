@@ -26,8 +26,8 @@ Save output as .bdasm to get highlighting/outline from the KH1 EVS VS Code exten
 """
 import sys, struct, re, os, json
 
-UNARY = {0:"end",1:"iabs",2:"fabs",3:"tailcall",4:"pop",5:"ftoi",6:"ftoi",
-         7:"blkcopy",8:"abort",9:"ineg",10:"fneg",11:"bnot",12:"dup",13:"lnot"}
+UNARY = {0:"yield",1:"iabs",2:"fabs",3:"ret",4:"pop",5:"ftoi",6:"ftoi",
+         7:"store.ind",8:"abort",9:"ineg",10:"fneg",11:"bnot",12:"dup",13:"lnot"}
 ARITH = {0:"add",1:"sub",2:"mul",3:"div",4:"mod",5:"and",6:"or",7:"xor",8:"shl",9:"shr",10:"land",11:"lor"}
 CMP   = {0:"ltz",1:"lez",2:"eqz",3:"nez",4:"gez",5:"gtz"}
 BASE  = {0:"loc",1:"glob",2:"heap",3:"imm"}
@@ -107,7 +107,14 @@ def code_start(data,block_off,name,end):
             if (op&0xF)==0 and (op>>8) not in UNARY: break   # invalid opcode
             nonend+=1; pos+=ilen(op)
         if nonend>bs: best,bs=cand,nonend
-    return best if best is not None else lo
+    if best is None: return lo
+    # Data just before the code can decode as a branch/yield; a real entry starts with its
+    # prologue (stores/pushes), never with those - skip up to 4 such leading instructions.
+    for _ in range(4):
+        op=u16(data,best)
+        if (op&0xF) in (4,5,6) or op==0: best+=ilen(op)
+        else: break
+    return best
 
 def extend_end(data,block_off,start,end):
     """The declared block size can undercount the real code length (observed in
@@ -161,8 +168,11 @@ def disasm(data,block_off,name,size):
         elif c==2:
             if (op&0x30)==0x00: mnem="push"; oper=f"#{i32(data,pos+2)}"
             elif (op&0x30)==0x10: mnem="push"; oper=f"#{f32(data,pos+2):g}f"
-            elif (op&0x30)==0x20: mnem="push"; oper=f"[{BASE[base]}+{s16(data,pos+2)}]"
-            else: mnem="pushblk"; oper=f"[{BASE[base]}+{s16(data,pos+2)}] x{sub}"
+            elif (op&0x30)==0x20:
+                mnem="lea"
+                oper=(f"@D{pos+2+s16(data,pos+2)-block_off:04X}" if base==3
+                      else f"[{BASE[base]}+{s16(data,pos+2)}]")
+            else: mnem="push"; oper=f"[{BASE[base]}+{s16(data,pos+2)}] x{sub}"
         elif c==3: mnem="store"; oper=f"[{BASE[base]}+{s16(data,pos+2)}]"
         elif c in (4,5,6,8):
             tgt=pos+4+s16(data,pos+2)*2; targets.add(tgt)
@@ -171,7 +181,7 @@ def disasm(data,block_off,name,size):
             oper=f"@L{tgt-block_off:04X}"+(f" locals={sub}" if c==8 else "")
         elif c==7: mnem=f"cmp.{CMP.get(sub,'?')}.{'f' if mode==1 else 'i'}"
         elif c==9: mnem="idxadd"; oper=str(sub)
-        elif c==0xA: mnem="pushblk.heap"; oper=f"x{sub}"
+        elif c==0xA: mnem="load"; oper=f"x{sub}"
         elif c==0xB:
             nm=VERBS.get(f"{base}:{sub:#04x}")
             mnem=nm if nm else "NATIVE"; oper="()" if nm else f"t{base} #{sub:#04x}"
@@ -186,7 +196,8 @@ def disasm(data,block_off,name,size):
         if pos in targets:
             n=calls.get(pos)
             L.append(f"@L{r:04X}:{f'  ; sub, called {n}x' if n else ''}")
-        term="  ; ---- routine end ----" if op==0 else ""
+        term=("  ; ---- return ----" if op==0x0300 else "  ; ---- abort ----" if op==0x0800
+              else "  ; resumes here next update" if op==0 else "")
         L.append(f"      {r:04X}  {raw.hex(' '):<17} {mnem:<14} {oper:<16}{term}")
     return "\n".join(header)+"\n"+_rename_roles("\n".join(L),roles)
 
@@ -199,6 +210,11 @@ def _ffmt(v):
     already disambiguates float from int in expression context."""
     s=f"{v:g}"
     return s if any(ch in s for ch in ".en") else s+".0"
+# Natives whose engine function is an empty stub (a bare RET) in the retail build - debug
+# prints/asserts compiled out. Their table entry still declares arguments, so the VM pops
+# them, but the compiler never pushed any; the fold treats them as consuming nothing.
+STUB_VERBS={(0,0x42)}
+MAX_PARAMS,MAX_RETURNS,MAX_STACK=16,4,64   # sanity caps (only data-as-code ever hits them)
 MOTION_VERBS={(0,0x0c),(0,0x0d),(0,0x0e)}   # (table,sub): BlendMotion, SetMotion, QueueMotion
 ACTOR_ARG0_VERBS={(0,0x0c),(0,0x0d),(0,0x0e),(0,0x17)}  # BlendMotion, SetMotion, QueueMotion, MakeAttack - confirmed arg0=actor
 
@@ -269,95 +285,283 @@ def _structure_loops(recs):
         recs[j]["text"]="}"
     return recs
 
+# ---------------------------------------------------------------------------------------
+# VM semantics (KH1_BehaviorScriptInterpreter, Steam 0x1402CC620) that the fold relies on.
+# The interpreter keeps TWO stacks:
+#   operand stack  - every item is a value blob followed by its byte size, so one push/pop
+#                    moves one item whatever its size (scalars are 1 word, vectors 3, ...).
+#   locals stack   - frames. `call @L locals=N` skips the CALLER's N local words, pushes
+#                    {N, return address} and jumps; the operand stack is left alone, so
+#                    arguments stay on it and the callee pops them into its own locals.
+#   unary 3 = ret  - pops the frame and jumps back; whatever the callee left on the operand
+#                    stack is its return value.
+#   unary 0 = yield - the interpreter returns 0 with PC already advanced: execution resumes
+#                    at the next instruction on the actor's next update (not a routine end).
+#   unary 8 = abort (interpreter returns -1).   unary 7 = *ptr = value (pops value, ptr).
+#   push mode 0x20 = ADDRESS of [base+off] (as a handle); mode 0x30 xN = the N-word VALUE.
+#   class 9 = ptr + N words;  class 0xA xN = pop ptr, push the N words it points at.
+#   bases: loc = current frame, glob = script globals, heap = fields of the object whose
+#   handle is in loc[0], imm = data inside the script at (instruction+2+off).
+# ---------------------------------------------------------------------------------------
+
+def _decode(data,start,end):
+    ins={}; order=[]; pos=start
+    while pos<end-1:
+        op=u16(data,pos); L=ilen(op)
+        ins[pos]={"pos":pos,"op":op,"c":op&0xF,"sub":op>>8,"mode":(op>>4)&3,
+                  "base":(op>>6)&3,"len":L,"arg":s16(data,pos+2) if L>=4 else None}
+        order.append(pos); pos+=L
+    return ins,order
+
+def _target(i): return i["pos"]+4+i["arg"]*2
+
+def _effect(i,sig):
+    """(pops, pushes, flow) for one instruction. flow: fall|jump|branch|ret|stop"""
+    c,sub=i["c"],i["sub"]
+    if c==0:
+        if sub==0: return 0,0,"fall"                 # yield
+        if sub==3: return 0,0,"ret"
+        if sub==8: return 0,0,"stop"                 # abort
+        if sub==4: return 1,0,"fall"
+        if sub==7: return 2,0,"fall"
+        if sub==12: return 1,2,"fall"                # dup
+        if sub in (1,2,5,6,9,10,11,13): return 1,1,"fall"
+        return 0,0,"fall"
+    if c==1: return 2,1,"fall"
+    if c==2: return 0,1,"fall"
+    if c==3: return 1,0,"fall"
+    if c==4: return 0,0,"jump"
+    if c in (5,6): return 1,0,"branch"
+    if c==7: return 1,1,"fall"
+    if c==8:
+        p,r=sig.get(_target(i),(0,0)); return p,r,"fall"
+    if c in (9,0xA): return 1,1,"fall"
+    if c==0xB:
+        if (i["base"],i["sub"]) in STUB_VERBS: return 0,0,"fall"
+        ar=ARITY.get((i["base"],i["sub"]))
+        return (ar[0],1 if ar[1] else 0,"fall") if ar else (0,0,"fall")
+    return 0,0,"fall"
+
+def _analyze(ins,order,entries,sig):
+    """Stack depth at every reachable instruction of each function (depth 0 at entry).
+    Returns {entry: {"depth":{pc:d}, "min":m, "rets":[d,...], "bad":n}}."""
+    out={}
+    for e in entries:
+        depth={e:0}; work=[e]; mn=0; rets=[]; bad=0
+        while work:
+            pc=work.pop(); i=ins.get(pc)
+            if i is None: continue
+            d=depth[pc]; p,r,flow=_effect(i,sig)
+            mn=min(mn,d-p); nd=d-p+r
+            succ=[]
+            if flow=="fall": succ=[pc+i["len"]]
+            elif flow=="jump": succ=[_target(i)]
+            elif flow=="branch": succ=[pc+i["len"],_target(i)]
+            elif flow=="ret": rets.append(d)
+            for s in succ:
+                if s not in ins: continue
+                if s in depth:
+                    if depth[s]!=nd: bad+=1
+                    continue
+                depth[s]=nd; work.append(s)
+        out[e]={"depth":depth,"min":mn,"rets":rets,"bad":bad}
+    return out
+
+def _orphans(ins,order,entries,sig):
+    """Code no entry reaches that starts right after a ret/abort/goto: functions the block
+    never calls itself (engine/other-block entry points or dead code). One pass: each new
+    entry is analysed once and its reach added."""
+    reached=set()
+    for a in _analyze(ins,order,entries,sig).values(): reached|=set(a["depth"])
+    found=[]; prev=None
+    for pc in order:
+        if pc not in reached and prev is not None:
+            pi=ins[prev]
+            if (pi["c"]==0 and pi["sub"] in (3,8)) or pi["c"]==4:
+                found.append(pc)
+                reached|=set(_analyze(ins,order,[pc],sig)[pc]["depth"])
+        prev=pc
+    return found
+
+def _signatures(ins,order,start):
+    """Fixpoint over call targets: sig[entry] = (params popped from caller, values returned)."""
+    calls=sorted({_target(i) for i in ins.values() if i["c"]==8 and _target(i) in ins})
+    entries=[start]+[c for c in calls if c!=start]
+    entries+= [o for o in _orphans(ins,order,entries,{}) if o not in entries]
+    calls=entries[1:]
+    sig={}
+    for _ in range(12):
+        res=_analyze(ins,order,entries,sig); new={}
+        for e in entries:
+            a=res[e]; p=-a["min"]
+            if a["rets"]:
+                rd=max(set(a["rets"]),key=a["rets"].count); r=max(rd+p,0)
+            else: r=0
+            # real compiled routines take a handful of args and return <=1-2 values; anything
+            # bigger is data decoded as code - clamp so it can't blow up callers' stacks
+            new[e]=(min(p,MAX_PARAMS),min(r,MAX_RETURNS))
+        if new==sig: break
+        sig=new
+    return sig,res,calls
+
+_BASE_ADDR=re.compile(r"^&(loc|glob|heap)\[(-?\d+)\]$")
+_GEN_ADDR=re.compile(r"^&(.+)\[(-?\d+)\]$")
+
+def _wrap(e):
+    return e if re.fullmatch(r"[\w.&]+(\[[^\[\]]*\])*",e) else f"({e})"
+
 def fold(data,block_off,name,size,motion_dict=None):
     end=min(block_off+4+size,len(data)); start=code_start(data,block_off,name,end)
     end=extend_end(data,block_off,start,end)
     roles=detect_roles(data,block_off,name,size)
-    # collect jump/call targets for labels, tallying call counts separately so labels
-    # reached only by goto/if-goto (loop heads, if-merges) can be told apart from real
-    # call @Lxxxx subroutine entries
-    targets=set(); calls={}; pos=start
-    while pos<end-1:
-        op=u16(data,pos); c=op&0xF
-        if c in (4,5,6,8):
-            tgt=pos+4+s16(data,pos+2)*2; targets.add(tgt)
-            if c==8: calls[tgt]=calls.get(tgt,0)+1
-        pos+=ilen(op)
-    stk=[]; recs=[]; pending=[]
+    ins,order=_decode(data,start,end)
+    sig,ana,calls=_signatures(ins,order,start)
+    # owner function of each instruction (first analysis that reached it) and its depth
+    # depth is relative to the function entry, where the stack already holds its params
+    owner={}; dep={}
+    for e in [start]+calls:
+        base=sig.get(e,(0,0))[0]
+        for pc,d in ana[e]["depth"].items():
+            if pc not in owner: owner[pc]=e; dep[pc]=d+base
+    ncall={}
+    for i in ins.values():
+        if i["c"]==8: ncall[_target(i)]=ncall.get(_target(i),0)+1
+    targets={_target(i) for i in ins.values() if i["c"] in (4,5,6,8)}|set(calls)
+    rel=lambda p: p-block_off
+    stk=[]; recs=[]; pending=[]; live=True
+    carry={}      # jump target -> stack contents at each jump to it (switch values etc.)
+    def remember(t):
+        carry.setdefault(t,[]).append(list(stk))
     def emit(off,text):
         nonlocal pending
-        recs.append({"off":off-block_off,"labs":pending,"text":text,"indent":0})
-        pending=[]
-    def pop(): return stk.pop() if stk else "?"
-    def popn(n):
-        g=[pop() for _ in range(n)]; return g[::-1]
-    pos=start
-    while pos<end-1:
-        if pos in targets: pending=pending+[f"@L{pos-block_off:04X}"]
-        op=u16(data,pos); c=op&0xF; sub=op>>8; mode=(op>>4)&3; base=(op>>6)&3
+        recs.append({"off":rel(off),"labs":pending,"text":text,"indent":0}); pending=[]
+    ntmp=[0]
+    def spill(pc,e):
+        """Name e in a temporary instead of copying its text (dup / multi-value returns / huge
+        expressions), so evaluation happens once and text can't blow up."""
+        if re.fullmatch(r"-?[\w.&]+(\[[^\[\]]*\])*",e): return e
+        t=f"t{ntmp[0]}"; ntmp[0]+=1; emit(pc,f"{t} = {e}"); return t
+    def pop():
+        return stk.pop() if stk else "?"
+    def popn(n): return [pop() for _ in range(n)][::-1]
+    def var(i,n=1):
+        b=BASE[i["base"]]; off=i["arg"]
+        return f"{b}[{off}]" if n==1 else f"{b}[{off}:{n}]"
+    def addr(i):
+        if i["base"]==3: return f"&data_{rel(i['pos']+2+i['arg']):04X}"
+        return f"&{BASE[i['base']]}[{i['arg']}]"
+    def ptradd(p,n):
+        m=_BASE_ADDR.match(p)
+        if m: return f"&{m.group(1)}[{int(m.group(2))+4*n}]"
+        m=_GEN_ADDR.match(p)
+        if m and not p.startswith("&("): return f"&{m.group(1)}[{int(m.group(2))+n}]"
+        if p.startswith("&"): return f"&{p[1:]}[{n}]" if n else p
+        return f"&{_wrap(p)}[{n}]"
+    def deref(p,n):
+        if p.startswith("&"): t=p[1:]
+        else: t=f"*{_wrap(p)}"
+        return t if n==1 else f"{t}:{n}"
+    for pc in order:
+        if len(stk)>MAX_STACK: stk=stk[-MAX_STACK:]
+        for k,e in enumerate(stk):
+            if len(e)>300: stk[k]=spill(pc,e)
+        i=ins[pc]; c,sub=i["c"],i["sub"]
+        if pc in targets: pending=pending+[f"@L{rel(pc):04X}"]
+        if pc in sig:                                      # block entry / subroutine entry
+            p,r=sig[pc]; stk=[f"a{k}" for k in range(p)]; live=True
+            if pc==start and p:
+                emit(pc,f"; block entry receives {p} value(s) from the engine: {', '.join(stk)}")
+        elif pc in dep and (not live or len(stk)!=dep[pc]):
+            d=max(dep[pc],0)
+            got=[c_ for c_ in carry.get(pc,[]) if len(c_)==d]
+            if not live and got and all(c_==got[0] for c_ in got):
+                stk=list(got[0]); live=True
+            elif not live or len(stk)<d: stk=(stk if live else [])[:d]
+            if len(stk)<d: stk=[f"s{k}" for k in range(d-len(stk))]+stk
+            elif len(stk)>d: stk=stk[len(stk)-d:] if d else []
+            live=True
+        elif not live:
+            stk=[]; live=True
         if c==2:
-            if (op&0x30)==0x00: stk.append(str(i32(data,pos+2)))
-            elif (op&0x30)==0x10: stk.append(_ffmt(f32(data,pos+2)))
-            elif (op&0x30)==0x20: stk.append(f"{BASE[base]}[{s16(data,pos+2)}]")
-            else: stk.append(f"{BASE[base]}blk[{s16(data,pos+2)}]")
-        elif c==0xA: stk.append(f"heapblk[{sub}]")
+            if (i["op"]&0x30)==0x00: stk.append(str(i32(data,pc+2)))
+            elif (i["op"]&0x30)==0x10: stk.append(_ffmt(f32(data,pc+2)))
+            elif (i["op"]&0x30)==0x20: stk.append(addr(i))
+            else: stk.append(var(i,sub))
+        elif c==0xA: stk.append(deref(pop(),sub))
+        elif c==9: stk.append(ptradd(pop(),sub))
         elif c==1:
             b=pop(); a=pop(); stk.append(f"({a} {ARITHSYM.get(sub,'?')} {b})")
         elif c==7:
             a=pop(); stk.append(f"({a} {CMPSYM.get(sub,'?0')})")
-        elif c==9:
-            a=pop(); stk.append(f"{a}[{sub}]")
         elif c==0:
-            if sub==0:
-                for lo in stk: emit(pos,lo)
-                stk.clear(); emit(pos,"return")
-            elif sub==4: emit(pos,pop())
+            if sub==0: emit(pc,"yield")
+            elif sub==3:
+                emit(pc,f"return {', '.join(stk)}" if stk else "return"); stk=[]; live=False
+            elif sub==8: emit(pc,"abort"); live=False
+            elif sub==4:
+                v=pop()
+                if re.search(r"[A-Za-z_]\w*\??\(|call @",v): emit(pc,v)   # keep side effects only
+            elif sub==7:
+                v=pop(); p=pop(); emit(pc,f"{deref(p,1)} = {v}")
             elif sub==12:
-                if stk: stk.append(stk[-1])
+                if stk: stk[-1]=spill(pc,stk[-1]); stk.append(stk[-1])
+                else: stk.append("?")
             elif sub in (1,2): stk.append(f"abs({pop()})")
-            elif sub in (9,10): stk.append(f"-{pop()}")
+            elif sub in (9,10): stk.append(f"-{_wrap(pop())}")
             elif sub in (5,6): stk.append(f"int({pop()})")
-            elif sub==11: stk.append(f"~{pop()}")
-            elif sub==13: stk.append(f"!{pop()}")
-            elif sub==3: emit(pos,f"tailcall {pop()}")
-            elif sub==8: emit(pos,"abort")
-        elif c==3: a=pop(); emit(pos,f"{BASE[base]}[{s16(data,pos+2)}] = {a}")
-        elif c==4: emit(pos,f"goto @L{(pos+4+s16(data,pos+2)*2)-block_off:04X}")
+            elif sub==11: stk.append(f"~{_wrap(pop())}")
+            elif sub==13: stk.append(f"!{_wrap(pop())}")
+        elif c==3:
+            a=pop(); emit(pc,f"{var(i)} = {a}")
+        elif c==4:
+            remember(_target(i))
+            emit(pc,f"goto @L{rel(_target(i)):04X}"); live=False
         elif c in (5,6):
-            cnd=pop(); t=(pos+4+s16(data,pos+2)*2)-block_off
-            emit(pos, f"if (!({cnd})) goto @L{t:04X}" if c==5 else f"if ({cnd}) goto @L{t:04X}")
+            cnd=pop(); remember(_target(i)); t=rel(_target(i))
+            emit(pc, f"if (!({cnd})) goto @L{t:04X}" if c==5 else f"if ({cnd}) goto @L{t:04X}")
         elif c==8:
-            t=(pos+4+s16(data,pos+2)*2)-block_off; args=", ".join(stk); stk.clear()
-            emit(pos,f"call @L{t:04X}({args})")
+            t=_target(i); p,r=sig.get(t,(0,0)); argv=popn(p)
+            call=f"call @L{rel(t):04X}({', '.join(argv)})"
+            if r==1: stk.append(call)
+            elif r>1:
+                t=spill(pc,call); stk.extend(f"{t}[{k}]" for k in range(r))
+            else: emit(pc,call)
         elif c==0xB:
-            nm=VERBS.get(f"{base}:{sub:#04x}") or f"NATIVE_t{base}_{sub:#x}"
-            ar=ARITY.get((base,sub))
-            if ar is None:
-                args=", ".join(stk); stk.clear(); emit(pos,f"{nm}({args})")
+            nm=VERBS.get(f"{i['base']}:{sub:#04x}") or f"NATIVE_t{i['base']}_{sub:#x}"
+            ar=ARITY.get((i["base"],sub))
+            if (i["base"],sub) in STUB_VERBS:
+                emit(pc,f"{nm}()")
+            elif ar is None:
+                args=", ".join(stk); stk=[]; emit(pc,f"{nm}({args})")
             else:
                 n,ret=ar; argv=popn(n); call=f"{nm}({', '.join(argv)})"
                 if ret: stk.append(call)
                 else:
                     note=""
-                    if motion_dict is not None and (base,sub) in MOTION_VERBS and len(argv)>=2:
+                    if motion_dict is not None and (i["base"],sub) in MOTION_VERBS and len(argv)>=2:
                         try:
                             motion_id=int(argv[1])&0xFFFF
                             idx=motion_dict.get(motion_id)
                             note=f"  ; -> anim{idx:04d}" if idx is not None else f"  ; motion_id {motion_id} (no anim)"
                         except ValueError: pass
-                    emit(pos,call+note)
-        pos+=ilen(op)
+                    emit(pc,call+note)
     recs=_structure_loops(recs)
     header=[f"; ===== {name}  (folded)  block@0x{block_off:X}  code@0x{start:X} ====="]
     if roles.get("self") is not None:
         header.append(f"; detected: glob[{roles['self']}] = self (cached actor handle, "
                        f"renamed below) - arg0 of SetMotion/QueueMotion/BlendMotion/MakeAttack")
-    call_labels={f"@L{p-block_off:04X}":n for p,n in calls.items()}
     out=[]
     for r in recs:
         if r["labs"]:
-            n=max((call_labels[lb] for lb in r["labs"] if lb in call_labels),default=None)
-            out.append(f"{','.join(r['labs'])}:{f'  ; sub, called {n}x' if n else ''}")
+            notes=[]
+            for lb in r["labs"]:
+                p=int(lb[2:],16)+block_off
+                if p in sig and p!=start:
+                    pa,re_=sig.get(p,(0,0))
+                    params=", ".join(f"a{k}" for k in range(pa))
+                    used=f"called {ncall[p]}x" if p in ncall else "not called in this block"
+                    notes.append(f"sub({params}){' -> '+str(re_) if re_ else ''}, {used}")
+            out.append(f"{','.join(r['labs'])}:{'  ; '+'; '.join(notes) if notes else ''}")
         out.append(f"      {r['off']:04X}  {'    '*r['indent']}{r['text']}")
     return "\n".join(header)+"\n"+_rename_roles("\n".join(out),roles)
 

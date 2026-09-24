@@ -493,8 +493,7 @@ def _bind_pose_world(joints_by_idx):
 
 
 def _solve_main_skeleton(rec, pose, joints_by_idx, prev_world=None):
-    """FUN_1403900B0's per-joint dispatch, as far as decoded (see
-    mdls_mset_model_and_animation_format.md §3.7). Two independent things are decided per
+    """FUN_1403900B0's per-joint dispatch, as far as decoded. Two independent things are decided per
     joint based on its flags (kh1_mset_motion.parse_joint_flags):
 
     ROTATION - one of: normal FK (own local rotation composed onto the parent's world
