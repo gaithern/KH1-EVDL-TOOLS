@@ -215,6 +215,7 @@ function activate(context) {
             },
         }));
     require('./bdasm').register(context, vscode);
+    require('./bds').register(context, vscode);
 }
 
 module.exports = { activate, deactivate() {}, parse, definition, references };

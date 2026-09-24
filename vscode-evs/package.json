@@ -1,8 +1,8 @@
 {
   "name": "kh1-evs",
   "displayName": "KH1 EVS",
-  "description": "Syntax highlighting and navigation for EVS, the C-like view of Kingdom Hearts 1 event scripts (KH1-EVDL-TOOLS/evs), and for .bdasm enemy AI disassembly (kh1_bd_disasm.py)",
-  "version": "0.0.4",
+  "description": "Syntax highlighting and navigation for EVS, the C-like view of Kingdom Hearts 1 event scripts (KH1-EVDL-TOOLS/evs), for BDS, the C-like view of enemy AI (KH1-EVDL-TOOLS/bds), and for .bdasm enemy AI disassembly (kh1_bd_disasm.py)",
+  "version": "0.0.7",
   "publisher": "kh1-evdl-tools",
   "engines": {
     "vscode": "^1.60.0"
@@ -33,6 +33,17 @@
           ".bdasm"
         ],
         "configuration": "./bdasm-language-configuration.json"
+      },
+      {
+        "id": "bds",
+        "aliases": [
+          "KH1 BDS",
+          "bds"
+        ],
+        "extensions": [
+          ".bds"
+        ],
+        "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
@@ -45,12 +56,23 @@
         "language": "bdasm",
         "scopeName": "source.bdasm",
         "path": "./syntaxes/bdasm.tmLanguage.json"
+      },
+      {
+        "language": "bds",
+        "scopeName": "source.bds",
+        "path": "./syntaxes/bds.tmLanguage.json"
       }
-    ]
+    ],
+    "configurationDefaults": {
+      "[bds]": {
+        "editor.semanticHighlighting.enabled": true
+      }
+    }
   },
   "main": "./extension.js",
   "activationEvents": [
     "onLanguage:evs",
-    "onLanguage:bdasm"
+    "onLanguage:bdasm",
+    "onLanguage:bds"
   ]
 }

@@ -26,7 +26,11 @@ function parse(text) {
         }
         const prev = block.labels[block.labels.length - 1];
         if (prev) prev.end = i - 1;
-        block.labels.push({ name: m[1], note: m[3] || '', line: i, end: block.end });
+        const note = m[3] || '';
+        // `; routine_name - sub(...)` when a names/<block>.json gives the routine a name
+        const nm = /^([A-Za-z_]\w*)(?:\s+-\s+|$)/.exec(note);
+        const alias = nm && nm[1] !== 'sub' ? nm[1] : null;
+        block.labels.push({ name: m[1], alias, note, line: i, end: block.end });
     });
     for (const b of blocks) {
         const last = b.labels[b.labels.length - 1];
@@ -43,6 +47,8 @@ function labelAt(text, col) {
     REF_RE.lastIndex = 0;
     let m;
     while ((m = REF_RE.exec(text))) if (m.index <= col && col <= m.index + m[0].length) return m[0];
+    const w = /[A-Za-z_]\w*/g;       // or a routine name given by a names file
+    while ((m = w.exec(text))) if (m.index <= col && col <= m.index + m[0].length) return m[0];
     return null;
 }
 
@@ -50,7 +56,7 @@ function labelAt(text, col) {
 function definition(doc, line, col) {
     const name = labelAt(doc.lines[line], col);
     const block = name && blockAt(doc, line);
-    const hit = block && block.labels.find(l => l.name === name);
+    const hit = block && block.labels.find(l => l.name === name || l.alias === name);
     return hit ? hit.line : null;
 }
 
@@ -59,7 +65,9 @@ function references(doc, line, col) {
     const name = labelAt(doc.lines[line], col);
     const block = name && blockAt(doc, line);
     if (!block) return [];
-    const re = new RegExp(`${name}\\b`, 'g');
+    const lab = block.labels.find(l => l.name === name || l.alias === name);
+    const alt = lab ? [lab.name, lab.alias].filter(Boolean) : [name];
+    const re = new RegExp(`(?<![\\w@])(${alt.join('|')})\\b`, 'g');
     const out = [];
     for (let i = block.line; i <= block.end; i++) {
         let m;
@@ -100,7 +108,8 @@ function register(context, vscode) {
                 return doc.blocks.map(b => {
                     const s = sym(b.name, b.detail, K.Module, b.line, b.end);
                     // subroutines (`; sub, called Nx`) as functions, plain jump targets as labels
-                    s.children = b.labels.map(l => sym(l.name, l.note, /^sub\b/.test(l.note) ? K.Function : K.Key, l.line, l.end));
+                    s.children = b.labels.map(l => sym(l.alias || l.name, l.alias ? `${l.name}  ${l.note}` : l.note,
+                        /\bsub\(/.test(l.note) ? K.Function : K.Key, l.line, l.end));
                     return s;
                 });
             },

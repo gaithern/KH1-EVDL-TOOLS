@@ -7,7 +7,8 @@
  },
  "0:0x05": {
   "func_steam": "0x1402B98E0",
-  "name": null
+  "name": "FrameDelta",
+  "_note": "Ghidra: returns the global float at 0x14233FBDC. Scripts subtract it from timers every update and scale speeds by it (e.g. 8.0 * FrameDelta()), i.e. the per-update time step. 2468 call sites, all 138 scripts."
  },
  "0:0x06": {
   "func_steam": "0x1402B99C0",
@@ -56,7 +57,8 @@
  },
  "0:0x14": {
   "func_steam": "0x1402B9670",
-  "name": "GetObj?"
+  "name": "StartThread",
+  "_note": "Ghidra-confirmed: StartThread(obj, entry) -> thread handle. Calls FUN_1402bd640(args, entry), which creates a new script VM thread starting at script_base + entry*2 (script_base = *(ctx+8), the .bd block start), links it into the actor's thread chain (+0x740) and, if obj resolves, copies it in as the thread's object (what its heap[...] fields read). entry is a code offset in 16-bit words; kh1_bd_disasm prints such literals as @Lxxxx."
  },
  "0:0x16": {
   "func_steam": "0x1402BBA00",
@@ -116,18 +118,18 @@
  },
  "0:0x20": {
   "func_steam": "0x1402BA0A0",
-  "name": null,
-  "_note": "Ghidra: 2 handle args, no return; resolves both then calls FUN_1402b0590(a,b), not decompiled further. 114/500 enemies, e.g. NATIVE_t0_0x20(locblk[0], loc[16]). No usage-shape hypothesis yet - candidate for a follow-up decompile pass."
+  "name": "GetBodyPos",
+  "_note": "Ghidra-confirmed (FUN_1402b04c0): writes a body/attachment point of the actor into the out vector (falls back to its position at +0x10), with height adjusted by the actor's scale (+0x40/+0x44)."
  },
  "0:0x21": {
   "func_steam": null,
-  "name": null,
-  "_note": "Ghidra has NO function defined at the funcptr this table entry points to (0x1402b97c0) - needs create_function or a live breakpoint to inspect. 138/500 enemies (same frequency as 0x04/0x05, i.e. called from nearly every script) - HIGH PRIORITY for live CheatEngine confirmation. Args are always 4 raw ints with no self/handle, e.g. NATIVE_t0_0x21(3480, 3408, 3470, 0) / (2542, 0, 2476, 0) - the clustering of close numeric values plus a trailing 0 flag looks like it could be a text/subtitle/SFX-cue trigger (3 candidate IDs + a mode flag), but that's a shape guess only, not evidence."
+  "name": "SetEventHandlers",
+  "_note": "Ghidra-confirmed (bytes at 0x1402B97C0): stores four 16-bit code offsets (in words) into the script context +0x748..+0x74E - the routines the engine runs on events. Sabor passes its hit handler and its message handler (the one that sets glob[916]/[920]/[924] when the room script sends 300-302). kh1_bd_disasm prints the offsets as @Lxxxx."
  },
  "0:0x22": {
   "func_steam": "0x1402B9710",
-  "name": "AttachOrReplaceObj?",
-  "_note": "Ghidra: resolves self; if a handle is already present it's torn down first (FUN_1402bd390), then a new one is created via FUN_1402bd640(arg1, arg2) and the result re-wrapped and returned - a 'replace whatever's currently attached' pattern, structurally similar to SpawnObj (0x4a) but for a persistent single-slot attachment rather than a one-shot spawn. 138/500 enemies, e.g. heap[8] = NATIVE_t0_0x22(heapblk[8], 0, locblk[4])."
+  "name": "ReplaceThread",
+  "_note": "Ghidra-confirmed: ReplaceThread(old, obj, entry) -> thread handle. Tears down thread `old` if present (FUN_1402bd390), then starts a new one exactly like StartThread (0x14) via FUN_1402bd640: code at script_base + entry*2. Scripts keep the handle in a slot and call this to switch 'state' coroutines, e.g. Sabor's helper @L30A6(&glob[800], 548) -> ReplaceThread(heap[8], 0, 548) starts the routine at block offset 0x448. 138/500 enemies."
  },
  "0:0x24": {
   "func_steam": "0x1402BA110",
@@ -136,8 +138,8 @@
  },
  "0:0x28": {
   "func_steam": "0x1402BA1A0",
-  "name": null,
-  "_note": "Ghidra: 3 args (2 handles + 1 passthrough), returns a value via FUN_140299d60(a,b,arg2). Not decompiled further; 106/500 enemies, e.g. loc[20] = NATIVE_t0_0x28(locblk[0], locblk[12], locblk[8]). No usage-shape hypothesis yet."
+  "name": "MoveTo",
+  "_note": "Ghidra-confirmed (FUN_140299d60): MoveTo(actor, &pos, mode) -> remaining distance (0.0 once close, -1.0 if blocked). Turns the actor toward pos (atan2 -> yaw), moves at a speed from its stats (mode 0/1/2 = stats +4/+8/+0xC) and handles wall/ledge checks."
  },
  "0:0x2c": {
   "func_steam": "0x1402BA210",
@@ -156,8 +158,8 @@
  },
  "0:0x31": {
   "func_steam": "0x1402BBE80",
-  "name": null,
-  "_note": "Ghidra: 2 handle args, no return; resolves both then calls FUN_140292ae0(a,b,0). 138/500 enemies, e.g. NATIVE_t0_0x31(locblk[0], 0) / (locblk[0], locblk[4]) - 2nd arg is sometimes the literal 0 and sometimes another handle, so it's not a fixed-role parameter. No confident usage-shape hypothesis yet."
+  "name": "SetTarget",
+  "_note": "Ghidra-confirmed (FUN_140292ae0): writes the target's handle to actor +0x74 (and arg 3 to +0x78). +0x74 is the field scripts read as self[29] = self.target."
  },
  "0:0x32": {
   "func_steam": "0x1402BA290",
@@ -166,8 +168,8 @@
  },
  "0:0x3d": {
   "func_steam": "0x1402BB870",
-  "name": null,
-  "_note": "Ghidra: 2 handle args, no return, calls FUN_1402ada80(a,b) - address sits right next to FUN_1402ada20 (the callee behind 0x91's timed-task-allocation shape), suggesting a cluster of related 'timed action' helpers, but not decompiled deep enough to name confidently. 116/500 enemies, e.g. NATIVE_t0_0x3d(locblk[12], loc[16])."
+  "name": "SetObjRotationFromVec?",
+  "_note": "Ghidra (FUN_1402ada80): converts the vector arg to three angles (FUN_1402a9290) and stores them as 16-bit turn units (angle/2pi*65536) into the rotation of the object referenced at obj+4."
  },
  "0:0x42": {
   "func_steam": "0x1402B9910",
@@ -181,18 +183,18 @@
  },
  "0:0x4d": {
   "func_steam": "0x1402BC340",
-  "name": null,
-  "_note": "Ghidra: 3 handle args, returns FUN_140299530(...) + 1 (the +1 suggests 0 is reserved as a 'not found' sentinel, i.e. this may return an index). 109/500 enemies, used directly as a boolean-ish condition, e.g. if (!((NATIVE_t0_0x4d(locblk[0], loc[32], loc[16]) - 0) ==0)). No confident name yet."
+  "name": "RayCast",
+  "_note": "Ghidra-confirmed (FUN_140299530): RayCast(from, delta, &hit) -> hit polygon index + 1 (0 = nothing hit). Steps from `from` along `delta` in 100-unit increments testing collision; writes the hit point."
  },
  "0:0x64": {
   "func_steam": "0x1402B9D10",
-  "name": null,
-  "_note": "Ghidra: 2 handle args, returns a value via FUN_1402a8c70(a,b). 121/500 enemies; survey examples show it called 3x in a row with the SAME two args writing to different local destinations (loc[56]/loc[48]/loc[52]), which could be an unrolled per-axis vector-component getter, but that's unconfirmed - FUN_1402a8c70 not decompiled."
+  "name": "CosAngle",
+  "_note": "Ghidra-confirmed (FUN_1402a8c70): dot(a,b)/(|a||b|) clamped to [-1,1], 0 if either is zero - cosine of the angle between two vectors."
  },
  "0:0x69": {
   "func_steam": "0x1402BC600",
-  "name": "GetPlayerActor?",
-  "_note": "Ghidra: takes ZERO args, wraps the FIXED global address 0x142db7b50 into a handle and returns it - a singleton getter, not a per-actor query. That address is exactly 8 bytes after g_pCurrentScriptActor (0x142db7b48) i.e. likely a sibling global in the same struct, plausibly the player/Sora actor pointer. 121/500 enemies, e.g. glob[32] = NATIVE_t0_0x69() cached once and reused - same self-slot-caching convention as the self actor handle."
+  "name": "GetMapInfo",
+  "_note": "Ghidra: takes ZERO args and returns a handle to the fixed 3-word struct at 0x142db7b50 (Steam), which fnc_apply_loaded_ard (write at 0x140287cb2) fills on every room load: word 0 = g_WorldNumber (0x14233fe84), word 1 = g_AreaNumber (0x14233fe8c) + 1 = the ARD file number (tz01 -> 1), word 2 = g_SetNumber (0x14233fe90). Not the player actor (the old guess). Enemies share three getters returning [0]/[1]/[2]; ex_2020 compares the world word with 0xB; Sabor (tz_3000) picks its encounter setup from the room word (1/3/0xC/0xD = tz01/tz03/tz12/tz13)."
  },
  "0:0x72": {
   "func_steam": "0x1402BA950",
@@ -211,13 +213,13 @@
  },
  "0:0xa4": {
   "func_steam": null,
-  "name": null,
-  "_note": "Ghidra has NO function defined at the funcptr this table entry points to (0x1402bc940) - needs create_function or a live breakpoint. 108/500 enemies, always called with the SAME literal arg (24), no return, e.g. NATIVE_t0_0xa4(24) - the fixed-constant-arg shape suggests a mode/category selector rather than a per-call value. Candidate for live confirmation."
+  "name": "FadeIn",
+  "_note": "Ghidra-confirmed (FUN_14017ab50): FadeIn(frames) - queues fade-in (from black or white, depending on the current fade) over `frames`. Sabor calls FadeOutToWhite(1) then FadeIn(24) when defeated."
  },
  "0:0xa5": {
   "func_steam": null,
-  "name": null,
-  "_note": "Ghidra has NO function defined at the funcptr this table entry points to (0x1402bc950) - needs create_function or a live breakpoint. 105/500 enemies, always called with the SAME literal arg (1), no return, e.g. NATIVE_t0_0xa5(1). Often appears right alongside 0xa4(24) in the same scripts - possibly a paired mode-setup call. Candidate for live confirmation."
+  "name": "FadeOutToWhite",
+  "_note": "Ghidra-confirmed (FUN_14017aca0): FadeOutToWhite(frames) - queues fnc_fade_job_out_to_white over `frames`."
  },
  "0:0xa7": {
   "func_steam": "0x1402BC960",
@@ -231,8 +233,8 @@
  },
  "0:0xad": {
   "func_steam": "0x1402BC100",
-  "name": null,
-  "_note": "Ghidra: single arg (self), no return; calls FUN_1402b89f0(self), not decompiled further. 117/500 enemies, e.g. NATIVE_t0_0xad(self). NOTE: distinct from the already-named 0:0xac (IsActionDone?) despite the similar single-self-arg shape - 0xac returns a value (arity [1,1], used as a boolean in a wait-loop) while 0xad does not (arity [1,0]), so they cannot be the same kind of call."
+  "name": "RecordDefeat",
+  "_note": "Ghidra-confirmed (FUN_1402b89f0): increments the per-enemy-type defeat counter (inventory +0x580, indexed by the type id at type record +0x4C) - the Jiminy's Journal tally - and checks the related achievements."
  },
  "0:0xd7": {
   "func_steam": "0x1402BC6B0",
@@ -1297,5 +1299,100 @@
   "func_steam": "0x1402BA510",
   "name": "IsInZone",
   "_note": "Ghidra-confirmed. IsInZone(actor, zone_id) -> 0/1. FUN_1402ba510 -> FUN_1402a9e40 tests bit (zone_id-1) of FUN_1402a9960(actor), which overlaps the actor's AABB with every box in the room's zone table (global DAT_142d60c90) and ORs 1<<(id-1) per hit (entries with flags&2 always count). Zone table comes from the current ARD set section: magic 'ZN\u0000\u001e', u8 count @+4, then 0x30-byte entries from +0x10 (u8 id, u8 flags, ..., min xyz f32 @+0x10, max xyz f32 @+0x20). No table in the set -> always 0. Used by Sabor (tz_3000.bd, Tree House set 15) to pick which wall/junk pile to break when a hit puts him into his reaction state (mode 1) inside zones 5/6/7, and to track which of 4 perches (zones 1-4) he's on."
+ },
+ "1:0x00": {
+  "name": "DebugNop",
+  "_note": "Ghidra: the engine function is a bare RET (compiled-out debug call). Unlike t0 0x42 the scripts do push its 1 argument, so the stack stays consistent.",
+  "func_steam": "0x140394D80"
+ },
+ "0:0x78": {
+  "name": "IsActive",
+  "_note": "Ghidra-confirmed (FUN_140291ff0): actor != null && (actor+0x374 & 1) && !(actor+0x374 & 2).",
+  "func_steam": "0x1402BAB10"
+ },
+ "0:0x51": {
+  "name": "SendMessage",
+  "_note": "Ghidra-confirmed (FUN_140297ca0): SendMessage(to_actor, from_actor, msg) -> result. If the receiver is active and has a script (+0x144, flag bit 16 of +0x374) it runs that script's handler via FUN_1402bcd60 with (from, msg) and returns its result; otherwise calls the actor's native handler (+0x4A0) or a default. Actor-to-actor messaging (vs SendEventComm, which talks to the room's event script).",
+  "func_steam": "0x1402BBFF0"
+ },
+ "0:0xa8": {
+  "name": "QueueAction?",
+  "_note": "Ghidra (FUN_140290080): (actor, n) fills this actor's entry (indexed by stats+0xBD) in a global request table at 0x142D371D0 with type 2 and value n, using the enemy type record (+0x130, id at +0x4C) or a per-actor table (+0x4A8). Read back by 0xB5. Exact meaning not pinned down.",
+  "func_steam": "0x1402BB010"
+ },
+ "0:0x84": {
+  "name": "GetPlacementMode",
+  "_note": "Ghidra-confirmed (FUN_1402bac40): returns byte +0x5A of the actor's placement record - actor+0x130 is a handle to the room ARD's 0x78-byte actor placement record (set by fnc_spawn_world_gimmick_entity, puVar13[0x4c]). The engine itself uses 2/3/4 of that byte to place/orient the actor relative to Sora; other values are free flags for the script. In the file the record starts 0x68 bytes before its name string. Sabor (tz_3000): tz01 story-fight record has 5, tz03 story-fight record has 6, every other Sabor record has 1.",
+  "func_steam": "0x1402BAC40"
+ },
+ "0:0x74": {
+  "name": "SetActorFlags",
+  "_note": "Ghidra-confirmed: ORs args 2..4 into actor +0x3A4/+0x3A8/+0x3AC.",
+  "func_steam": "0x1402BAA00"
+ },
+ "0:0x59": {
+  "name": "GetActorTimer?",
+  "_note": "Ghidra: returns the float at actor +0x3D4. Used as `while (x > 0.0)` waits; which timer it is (hitstun/invulnerability) not confirmed.",
+  "func_steam": "0x1402BA5D0"
+ },
+ "0:0x03": {
+  "name": "CosDeg",
+  "_note": "Ghidra-confirmed: cos(deg * pi/180). Pair of SinDeg (0x02).",
+  "func_steam": "0x1402B9880"
+ },
+ "0:0xab": {
+  "name": "LoadScriptTable?",
+  "_note": "Ghidra: validates a data blob (first byte 0x14) inside the script and installs its two sub-tables into a global slot (FUN_1401e1400). Called with &data_XXXX; what the tables drive is not confirmed.",
+  "func_steam": "0x1402BCAD0"
+ },
+ "0:0x7f": {
+  "name": "PlaySE?",
+  "_note": "Ghidra (FUN_1402a10b0): (actor, id) plays id (low 16 bits) through the actor's player at +0x15C, optionally with the bank at +0x14C; has a world-specific id remap (world 0xB area 2: 0x429 -> 0x40E). Most likely a sound effect.",
+  "func_steam": "0x1402BABE0"
+ },
+ "0:0xd6": {
+  "name": "ClearActorFlags88",
+  "_note": "Ghidra-confirmed: actor+0x88 &= ~mask; if mask & 2 also zeroes +0x3E4. (Distinct from ClearActorFlags 0x75, which clears the +0x3A4 group.)",
+  "func_steam": "0x1402BC150"
+ },
+ "0:0xb5": {
+  "name": "GetQueuedAction?",
+  "_note": "Ghidra (FUN_14028ff40): returns this actor's value in the request table written by QueueAction? (0xA8), or -1 if none.",
+  "func_steam": "0x1402BB160"
+ },
+ "0:0x96": {
+  "func_steam": "0x1402B9800",
+  "name": "SetEventHandler",
+  "_note": "Ghidra-confirmed (bytes at 0x1402B9800): SetEventHandler(slot, entry) stores one 16-bit code offset (words) into script context +0x748 + slot*2 - the single-slot form of SetEventHandlers (0x21)."
+ },
+ "0:0x75": {
+  "name": "ClearActorFlags",
+  "_note": "Ghidra-confirmed: actor +0x3A4/+0x3A8/+0x3AC &= ~args 2..4. The AND-NOT partner of SetActorFlags (0x74).",
+  "func_steam": "0x1402BAA40"
+ },
+ "0:0x95": {
+  "name": "DegToRad",
+  "_note": "Ghidra-confirmed: FUN_1402a8280(deg * pi/180) - degrees to a normalized radian angle, e.g. self.stats[7] = DegToRad(50.0).",
+  "func_steam": "0x1402B9940"
+ },
+ "0:0x77": {
+  "name": "GetBodyPartPos",
+  "_note": "Ghidra-confirmed: GetBodyPartPos(actor, part, &out) -> FUN_1402b04c0(actor, part, out), the same body-point lookup GetBodyPos (0x20) does for part 0.",
+  "func_steam": "0x1402BAAD0"
+ },
+ "0:0x8a": {
+  "name": "GetGlobalB5C?",
+  "_note": "Ghidra: returns a handle to the global at 0x142DB7B5C (next to the other script-context singletons at 0x142DB7B48/B50). What it holds is not confirmed.",
+  "func_steam": "0x1402BC620"
+ },
+ "0:0x79": {
+  "name": "SetLookTarget?",
+  "_note": "Ghidra (FUN_1402a28c0): SetLookTarget?(actor, other) stores other's handle at actor +0x470 and, if other is active, caches its body point (GetBodyPos) at actor +0x460. A secondary target, separate from SetTarget's +0x74.",
+  "func_steam": "0x1402BAB30"
+ },
+ "0:0x15": {
+  "name": "SpawnAttached?",
+  "_note": "Ghidra (FUN_1402adc20): SpawnAttached?(obj_type, flags, actor, point_query, f) creates an object via the SpawnObj core (FUN_1402ae5b0, lifetime 20000) and binds it to a point on actor (FUN_14029eb20 query, e.g. 32771 = 0x8003 position), copying that point as its position. Returns the object handle.",
+  "func_steam": "0x1402BB5F0"
  }
 }

@@ -43,8 +43,16 @@ this enemy's AI actually do, and what does each attack look like" — entirely o
     are named from `kh1_bd_verbs.json`.
   - Save the output as `.bdasm` to get highlighting, an outline and label navigation from the
     `vscode-evs/` extension.
+- **`kh1_bd_asm.py`** — Assembler for the raw listing, so enemy AI can be edited.
+  - `python enemy_ai/kh1_bd_asm.py patch <in.mdls> <edited listing> <out.mdls>` → re-encodes every
+    block in the listing and writes a patched copy. Labels are re-resolved, so instructions can be
+    added or removed as long as the block still fits; unchanged lines keep their exact bytes.
+  - `python enemy_ai/kh1_bd_asm.py roundtrip <file.mdls>` → checks disassemble → assemble gives
+    back identical bytes (true for all 317 blocks in the game).
 - **`kh1_bd_verbs.json`** — Native-verb table (name, arg count, engine address and evidence
   notes) used by `kh1_bd_disasm.py`'s `--fold` view.
+- **`names/<block>.json`** (repo root) — optional per-script names for the fold view and BDS, e.g.
+  `names/tz_3000.bd.json`: `{"glob": {"840": "encounter"}, "routines": {"@L1BF4": "break_floor_hole"}}`.
 - **`kh1_bd_verb_survey.py`** — Cross-enemy survey of how each native verb is used.
 - **`kh1_motion_dict.py`** — Resolves a raw AI-script motion ID to the local `.mset` animation
   index it plays (`anim0000`-style numbering, matching ModelViewerWX), from the dictionary
@@ -55,6 +63,33 @@ this enemy's AI actually do, and what does each attack look like" — entirely o
   - The enemy's `.mset` must sit alongside its `.mdls` with the same basename.
 
 Worked example outputs are in `docs/enemy_ai/examples/`.
+
+## `bds/` — enemy AI as editable C-like source (BDS)
+
+BDS is a C-like view of the `.bd` enemy AI bytecode, and it is **fully round-trippable**: compiling
+the decompiled text gives back the original bytes exactly. Functions are written as `if`/`else if`/
+`while`/`loop`/`switch` with named natives, fields (`self.target.pos`, `self.stats.hp`), glob
+aliases from `names/<block>.json`, and function references (`SetEventHandlers(@on_hit, @on_message, 0, 0)`). A
+function the decompiler can't express exactly is kept as an `asm` instruction listing inside the
+same file, and unreachable bytes are kept as a `data { }` hex block. Both of those round-trip too.
+
+```
+python bds/lang.py path/to/xa_tz_3000.mdls -o tz_3000.bds         # decompile every .bd block
+python bds/build.py tz_3000.bds path/to/xa_tz_3000.mdls out.mdls   # compile back into a copy
+python bds/roundtrip.py [xa_tz_3000 ...]                           # check decompile -> compile is exact
+```
+
+- `build.py` writes only the blocks present in the `.bds`. Code may grow into the zero padding
+  after a block (up to the next section or block); the `.mdls` layout is never moved.
+- Threads, event handlers and attack callbacks are started with a function's offset/2. These are
+  written as `@name` and follow the function when code moves. `build.py` warns if a moved
+  function's old offset/2 still appears as a plain number.
+- Rare shapes carry a mark instead of losing exactness: `if.nj`/`else.nj` (a branch without the
+  compiler's usual jump to the end), `.i`/`.f` on an operator whose int/float mode isn't the one
+  its operands imply, and `seed 0x....` / `~0x....` for opcode bits the compiler carried over
+  from the previous instruction.
+- Open `.bds` files in VS Code with the `vscode-evs/` extension for highlighting, an outline,
+  go-to-definition and find-references.
 
 ## `animation/` — `.mdls`/`.mset` model and skeletal animation
 
