@@ -52,7 +52,7 @@ NAT_RAW_RE = re.compile(r'__t(\d)_(0x[0-9a-fA-F]+)$')
 
 # actor fields (word offsets into the engine's `entity`), and the stats page's
 VEC_FIELDS = {'pos': 4, 'rot': 12, 'scale': 16}
-ACTOR_FIELDS = {'target': 29, 'stats': 27}
+ACTOR_FIELDS = {'target': 29, 'stats': 27, 'air': 28, 'attacker': 31, 'motion_speed': 161}
 STATS_FIELDS = {'hp': 15, 'max_hp': 16, 'mp': 17}
 AXES = 'xyzw'
 

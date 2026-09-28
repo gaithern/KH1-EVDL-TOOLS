@@ -297,6 +297,26 @@
   "func_steam": "0x140395100",
   "name": "SetTimedMove"
  },
+ "0:0x26": {
+  "name": "ScriptedKnockback?",
+  "_note": "Ghidra + live (Leon ex_1030, 2026-09-27): (actor, hit, motion_base, up, horizontal, 0) -> result; engine FUN_1402b79f0. Plays the knockback reaction from motion_base (Leon: 0xFA ground / 0x104 air, picked by self.air) and launches the actor with the given up/horizontal speeds. Leon vanilla 5.0/50.0 = back flip; 90.0/5.0 = near-vertical launch. Used by boss hit handlers that own their reactions (entity+0x374 bit 0x10000).",
+  "func_steam": "0x1402BBC80"
+ },
+ "0:0x2a": {
+  "name": "PushOnHit?",
+  "_note": "Ghidra + live (Leon ex_1030, 2026-09-27): (actor, hit); engine FUN_1402b7e60, the reaction-level-2 handler: pushes the actor along the hit direction (btltbl2+0x2C x weight) with no flinch motion. Boss hit handlers call it for hits they absorb without hitstun.",
+  "func_steam": "0x1402BBD80"
+ },
+ "0:0x3b": {
+  "name": "SetMotionSpeed",
+  "_note": "Ghidra-confirmed (FUN_1402ba370 -> FUN_14029e8b0): (actor, speed) writes the float at entity+0x284 (self.motion_speed). The per-frame animation advance (FUN_14029f0a0) adds FrameDelta x this value, so the whole motion (hitboxes, flags, timing) scales. SetMotion does NOT reset it (only spawn init sets 1.0), so restore it after use. Leon (ex_1030) uses 0.1 for the defeat slow-mo; 1.5-2.5 tested live on his spin. Event scripts reach the same setter via fnc_0D1_set_motion_speed.",
+  "func_steam": "0x1402BA370"
+ },
+ "0:0x6b": {
+  "name": "SpawnEffect?",
+  "_note": "Usage only (Leon ex_1030): (actor, effect_id, blend/start) called right before each attack's MakeAttack/SetMotion with a per-attack id (slashes 8/9, jump slash 0xA/0x17; guard-mode variants 0xC/0xD/0xE/0x18). Reads as attaching the attack's swing effect. Not Ghidra-verified.",
+  "func_steam": "0x1402BA790"
+ },
  "_arity_t0": [
   [
    1,
@@ -1316,8 +1336,8 @@
   "func_steam": "0x1402BBFF0"
  },
  "0:0xa8": {
-  "name": "QueueAction?",
-  "_note": "Ghidra (FUN_140290080): (actor, n) fills this actor's entry (indexed by stats+0xBD) in a global request table at 0x142D371D0 with type 2 and value n, using the enemy type record (+0x130, id at +0x4C) or a per-actor table (+0x4A8). Read back by 0xB5. Exact meaning not pinned down.",
+  "name": "QueueVoice?",
+  "_note": "Ghidra (FUN_140290080): (actor, n) fills this actor's entry (indexed by stats+0xBD) in a global request table at 0x142D371D0 with type 2 and value n, using the enemy type record (+0x130, id at +0x4C) or a per-actor table (+0x4A8). Read back by 0xB5. Exact meaning not pinned down. Live (Leon ex_1030, 2026-09-27): the value picks a voice clip (VAGp) - scripts call it with random 0xF/0x10 when hurt, 0x11 on defeat, 1/0/3/5 per attack - so it queues a voice line, not an action.",
   "func_steam": "0x1402BB010"
  },
  "0:0x84": {
