@@ -1,0 +1,10 @@
+{
+  "kgr 5": {
+    "vars": {
+      "runtime.dword[0x904]": "FORM_CONFIRMED",
+      "runtime.dword[0x908]": "DREAM_STAT_BONUS",
+      "runtime.dword[0x90C]": "ABILITY_PATH",
+      "runtime.dword[0x910]": "DREAM_WEAPON"
+    }
+  }
+}

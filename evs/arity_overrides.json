@@ -1,0 +1,62 @@
+{
+ "59": {
+  "name": "Change_map",
+  "args": 3,
+  "returns": 0
+ },
+ "202": {
+  "name": "Get_angle_actor_to_coord",
+  "args": 4,
+  "returns": 1
+ },
+ "290": {
+  "name": "Push_actor_coord_X2",
+  "args": 1,
+  "returns": 1
+ },
+ "291": {
+  "name": "Push_actor_coord_Y2",
+  "args": 1,
+  "returns": 1
+ },
+ "292": {
+  "name": "Push_actor_coord_Z2",
+  "args": 1,
+  "returns": 1
+ },
+ "419": {
+  "name": "GetLength_2",
+  "args": 4,
+  "returns": 1
+ },
+ "293": {
+  "name": "Push_actor_rotation2",
+  "args": 1,
+  "returns": 1
+ },
+ "416": {
+  "name": "Add_battle_item",
+  "args": 2,
+  "returns": 1
+ },
+ "559": {
+  "name": "Acquire_ability",
+  "args": 2,
+  "returns": 0
+ },
+ "684": {
+  "name": "Equip_accessory",
+  "args": 2,
+  "returns": 0
+ },
+ "685": {
+  "name": "Equip_ability",
+  "args": 2,
+  "returns": 0
+ },
+ "527": {
+  "name": "Check_anthem_report",
+  "args": 1,
+  "returns": 1
+ }
+}

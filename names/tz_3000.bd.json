@@ -1,0 +1,33 @@
+{
+  "glob": {
+    "32": "hole_jump_point",
+    "80": "junk_jump_point",
+    "96": "kabe_1_jump_point",
+    "112": "kabe_2_jump_point",
+    "800": "state_thread",
+    "824": "map_info",
+    "840": "encounter",
+    "844": "hp_depleted",
+    "868": "hole_selector",
+    "888": "perch_zone",
+    "916": "junk_broken",
+    "920": "kabe_2_broken",
+    "924": "kabe_1_broken",
+    "932": "breaking_through"
+  },
+  "routines": {
+    "@L0448": "state_reacting",
+    "@L059E": "state_combat",
+    "@L078C": "escape_jump",
+    "@L108C": "try_zone_break",
+    "@L1340": "after_break",
+    "@L1812": "leap_to",
+    "@L1BF4": "break_floor_hole",
+    "@L30A6": "set_state",
+    "@L30C4": "take_mode_request",
+    "@L30FA": "request_mode",
+    "@L3820": "init_encounter",
+    "@L4062": "on_message",
+    "@L40DA": "on_hit"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "KH1 BDS",
+  "scopeName": "source.bds",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#block-header" },
+    { "include": "#func-header" },
+    { "include": "#label" },
+    { "include": "#asm" },
+    { "include": "#keyword" },
+    { "include": "#fref" },
+    { "include": "#memory" },
+    { "include": "#field" },
+    { "include": "#native-unknown" },
+    { "include": "#call" },
+    { "include": "#self" },
+    { "include": "#param" },
+    { "include": "#number" },
+    { "include": "#operator" }
+  ],
+  "repository": {
+    "comment": { "name": "comment.line.double-slash.bds", "match": "//.*$" },
+    "block-header": {
+      "patterns": [
+        { "match": "^(bd)\\s+(\\S+)\\s+(code)\\s+(0x[0-9A-Fa-f]+)", "captures": { "1": { "name": "storage.type.block.bds" }, "2": { "name": "entity.name.type.block.bds" }, "3": { "name": "storage.modifier.bds" }, "4": { "name": "constant.numeric.hex.bds" } } },
+        { "match": "^\\s*(names|data)\\s*(?=\\{)", "captures": { "1": { "name": "storage.type.declarations.bds" } } }
+      ]
+    },
+    "func-header": {
+      "match": "^\\s*(func)\\s+([A-Za-z_]\\w*\\??)",
+      "captures": { "1": { "name": "storage.type.function.bds" }, "2": { "name": "entity.name.function.bds" } }
+    },
+    "label": { "match": "^\\s*(L\\d+|@L-?[0-9A-Fa-f]+)(:)\\s*$", "captures": { "1": { "name": "entity.name.label.bds" } } },
+    "asm": {
+      "patterns": [
+        { "name": "constant.other.exact-opcode.bds", "match": "~0x[0-9A-Fa-f]{4}\\b" },
+        { "name": "entity.name.label.bds", "match": "@L-?[0-9A-Fa-f]+\\b" },
+        { "name": "variable.other.asm-operand.bds", "match": "\\[(?:loc|glob|heap|imm)[+-][^\\]]*\\]" },
+        { "match": "^\\s{8}(push|store|store\\.ind|lea|load|dup|pop|yield|ret|abort|jmp|bz|bnz|call|idxadd|op|[a-z]{2,5}(?:\\.[a-z0-9]+)*)(?=\\s|$)(?!\\s*[=(\\[])", "captures": { "1": { "name": "keyword.other.mnemonic.bds" } } }
+      ]
+    },
+    "keyword": {
+      "patterns": [
+        { "name": "keyword.control.bds", "match": "\\b(if|else|while|loop|switch|case|default|goto|return|yield|abort)\\b(?:\\.(nj|i|f))?" },
+        { "name": "keyword.other.bds", "match": "\\b(asm|frame|seed|locals)\\b" },
+        { "name": "support.function.builtin.bds", "match": "\\b(load|iabs|fabs|ftoi|ftoi2|ineg|fneg|bnot|__push)(?=\\s*\\()" }
+      ]
+    },
+    "fref": { "name": "entity.name.function.reference.bds", "match": "@[A-Za-z_]\\w*\\??" },
+    "memory": {
+      "match": "\\b(loc|glob|heap|data)(?=\\[)",
+      "captures": { "1": { "name": "variable.language.memory.bds" } }
+    },
+    "field": {
+      "match": "(\\.)(pos|rot|scale|target|stats|hp|max_hp|mp|x|y|z|w)\\b",
+      "captures": { "2": { "name": "variable.other.property.bds" } }
+    },
+    "native-unknown": { "name": "support.function.native.unnamed.bds", "match": "\\b__t[01]_0x[0-9a-f]{2}\\b" },
+    "call": {
+      "patterns": [
+        { "match": "\\b(sub_[0-9A-F]{4})(?=\\s*\\()", "captures": { "1": { "name": "entity.name.function.unnamed.bds" } } },
+        { "match": "\\b([a-z_][a-z0-9_]*)(?=\\s*\\()", "captures": { "1": { "name": "entity.name.function.bds" } } },
+        { "match": "\\b([A-Z][A-Za-z0-9_]*\\??)(?=\\s*\\()", "captures": { "1": { "name": "support.function.native.bds" } } }
+      ]
+    },
+    "self": { "name": "variable.language.self.bds", "match": "\\bself\\b" },
+    "param": { "name": "variable.parameter.bds", "match": "\\ba\\d+\\b" },
+    "number": {
+      "patterns": [
+        { "name": "constant.numeric.float.bds", "match": "-?\\b\\d+\\.\\d*(?:e[+-]?\\d+)?\\b|\\b\\d+e[+-]?\\d+\\b" },
+        { "name": "constant.numeric.hex.bds", "match": "\\b0x[0-9A-Fa-f]+\\b" },
+        { "name": "constant.numeric.bds", "match": "#?-?\\b\\d+f?\\b" }
+      ]
+    },
+    "operator": {
+      "patterns": [
+        { "name": "keyword.operator.mode.bds", "match": "(?<=[-+*/%<>=!&|^])\\.(i|f)\\b" },
+        { "name": "keyword.operator.bds", "match": "&&|\\|\\||==|!=|<=|>=|<<|>>|->|[-+*/%&|^]=|[-+*/%<>&|^!~=]" }
+      ]
+    }
+  }
+}
