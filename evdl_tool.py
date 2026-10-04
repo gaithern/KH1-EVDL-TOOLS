@@ -984,6 +984,7 @@ def _run_gui():
     from tkinter import ttk, filedialog, messagebox
 
     ASM_FT = [('EVDL ASM files', '*.evdl.asm *.asm'), ('All files', '*.*')]
+    EVS_FT = [('EVS files', '*.evs'), ('All files', '*.*')]
     BIN_FT = [('All files', '*.*'), ('EVDL/ARD/EV files', '*.evdl *.ard *.ev')]
     asm_dir = str(WORKING)
     bin_dir = 'C:/OpenKH/OpenKHEGS/data/kh1'
@@ -996,8 +997,9 @@ def _run_gui():
     nb.pack(fill='both', expand=True, padx=4, pady=4)
 
     def _section(p, text, row):
-        tk.Label(p, text=text, font=('TkDefaultFont', 9, 'bold'), anchor='w') \
-          .grid(row=row, column=0, columnspan=3, sticky='w', padx=6, pady=(8, 0))
+        lbl = tk.Label(p, text=text, font=('TkDefaultFont', 9, 'bold'), anchor='w')
+        lbl.grid(row=row, column=0, columnspan=3, sticky='w', padx=6, pady=(8, 0))
+        return lbl
 
     def _filelist(p, row, ft, idir, height=5, width=70):
         frame = tk.Frame(p)
@@ -1010,7 +1012,8 @@ def _run_gui():
         bf = tk.Frame(p)
         bf.grid(row=row + 1, column=0, columnspan=3, sticky='w', padx=6, pady=2)
         def _add():
-            paths = filedialog.askopenfilenames(title='Add files', filetypes=ft, initialdir=idir)
+            paths = filedialog.askopenfilenames(title='Add files', filetypes=ft() if callable(ft) else ft,
+                                                initialdir=idir() if callable(idir) else idir)
             existing = set(lb.get(0, tk.END))
             for path in paths:
                 if path not in existing:
@@ -1059,58 +1062,148 @@ def _run_gui():
     t1 = ttk.Frame(nb)
     nb.add(t1, text='Disasm / Asm')
 
-    _section(t1, 'Disassemble  (.evdl / .ard  →  .asm)', 0)
-    dis_lb = _filelist(t1, 1, BIN_FT, bin_dir)
+    # ASM = raw instruction listing (this tool); EVS = structured script language (evs/)
+    mode_var = tk.StringVar(value='asm')
+    mode_frame = tk.Frame(t1)
+    mode_frame.grid(row=0, column=0, columnspan=3, sticky='w', padx=6, pady=(6, 0))
+    tk.Label(mode_frame, text='Format:').pack(side='left', padx=(0, 4))
+    for val, txt in (('asm', 'ASM'), ('evs', 'EVS')):
+        tk.Radiobutton(mode_frame, text=txt, value=val, variable=mode_var, indicatoron=0,
+                       width=6, command=lambda: _set_mode()).pack(side='left')
 
-    _section(t1, 'Assemble  (.asm  →  .evdl / .ard)', 3)
-    asm_lb = _filelist(t1, 4, ASM_FT, asm_dir)
+    def _is_evs():
+        return mode_var.get() == 'evs'
+
+    dis_lbl = _section(t1, '', 1)
+    dis_lb = _filelist(t1, 2, BIN_FT, bin_dir)
+
+    asm_lbl = _section(t1, '', 4)
+    asm_lb = _filelist(t1, 5, lambda: EVS_FT if _is_evs() else ASM_FT, asm_dir)
 
     tk.Label(t1, text='Original binary\n(override, optional):', anchor='e', justify='right') \
-      .grid(row=6, column=0, sticky='e', **pad)
+      .grid(row=7, column=0, sticky='e', **pad)
     orig_bin_var = tk.StringVar()
-    tk.Entry(t1, textvariable=orig_bin_var, width=50).grid(row=6, column=1, sticky='ew', **pad)
+    tk.Entry(t1, textvariable=orig_bin_var, width=50).grid(row=7, column=1, sticky='ew', **pad)
     def _browse_orig():
         p = filedialog.askopenfilename(title='Select original binary to repack into',
                                        filetypes=BIN_FT, initialdir=bin_dir)
         if p: orig_bin_var.set(p)
-    tk.Button(t1, text='Browse…', command=_browse_orig).grid(row=6, column=2, **pad)
+    tk.Button(t1, text='Browse…', command=_browse_orig).grid(row=7, column=2, **pad)
 
-    t1_outdir_var       = _outdir_row(t1, 7)
-    t1_append, t1_clear = _results(t1, 9)
+    t1_outdir_var       = _outdir_row(t1, 8)
+    t1_append, t1_clear = _results(t1, 10)
+
+    def _run_one(name, fn):
+        """Run fn, echoing what it prints into the results box; die() must not close the GUI."""
+        import io, contextlib
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                fn()
+            ok, err = True, None
+        except SystemExit:
+            ok, err = False, None
+        except Exception as e:
+            ok, err = False, f'{type(e).__name__}: {e}'
+        t1_append(f'{"OK " if ok else "ERR"} {name}' + (f': {err}' if err else ''))
+        for line in buf.getvalue().strip().splitlines():
+            t1_append(f'      {line}')
+
+    def _evs_modules():
+        evs_dir = str(_HERE / 'evs')
+        if evs_dir not in sys.path:
+            sys.path.insert(0, evs_dir)
+        import lang, build
+        return lang, build
+
+    def _find_orig(evs_path):
+        """Original binary for an .evs: the file it is named after, next to it or in the game data."""
+        from corpus import GAME_DATA
+        name = re.sub(r'\.evs$', '', evs_path.name, flags=re.IGNORECASE)
+        for cand in (evs_path.with_name(name), GAME_DATA / name):
+            if cand.is_file():
+                return cand
+        return next(GAME_DATA.rglob(name), None) if GAME_DATA.is_dir() else None
 
     def _t1_disasm():
         files = list(dis_lb.get(0, tk.END))
         if not files: messagebox.showerror('Bad input', 'Add at least one file to disassemble.'); return
+        out_dir = _out_dir(t1_outdir_var)
         t1_clear()
+        if out_dir:
+            out_dir.mkdir(parents=True, exist_ok=True)
+        if not _is_evs():
+            for p in files:
+                out_path = str(out_dir / (Path(p).name + '.asm')) if out_dir else None
+                _run_one(Path(p).name, lambda: cmd_disasm(p, out_path))
+            return
+        lang, _ = _evs_modules()
         for p in files:
-            try:
-                cmd_disasm(p)
-                t1_append(f'OK  {Path(p).name}')
-            except Exception as e:
-                t1_append(f'ERR {Path(p).name}: {e}')
+            def _do():
+                dest = (out_dir or WORKING) / (Path(p).name + '.evs')
+                dest.write_text(lang.decompile_file(p), encoding='utf-8')
+                print(f'-> {dest}')
+            _run_one(Path(p).name, _do)
 
     def _t1_asm():
         files = list(asm_lb.get(0, tk.END))
-        if not files: messagebox.showerror('Bad input', 'Add at least one .asm file to assemble.'); return
+        ext = '.evs' if _is_evs() else '.asm'
+        if not files: messagebox.showerror('Bad input', f'Add at least one {ext} file to assemble.'); return
         out_dir  = _out_dir(t1_outdir_var)
         orig_bin = orig_bin_var.get().strip() or None
         t1_clear()
-        for p in files:
-            try:
+        if out_dir:
+            out_dir.mkdir(parents=True, exist_ok=True)
+        if not _is_evs():
+            for p in files:
                 out_path = None
                 if out_dir:
-                    out_dir.mkdir(parents=True, exist_ok=True)
                     base = re.sub(r'\.asm$', '', Path(p).name, flags=re.IGNORECASE)
                     out_path = str(out_dir / base)
-                cmd_asm(p, out_path, orig_bin_override=orig_bin)
-                t1_append(f'OK  {Path(p).name}')
-            except Exception as e:
-                t1_append(f'ERR {Path(p).name}: {e}')
+                _run_one(Path(p).name, lambda: cmd_asm(p, out_path, orig_bin_override=orig_bin))
+            return
+        _, build = _evs_modules()
+        for p in files:
+            def _do():
+                src = Path(p)
+                orig = Path(orig_bin) if orig_bin else _find_orig(src)
+                if not orig:
+                    raise FileNotFoundError('original binary not found; set the override')
+                dest = (out_dir or src.parent) / re.sub(r'\.evs$', '', src.name, flags=re.IGNORECASE)
+                binls = build.build_file(src, orig, dest)
+                print(f'-> {dest}  (repacked into {orig})')
+                for b in binls:
+                    print(f'-> {b}  (new messages)')
+            _run_one(Path(p).name, _do)
 
     t1_btns = tk.Frame(t1)
-    t1_btns.grid(row=11, column=0, columnspan=3, pady=8)
-    tk.Button(t1_btns, text='Disassemble', command=_t1_disasm, width=16).pack(side='left', padx=6)
-    tk.Button(t1_btns, text='Assemble',    command=_t1_asm,    width=16).pack(side='left', padx=6)
+    t1_btns.grid(row=12, column=0, columnspan=3, pady=8)
+    dis_btn = tk.Button(t1_btns, command=_t1_disasm, width=16)
+    dis_btn.pack(side='left', padx=6)
+    asm_btn = tk.Button(t1_btns, command=_t1_asm, width=16)
+    asm_btn.pack(side='left', padx=6)
+
+    # Each format keeps its own assemble list, since .asm and .evs files are not interchangeable
+    _asm_lists = {'asm': [], 'evs': []}
+    _cur_mode = ['asm']
+
+    def _set_mode():
+        mode = mode_var.get()
+        _asm_lists[_cur_mode[0]] = list(asm_lb.get(0, tk.END))
+        asm_lb.delete(0, tk.END)
+        for item in _asm_lists[mode]:
+            asm_lb.insert(tk.END, item)
+        _cur_mode[0] = mode
+        if mode == 'evs':
+            dis_lbl.config(text='Decompile  (.evdl / .ard / .ev  →  .evs)')
+            asm_lbl.config(text='Build  (.evs  →  .evdl / .ard / .ev)')
+            dis_btn.config(text='Decompile'); asm_btn.config(text='Build')
+        else:
+            dis_lbl.config(text='Disassemble  (.evdl / .ard  →  .asm)')
+            asm_lbl.config(text='Assemble  (.asm  →  .evdl / .ard)')
+            dis_btn.config(text='Disassemble'); asm_btn.config(text='Assemble')
+
+    _set_mode()
 
     # ── Tab 2: Byte Search ────────────────────────────────────────────────────
     t2 = ttk.Frame(nb)
