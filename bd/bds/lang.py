@@ -12,6 +12,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / 'asm'))
 import kh1_bd_disasm as bd
 import kh1_bd_asm as bdasm
+from kh1_motion_dict import read_motion_dict
 
 NAMES_DIR = HERE.parent / 'data' / 'names'
 
@@ -967,9 +968,34 @@ def no_jump_mark(has_jump):
     return '.nj'
 
 
+MOTION_VERBS = {(0, 0x0C), (0, 0x0D), (0, 0x0E)}
+MOTION_ID_MASK = 0xFFFF
+
+
+def constant_motion_id(expression):
+    if expression[0] != 'nat' or (expression[1], expression[2]) not in MOTION_VERBS:
+        return None
+    arguments = expression[3]
+    if len(arguments) < 2 or arguments[1][0] != 'int':
+        return None
+    return arguments[1][1] & MOTION_ID_MASK
+
+
+def motion_comment(expression, motions):
+    if motions is None:
+        return ''
+    motion_id = constant_motion_id(expression)
+    if motion_id is None:
+        return ''
+    if motion_id in motions:
+        return f'  // -> anim{motions[motion_id]:04d}'
+    return f'  // motion_id {motion_id} (no anim)'
+
+
 class StatementPrinter:
-    def __init__(self, names):
+    def __init__(self, names, motions=None):
         self.names = names
+        self.motions = motions
 
     def text(self, e):
         return expr_text(e, self.names)
@@ -986,13 +1012,15 @@ class StatementPrinter:
         if kind == 'label':
             return [f'{"    " * max(depth - 1, 0)}{s[1]}:']
         if kind == 'store':
-            return [f'{pad}{self.text(("val", s[1], s[2], 1))} = {self.text(s[3])};']
+            comment = motion_comment(s[3], self.motions)
+            return [f'{pad}{self.text(("val", s[1], s[2], 1))} = {self.text(s[3])};{comment}']
         if kind == 'storei':
             return [f'{pad}{pointer_target_text(s[1], self.names)} = {self.text(s[2])};']
         if kind == 'rmw':
             return [pad + self.read_modify_write_text(s)]
         if kind == 'expr':
-            return [f'{pad}{self.text(s[1])};']
+            comment = motion_comment(s[1], self.motions)
+            return [f'{pad}{self.text(s[1])};{comment}']
         if kind == 'keep':
             return [f'{pad}__push({self.text(s[1])});']
         if kind in ('yield', 'abort'):
@@ -1058,8 +1086,8 @@ class StatementPrinter:
         return out
 
 
-def statement_lines(statements, names, depth):
-    return StatementPrinter(names).lines(statements, depth)
+def statement_lines(statements, names, depth, motions=None):
+    return StatementPrinter(names, motions).lines(statements, depth)
 
 
 MODE_MARK = r'(?:\.(?:i|f|m2|m3)\b)?'
@@ -1807,8 +1835,9 @@ class Part:
 
 
 class Block:
-    def __init__(self, data, block_off, name, size):
+    def __init__(self, data, block_off, name, size, motions=None):
         self.data = data
+        self.motions = motions
         self.block_off = block_off
         self.name = name
         self.start, self.end = code_region(data, block_off, name, size)
@@ -1974,7 +2003,7 @@ def structured_lines(block, part):
             raise Fail('jump out of the function')
     tree = renumber(structure(statements, refs))
     head = function_header(block.routines[part.entry], param_count, return_count, builder.frame, part.seed)
-    lines = [head + block.header_comment(part.entry)] + statement_lines(tree, block.names, 2) + ['    }']
+    lines = [head + block.header_comment(part.entry)] + statement_lines(tree, block.names, 2, block.motions) + ['    }']
     check_labels_survive(lines, block, builder.frame)
     return lines
 
@@ -2094,8 +2123,8 @@ def mismatched_functions(block, code, span_list):
     return wrong
 
 
-def decompile_block(data, block_off, name, size, force_asm=None):
-    block = Block(data, block_off, name, size)
+def decompile_block(data, block_off, name, size, force_asm=None, motions=None):
+    block = Block(data, block_off, name, size, motions)
     renderer = PartRenderer(block, force_asm)
     original = data[block.start:block.end]
     for _ in range(len(block.parts) + 2):
@@ -2229,13 +2258,22 @@ def compile_block(text, with_spans=False):
     return code_offset, code
 
 
+def sibling_motions(mdls_path):
+    mset_path = Path(mdls_path).with_suffix('.mset')
+    try:
+        return read_motion_dict(str(mset_path))
+    except (FileNotFoundError, struct.error):
+        return None
+
+
 def decompile_file(path, only=None):
     data = Path(path).read_bytes()
+    motions = sibling_motions(path)
     out = []
     for block_off, name, size in bd.find_blocks(data):
         if only is not None and only != name:
             continue
-        out.append(decompile_block(data, block_off, name, size))
+        out.append(decompile_block(data, block_off, name, size, motions=motions))
     return '\n'.join(out)
 
 
