@@ -27,7 +27,7 @@ function parse(text) {
         const prev = block.labels[block.labels.length - 1];
         if (prev) prev.end = i - 1;
         const note = m[3] || '';
-        // `; routine_name - sub(...)` when a names/<block>.json gives the routine a name
+        // `; routine_name - sub(...)` when a bd/data/names/<block>.json gives the routine a name
         const nm = /^([A-Za-z_]\w*)(?:\s+-\s+|$)/.exec(note);
         const alias = nm && nm[1] !== 'sub' ? nm[1] : null;
         block.labels.push({ name: m[1], alias, note, line: i, end: block.end });

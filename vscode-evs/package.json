@@ -1,7 +1,7 @@
 {
   "name": "kh1-evs",
   "displayName": "KH1 EVS",
-  "description": "Syntax highlighting and navigation for EVS, the C-like view of Kingdom Hearts 1 event scripts (KH1-EVDL-TOOLS/evs), for BDS, the C-like view of enemy AI (KH1-EVDL-TOOLS/bds), and for .bdasm enemy AI disassembly (kh1_bd_disasm.py)",
+  "description": "Syntax highlighting and navigation for EVS, the C-like view of Kingdom Hearts 1 event scripts (KH1-EVDL-TOOLS/ev/evs), for BDS, the C-like view of enemy AI (KH1-EVDL-TOOLS/bd/bds), and for .bdasm enemy AI disassembly (kh1_bd_disasm.py)",
   "version": "0.0.7",
   "publisher": "kh1-evdl-tools",
   "engines": {

@@ -1,4 +1,4 @@
-// Navigation for .bds files (bds/lang.py output): blocks are `bd NAME code 0x... {`, functions
+// Navigation for .bds files (bd/bds/lang.py output): blocks are `bd NAME code 0x... {`, functions
 // `    func NAME ... {`, glob aliases live in each block's `names { }`, and labels (`L1:`, or
 // `@Lxxxx:` in asm functions) belong to the function they are in.
 'use strict';
@@ -125,13 +125,13 @@ function tokens(doc) {
     return out;
 }
 
-// ---- natives table (enemy_ai/kh1_bd_verbs.json, found next to the open file or in the workspace) ----
+// ---- natives table (bd/asm/kh1_bd_verbs.json, found next to the open file or in the workspace) ----
 function loadVerbs(fs, path, startDir, roots) {
     const dirs = [];
     for (let d = startDir; d && !dirs.includes(d); d = path.dirname(d)) dirs.push(d);
     for (const r of roots) dirs.push(r);
     for (const d of dirs) {
-        const f = path.join(d, 'enemy_ai', 'kh1_bd_verbs.json');
+        const f = path.join(d, 'bd', 'asm', 'kh1_bd_verbs.json');
         if (!fs.existsSync(f)) continue;
         try {
             const j = JSON.parse(fs.readFileSync(f, 'utf8'));
