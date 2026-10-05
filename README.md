@@ -22,6 +22,30 @@ reused across other KH1 modding projects.
   carries a terminator byte: `04` for dialogue the player dismisses (talk lines, menus) and `00`
   for timed cutscene subtitles. New strings default to `04`; a menu saved with `00` closes
   instantly and deadlocks the script.
+- **`wdt_viewer.py`** — Read-only viewer for the per-world `<world>.wdt` files. Every value is
+  shown with its file offset, its offset inside its table entry, and its raw bytes, next to a
+  hex pane that highlights the selected field (click a hex byte to jump the other way).
+  - `python wdt_viewer.py [file.wdt]` opens the GUI (Ctrl+O to open, Ctrl+G for go-to-offset;
+    double-click a row in an overview table to open that record).
+  - `python wdt_viewer.py dump <file.wdt>` prints every field as text.
+  - `python wdt_viewer.py verify [dir]` parses every `.wdt` in a folder (default
+    `C:\OpenKH\OpenKHEGS\data\kh1`) and checks the layout: sections contiguous to EOF, every
+    entrance pointing at a real area, every door target pointing at a real entrance, every
+    BGM id present in the music table.
+  - BGM ids are named from [KH1-DOCUMENTATION](https://github.com/gaithern/KH1-DOCUMENTATION)'s
+    `data/sound/music.csv`. It is found automatically when KH1-DOCUMENTATION is checked out
+    next to this repo; otherwise pass `--music <path>`, set `KH1_MUSIC_CSV`, or use the
+    GUI's **Music table...** button. Without it the ids are shown unnamed.
+
+  What it decodes: the section table; the **area table** (location group, field/battle BGM
+  with track names, flags, Traverse Town's alternate BGM, ...) plus a **Music used** table per
+  world (each track, its length/loop point, and which rooms use it as field, battle or
+  alternate music); the **entrance table** (area plus Sora / party slot
+  1 / party slot 2 spawn x, y, z, rot) with the KGRs that use each entrance; the **world
+  script** header, string table and KGRs, with every `push N; Change_area` /
+  `Start_map_change_rewrite_set` door target; the 4 text colour sets as swatches; the **world
+  title logo** (TIM2) and the **dialog window texture** (256x128 8bpp), both rendered and
+  exportable as PNG.
 - **`find_replace.py`** — GUI/CLI tool for bulk find-and-replace across `.asm` files, with
   wildcard and regex modes.
 - **`save_data_labels.json`** — Known save-data memory offsets, used by `evdl_tool.py` to
