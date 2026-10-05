@@ -41,6 +41,9 @@ reused across other KH1 modding projects.
 - **`wdt_tool.py`** — Read-only viewer for the per-world `<world>.wdt` files. Every value is
   shown with its file offset, its offset inside its table entry, and its raw bytes, next to a
   hex pane that highlights the selected field (click a hex byte to jump the other way).
+  The parsing lives in `wdt/`: `wdt_format.py` (the parser), `wdt_music.py` (BGM names),
+  `wdt_images.py` (image decoding and PNG output) and `wdt_report.py` (`dump` and `verify`);
+  `wdt_tool.py` itself is only the command line and GUI.
   - `python wdt_tool.py [file.wdt]` opens the GUI (Ctrl+O to open, Ctrl+G for go-to-offset;
     double-click a row in an overview table to open that record).
   - `python wdt_tool.py dump <file.wdt>` prints every field as text.
