@@ -150,7 +150,7 @@
    "lua"
   ],
   "evidence": [
-   "`CID_PREREQUISITE` (0x11A) is written only by `UK_tw01_ard5.evdl` KGR[1] Script 0 — the cutscene fired the first time you talk to Cid in the 1st District",
+   "`CID_PREREQUISITE` (0x11A) is written only by `UK_tw01_ard5.evdl` KGR[1] Script 0 - the cutscene fired the first time you talk to Cid in the 1st District",
    "KH1-RANDOMIZER/mod/scripts/io_packages/locations.lua:3220: address = world_flags_address + 0xD,",
    "KH-1FM-AP-LUA/1fmAPConnector.lua:1030: ,{{0x2DEAA7A, 0x2DEA07A}, 2656375, 0, 0x1}  --Cid Comet G"
   ],
@@ -177,7 +177,7 @@
    "lua"
   ],
   "evidence": [
-   "| Geppetto's own (KGR[1] first visit) | — | 0x11C | | none |",
+   "| Geppetto's own (KGR[1] first visit) | - | 0x11C | | none |",
    "KH1-RANDOMIZER/mod/scripts/io_packages/locations.lua:2574: address = world_flags_address + 0x0F,"
   ]
  },

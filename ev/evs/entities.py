@@ -130,18 +130,18 @@ def world_prefix(path: Path):
     return match.group(1)
 
 
-def import_binl_tool():
-    repo_root = str(Path(__file__).resolve().parents[2])
-    if repo_root not in sys.path:
-        sys.path.insert(0, repo_root)
-    import binl_tool
-    return binl_tool
+def import_binl_file():
+    binl_folder = str(Path(__file__).resolve().parents[2] / 'binl')
+    if binl_folder not in sys.path:
+        sys.path.insert(0, binl_folder)
+    import binl_file
+    return binl_file
 
 
 @lru_cache(maxsize=256)
 def binl_texts(path: Path) -> dict:
-    binl_tool = import_binl_tool()
-    return dict(enumerate(binl_tool.BinlFile.load(str(path)).texts()))
+    binl_file = import_binl_file()
+    return dict(enumerate(binl_file.load_binl(str(path)).texts()))
 
 
 def script_language(path: Path):

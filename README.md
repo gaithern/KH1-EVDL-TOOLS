@@ -10,6 +10,7 @@ Python tools for modding **Kingdom Hearts Final Mix (HD 1.5 Remix)** scripts and
 | `wdt_tool.py` | Read-only viewer for `<world>.wdt` files. No arguments opens a GUI. |
 | `ev/` | Event script code: the binary format, `asm/` (assembler) and `evs/` (C-like language), plus `data/` labels and names. |
 | `bd/` | Enemy AI bytecode (`.bd` inside `xa_*.mdls`): `asm/` (disassembler/assembler) and `bds/` (C-like language). |
+| `binl/` | `.binl` text encoding, file format, commands and GUI behind `binl_tool.py`. |
 | `wdt/` | `.wdt` parsing behind `wdt_tool.py`. |
 | `vscode-evs/` | VS Code extension for `.evs`, `.bds` and `.bdasm` files. |
 

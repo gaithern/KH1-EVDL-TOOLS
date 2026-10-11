@@ -4,8 +4,9 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-import binl_tool
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'binl'))
+from binl_file import load_binl
+from binl_text import encode_text
 from entities import room_and_set, set_binl_name
 
 LANGS = ('UK', 'US', 'FR', 'GR', 'IT', 'SP', 'JP')
@@ -17,7 +18,7 @@ class MessageStore:
     def __init__(self, sources: dict, targets: dict = None, primary: str = None):
         self.files = {}
         for language, path in sources.items():
-            self.files[language] = binl_tool.BinlFile.load(str(path))
+            self.files[language] = load_binl(str(path))
         if targets:
             self.targets = targets
         else:
@@ -45,7 +46,7 @@ class MessageStore:
         if text in self.texts:
             return self.texts.index(text)
         self.check_tables_match(text)
-        encoded = binl_tool.encode_string(text)
+        encoded = encode_text(text)
         new_index = None
         for language, binl in self.files.items():
             appended_index = binl.append(encoded)
