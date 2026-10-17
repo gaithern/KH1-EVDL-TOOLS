@@ -6,6 +6,7 @@ Python tools for modding **Kingdom Hearts Final Mix (HD 1.5 Remix)** scripts and
 | Path | What it's for |
 |---|---|
 | `evdl_tool.py` | Event scripts (`.evdl`/`.ard`/`.wdt`/`.ev`) to and from text, as ASM or EVS. No arguments opens a GUI. |
+| `bd_tool.py` | Enemy AI (`.bd` blocks inside `xa_*.mdls`) to and from text, as BDS or ASM. No arguments opens a GUI. |
 | `binl_tool.py` | View and edit `.binl` dialogue files. No arguments opens a GUI. |
 | `wdt_tool.py` | Read-only viewer for `<world>.wdt` files. No arguments opens a GUI. |
 | `ev/` | Event script code: the binary format, `asm/` (assembler) and `evs/` (C-like language), plus `data/` labels and names. |
@@ -52,13 +53,18 @@ otherwise pass `--music <path>` or set `KH1_MUSIC_CSV`.
 ## Enemy AI (`.bd`)
 
 ```
-python bd/asm/kh1_bd_disasm.py <file.mdls> [<block>|all]            # raw instruction listing
-python bd/asm/kh1_bd_asm.py patch <in.mdls> <listing> <out.mdls>
-python bd/bds/lang.py <file.mdls> -o <out.bds>                       # decompile to BDS
-python bd/bds/build.py <file.bds> <original.mdls> <out.mdls>
-python bd/kh1_motion_ids.py <file.mdls> [--json out.json]            # which animation each attack plays
+python bd_tool.py list <file.mdls>                      # the .bd blocks in a model
+python bd_tool.py decompile <file.mdls> [-o dir]        # writes working/<file>.mdls.bds
+python bd_tool.py build <file.bds> [original.mdls]      # writes <file>.mdls next to the .bds
+python bd_tool.py disasm <file.mdls> [--block NAME]     # writes working/<file>.mdls.bdasm
+python bd_tool.py asm <file.bdasm> [original.mdls]
+python bd_tool.py motions <file.mdls> [--json out.json] # which animation each attack plays
+python bd_tool.py verify <file.mdls>                    # assembler round-trip check
 ```
+
+If no original `.mdls` is given, `build` and `asm` look for it next to the text file, then in
+`KH1_GAME_DATA` (default `C:/OpenKH/OpenKHEGS/data/kh1`).
 
 BDS and the assembler round-trip exactly. BDS marks each motion call with the animation it plays
 (`// -> anim0048`). Per-enemy names go in `bd/data/names/<block>.json`.
-`kh1_motion_ids.py` needs the enemy's `.mset` next to its `.mdls`.
+`motions` needs the enemy's `.mset` next to its `.mdls`.
