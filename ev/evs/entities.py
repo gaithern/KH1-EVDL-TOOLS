@@ -17,6 +17,13 @@ ENTITY_NAME_OFFSET = 0x68
 ENTITY_NAME_SIZE = 16
 BINL_SET_BASE = 0x3E8
 DEFAULT_LANGUAGE = 'UK'
+JAPANESE_LANGUAGE = 'JP'
+EVDLS_REJECTED_OUTSIDE_JAPANESE = (
+    'di03_ard0', 'tw02_ard0', 'tw26_ard0', 'tw26_ard3', 'tw01_ard3', 'tw23_ard3', 'al01_ardd',
+    'he01_ard3', 'ew02_ard0', 'pc12_ard3', 'ew33_ard0', 'ew32_ard0', 'ew36_ard0', 'ew31_ard0',
+    'ew03_ardd', 'ew04_ardd', 'ew07_ardd', 'ew09_ardd', 'ew10_ardd', 'ew12_ardd', 'he02_ard4',
+    'tw12_ard0', 'he07_ard5', 'he07_ard6', 'tw02_ard19', 'nm09_ard0', 'nm09_ard19', 'nm09_ardf',
+)
 
 SCRIPT_FILE_RE = re.compile(
     r'^(?:[A-Z]{2}_)?(?P<room>[a-z]{2}\d{2})(?:_ard(?P<evdl_set>[0-9a-f]+)\.evdl|(?P<ev_set_letter>[a-z])\.ev)$')
@@ -150,6 +157,32 @@ def script_language(path: Path):
     return DEFAULT_LANGUAGE
 
 
+def same_set_ev_name(language, room, set_number):
+    set_letter = chr(ord('a') + set_number)
+    return f'{language}_{room}{set_letter}.ev'
+
+
+def evdl_is_replaced_in_game(script_path: Path):
+    script_path = Path(script_path)
+    if script_path.suffix.lower() != '.evdl':
+        return False
+    room_set = room_and_set(script_path)
+    if not room_set:
+        return False
+    room, set_number = room_set
+    language = script_language(script_path)
+    script_name = LANGUAGE_PREFIX_RE.sub('', script_path.stem)
+    if language != JAPANESE_LANGUAGE and script_name in EVDLS_REJECTED_OUTSIDE_JAPANESE:
+        return True
+    if set_number >= 26:
+        return False
+    ev_name = same_set_ev_name(language, room, set_number)
+    for folder in (script_path.parent, game_data_dir() / 'remastered' / f'{room}.ard'):
+        if (folder / ev_name).is_file():
+            return True
+    return False
+
+
 def messages_for(path: Path, kgr=None):
     game_data = game_data_dir()
     path = Path(path)
@@ -160,13 +193,26 @@ def messages_for(path: Path, kgr=None):
         return None
     room, set_number = room_set
     name = set_binl_name(script_language(path), room, set_number)
-    for candidate in (path.parent / name, game_data / 'remastered' / f'{room}.ard' / name):
-        if candidate.is_file():
-            return binl_texts(candidate)
+    if not evdl_is_replaced_in_game(path):
+        for candidate in (path.parent / name, game_data / 'remastered' / f'{room}.ard' / name):
+            if candidate.is_file():
+                return binl_texts(candidate)
     if path.suffix.lower() == '.evdl':
-        import evdl_format
-        return evdl_format.parse_evdl_string_table(path.read_bytes()) or None
+        return embedded_texts(path)
     return None
+
+
+def embedded_texts(path: Path):
+    import evdl_format
+    import_binl_file()
+    import binl_text
+    raw_strings = evdl_format.parse_evdl_raw_strings(path.read_bytes())
+    if not raw_strings:
+        return None
+    texts = {}
+    for index in range(len(raw_strings)):
+        texts[index] = binl_text.decode_text(raw_strings[index])
+    return texts
 
 
 def names_for(path: Path, kgr_index: int):

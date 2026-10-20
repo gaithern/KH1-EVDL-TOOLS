@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'binl'))
 from binl_file import load_binl
 from binl_text import encode_text
-from entities import room_and_set, set_binl_name
+from entities import evdl_is_replaced_in_game, room_and_set, set_binl_name
 
 LANGS = ('UK', 'US', 'FR', 'GR', 'IT', 'SP', 'JP')
 DEFAULT_PRIMARY_LANGUAGE = 'UK'
@@ -75,10 +75,14 @@ def first_existing(directories, name):
     return None
 
 
-def store_for(script: Path, source_dirs, target_dir: Path = None):
+def store_for(script: Path, source_dirs, target_dir: Path = None, original_script: Path = None):
     script = Path(script)
+    if original_script is None:
+        original_script = script
     room_set = room_and_set(script)
     if not room_set:
+        return None
+    if evdl_is_replaced_in_game(original_script):
         return None
     room, set_number = room_set
     prefix_match = LANGUAGE_PREFIX_RE.match(script.name)

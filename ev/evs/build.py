@@ -161,7 +161,7 @@ def build_file(evs_path, orig_path, out_path):
         file_type = 'evdl'
     store = None
     if file_type == 'evdl':
-        store = msgstore.store_for(out_path, [out_path.parent, orig_path.parent], out_path.parent)
+        store = msgstore.store_for(out_path, [out_path.parent, orig_path.parent], out_path.parent, orig_path)
     blocks = compile_evs(evs_path, store)
     output = repack(orig_path.read_bytes(), file_type, blocks)
     out_path.parent.mkdir(parents=True, exist_ok=True)

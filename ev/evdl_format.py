@@ -194,28 +194,36 @@ def read_subfile_offsets(data):
     return offsets
 
 
-def parse_evdl_string_table(data):
+def parse_evdl_raw_strings(data):
     if len(data) < 16:
-        return {}
+        return []
     subfile_offsets = read_subfile_offsets(data)
     if not subfile_offsets or subfile_offsets[0] >= len(data):
-        return {}
+        return []
     table_start = subfile_offsets[0]
     table_end = subfile_offsets[1] if len(subfile_offsets) > 1 else len(data)
     table = data[table_start:table_end]
     if len(table) < 4:
-        return {}
+        return []
     string_count = u32(table, 0)
     if string_count > 10000:
-        return {}
-    strings = {}
+        return []
+    raw_strings = []
     position = 4
     for index in range(string_count):
         if position >= len(table):
             break
         end = find_string_end(table, position)
-        strings[index] = decode_khscii(table[position:end])
+        raw_strings.append(bytes(table[position:end]))
         position = end + 1
+    return raw_strings
+
+
+def parse_evdl_string_table(data):
+    strings = {}
+    raw_strings = parse_evdl_raw_strings(data)
+    for index in range(len(raw_strings)):
+        strings[index] = decode_khscii(raw_strings[index])
     return strings
 
 
