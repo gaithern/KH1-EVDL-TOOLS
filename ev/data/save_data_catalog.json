@@ -10777,5 +10777,84 @@
   "evidence": [
    "dh01c.ev KGR 5: set 0/1/2 by pedestal area 0x64/0x65/0x66, read to pick Change_sora_parameters"
   ]
+ },
+ {
+  "region": "save_data",
+  "offset": "0x700",
+  "var_id": "0x700",
+  "bit": null,
+  "name": "RARE_HEARTLESS_DROP_FLAGS_1",
+  "confidence": "high",
+  "meaning": "Rando-only one-time drop flags for the rare/mushroom Heartless locations. kh1_lua_library one_time_drops sets a bit when that location's drop is picked up; the client checks the bit like any other location. Chosen from the free run 0x62E-0x7FF (0x628-0x62D are the rando's SLIDE_n_LOCATION_TAKEN flags) (no script, game-code or Lua access; zeroed on New Game).",
+  "values": {
+   "bit 1 (0x01)": "White Mushroom Fire x3 reward collected (AP location 2659201)",
+   "bit 2 (0x02)": "White Mushroom Blizzard x3 reward collected (AP location 2659202)",
+   "bit 3 (0x04)": "White Mushroom Thunder x3 reward collected (AP location 2659203)",
+   "bit 4 (0x08)": "White Mushroom Cure x3 reward collected (AP location 2659204)",
+   "bit 5 (0x10)": "White Mushroom Gravity x3 reward collected (AP location 2659205)",
+   "bit 6 (0x20)": "White Mushroom Stop x3 reward collected (AP location 2659206)",
+   "bit 7 (0x40)": "White Mushroom Aero x3 reward collected (AP location 2659207)",
+   "bit 8 (0x80)": "Rare Truffle Juggle 100 reward collected (AP location 2659208)"
+  },
+  "other_names": [],
+  "sources": [
+   "lua"
+  ],
+  "evidence": [
+   "KH1-LUA-LIBRARY/scripts/io_packages/memory_locations.lua: RARE_HEARTLESS_DROP_FLAGS_1-3 = saveData1 + 0x700-0x702",
+   "KH1-RANDOMIZER/mod/scripts/io_packages/one_time_drop_locations.lua: flag_address = RARE_HEARTLESS_DROP_FLAGS_1 + flag_byte",
+   "KH1-RANDOMIZER/mod/scripts/io_packages/locations.lua: rare_heartless_flags_address = RARE_HEARTLESS_DROP_FLAGS_1"
+  ]
+ },
+ {
+  "region": "save_data",
+  "offset": "0x701",
+  "var_id": "0x701",
+  "bit": null,
+  "name": "RARE_HEARTLESS_DROP_FLAGS_2",
+  "confidence": "high",
+  "meaning": "Rando-only one-time drop flags for the rare/mushroom Heartless locations. kh1_lua_library one_time_drops sets a bit when that location's drop is picked up; the client checks the bit like any other location. Chosen from the free run 0x62E-0x7FF (0x628-0x62D are the rando's SLIDE_n_LOCATION_TAKEN flags) (no script, game-code or Lua access; zeroed on New Game).",
+  "values": {
+   "bit 1 (0x01)": "Pink Agaricus 100 Hits reward collected (AP location 2659209)",
+   "bit 2 (0x02)": "Gigas Shadow 7th Defeated reward collected (AP location 2659210)",
+   "bit 3 (0x04)": "Sniperwild 30th Defeated reward collected (AP location 2659211)",
+   "bit 4 (0x08)": "Pot Scorpion 11th Pot reward collected (AP location 2659212)",
+   "bit 5 (0x10)": "Grand Ghost Defeat reward collected (AP location 2659213)",
+   "bit 6 (0x20)": "Chimera 9 Heads reward collected (AP location 2659214)",
+   "bit 7 (0x40)": "Jet Balloon Defeat reward collected (AP location 2659215)",
+   "bit 8 (0x80)": "Neoshadow 7th Defeated reward collected (AP location 2659216)"
+  },
+  "other_names": [],
+  "sources": [
+   "lua"
+  ],
+  "evidence": [
+   "KH1-LUA-LIBRARY/scripts/io_packages/memory_locations.lua: RARE_HEARTLESS_DROP_FLAGS_1-3 = saveData1 + 0x700-0x702",
+   "KH1-RANDOMIZER/mod/scripts/io_packages/one_time_drop_locations.lua: flag_address = RARE_HEARTLESS_DROP_FLAGS_1 + flag_byte",
+   "KH1-RANDOMIZER/mod/scripts/io_packages/locations.lua: rare_heartless_flags_address = RARE_HEARTLESS_DROP_FLAGS_1"
+  ]
+ },
+ {
+  "region": "save_data",
+  "offset": "0x702",
+  "var_id": "0x702",
+  "bit": null,
+  "name": "RARE_HEARTLESS_DROP_FLAGS_3",
+  "confidence": "high",
+  "meaning": "Rando-only one-time drop flags for the rare/mushroom Heartless locations. kh1_lua_library one_time_drops sets a bit when that location's drop is picked up; the client checks the bit like any other location. Chosen from the free run 0x62E-0x7FF (0x628-0x62D are the rando's SLIDE_n_LOCATION_TAKEN flags) (no script, game-code or Lua access; zeroed on New Game).",
+  "values": {
+   "bit 1 (0x01)": "Black Fungi Defeat reward collected (AP location 2659217)",
+   "bit 2 (0x02)": "Stealth Soldier Defeat reward collected (AP location 2659218)",
+   "bit 3 (0x04)": "Black Ballade 4 Strikes reward collected (AP location 2659219)"
+  },
+  "other_names": [],
+  "sources": [
+   "lua"
+  ],
+  "evidence": [
+   "KH1-LUA-LIBRARY/scripts/io_packages/memory_locations.lua: RARE_HEARTLESS_DROP_FLAGS_1-3 = saveData1 + 0x700-0x702",
+   "KH1-RANDOMIZER/mod/scripts/io_packages/one_time_drop_locations.lua: flag_address = RARE_HEARTLESS_DROP_FLAGS_1 + flag_byte",
+   "KH1-RANDOMIZER/mod/scripts/io_packages/locations.lua: rare_heartless_flags_address = RARE_HEARTLESS_DROP_FLAGS_1"
+  ]
  }
 ]
