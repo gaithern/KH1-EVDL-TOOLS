@@ -1,4 +1,5 @@
 """ASM text format for KH1 event scripts: disassembler and assembler."""
+import json
 import os
 import re
 import sys
@@ -6,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from evdl_format import (
-    ALU, ALU_BY_NAME, ALU_OPS, BRANCH_OPCODES, CALL_OPCODES, LOCAL_VARIABLE_OPCODES,
+    ALU, ALU_BY_NAME, ALU_OPS, BRANCH_OPCODES, CALL_OPCODES, DATA_DIR, LOCAL_VARIABLE_OPCODES,
     MEMORY_OPCODES, OPCODE_BY_NAME, OPCODES, PUSH, REPO_ROOT, SAVE_DATA_LABELS, SCRIPT_HEADER,
     SYSCALL, SYSCALL_BY_NAME, SYSCALLS, VALID_OPS, ZERO_WORD, encode_instruction, find_kgrs,
     find_script_headers, opcode_of, operand_of, parse_ard, parse_evdl, parse_evdl_string_table,
@@ -17,7 +18,21 @@ WORKING = REPO_ROOT / 'working'
 
 DISPLAY_MESSAGE_SYSCALL = 1
 SET_CHAR_ID_SYSCALL = 10
+READ_BIT = 30
+WRITE_BIT = 31
+BIT_OPCODES = {READ_BIT, WRITE_BIT}
 SEPARATOR = '; ' + '─' * 72
+
+
+def load_bit_labels():
+    table = json.loads((DATA_DIR / 'bit_labels.json').read_text())
+    labels = {}
+    for bit_text, name in table.items():
+        labels[int(bit_text, 16)] = name
+    return labels
+
+
+BIT_LABELS = load_bit_labels()
 
 
 class EvdlAsmError(Exception):
@@ -44,6 +59,17 @@ def describe_memory_address(address):
     if address < 0xD40:
         return f'runtime?[0x{address:X}]{label_suffix}'
     return f'save_data2[0x{address - 0xD40:X}]{label_suffix}'
+
+
+def describe_bit_address(bit_number):
+    label = BIT_LABELS.get(bit_number, '')
+    label_suffix = f'  ({label})' if label else ''
+    byte_offset = (bit_number >> 3) - 0xD40
+    bit_in_byte = bit_number & 7
+    if byte_offset < 0:
+        save_data_offset = byte_offset + 0x1000
+        return f'save_data[0x{save_data_offset:X}] bit {bit_in_byte}{label_suffix}'
+    return f'save_data2[0x{byte_offset:X}] bit {bit_in_byte}{label_suffix}'
 
 
 def find_branch_targets(words):
@@ -152,6 +178,9 @@ def format_instruction(pc, word, label_names, headers, character_ids):
     elif opcode == SYSCALL:
         operand_text = str(operand)
         comment = SYSCALLS.get(operand, '')
+    elif opcode in BIT_OPCODES:
+        operand_text = f'[0x{operand:X}]'
+        comment = describe_bit_address(operand)
     elif opcode in MEMORY_OPCODES:
         operand_text = f'[0x{operand:X}]'
         comment = describe_memory_address(operand)
