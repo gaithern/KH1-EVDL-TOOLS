@@ -63,7 +63,33 @@ def build_block(data, name, block_text, block_off, size, limits):
     warn_moved(name, block_text)
     data[start:start + len(code)] = code
     data[start + len(code):end] = bytes(room - len(code))
+    move_init_entry(data, name, block_text, block_off, size)
     print(f'{name}: {len(code)} of {room} bytes')
+
+
+def new_function_offsets(block_text):
+    _, spans = lang.compile_block(block_text, with_spans=True)
+    part_headers = []
+    for line in block_text.split('\n'):
+        if lang.FUNC_RE.match(line) or line.startswith('    data {'):
+            part_headers.append(line)
+    offsets = {}
+    for n, header in enumerate(part_headers):
+        old_offset_match = OLD_OFFSET_RE.search(header)
+        if old_offset_match and n < len(spans):
+            offsets[int(old_offset_match.group(1), 16)] = spans[n][0]
+    return offsets
+
+
+def move_init_entry(data, name, block_text, block_off, size):
+    old_entry = size * 2 + 4
+    offsets = new_function_offsets(block_text)
+    if old_entry not in offsets:
+        raise ValueError(f'{name}: the header init entry 0x{old_entry:04X} is not a function start in the text')
+    new_entry = offsets[old_entry]
+    if new_entry != old_entry:
+        struct.pack_into('<H', data, block_off + 2, (new_entry - 4) // 2)
+        print(f'  {name}: init entry 0x{old_entry:04X} -> 0x{new_entry:04X}')
 
 
 def build_file(bds_path, orig_path, out_path):
