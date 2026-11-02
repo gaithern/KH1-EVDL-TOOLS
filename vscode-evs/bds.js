@@ -1,12 +1,12 @@
 // Navigation for .bds files (bd/bds/lang.py output): blocks are `bd NAME code 0x... {`, functions
-// `    func NAME ... {`, glob aliases live in each block's `names { }`, and labels (`L1:`, or
+// `    func NAME ... {`, globals aliases live in each block's `names { }`, and labels (`L1:`, or
 // `@Lxxxx:` in asm functions) belong to the function they are in.
 'use strict';
 
-const BLOCK_RE = /^bd (\S+) code (0x[0-9A-Fa-f]+) \{/;
-const FUNC_RE = /^ {4}func ([A-Za-z_]\w*\??)(.*?)\{\s*(?:\/\/\s*(.*))?$/;
-const DATA_RE = /^ {4}data \{\s*(?:\/\/\s*(.*))?$/;
-const NAME_RE = /^ {8}([A-Za-z_]\w*\??) = (glob\[-?\d+\]);/;
+const BLOCK_RE = /^bd (\S+)(?: code (0x[0-9A-Fa-f]+))? \{/;
+const FUNC_RE = /^ {4}(?:init )?func ([A-Za-z_]\w*\??)(.*?)\{\s*(?:\/\/\s*(.*))?$/;
+const DATA_RE = /^ {4}(data|stat_page|drop_table|attack_data|target_weights)(?: ([A-Za-z_]\w*))? \{\s*(?:\/\/\s*(.*))?$/;
+const NAME_RE = /^ {8}([A-Za-z_]\w*\??) = (globals\[-?\d+\]);/;
 const LABEL_RE = /^\s*(L\d+|@L-?[0-9A-Fa-f]+):\s*$/;
 const WORD_RE = /@?[A-Za-z_]\w*\??|@L-?[0-9A-Fa-f]+/g;
 
@@ -17,7 +17,7 @@ function parse(text) {
     lines.forEach((l, i) => {
         const b = BLOCK_RE.exec(l);
         if (b) {
-            block = { name: b[1], detail: `code ${b[2]}`, line: i, end: lines.length - 1, funcs: [], names: [] };
+            block = { name: b[1], detail: b[2] ? `code ${b[2]}` : 'full block', line: i, end: lines.length - 1, funcs: [], names: [] };
             blocks.push(block);
             func = null;
             return;
@@ -35,7 +35,7 @@ function parse(text) {
         if (f || d) {
             if (func) func.end = i - 1;
             func = f ? { name: f[1], sig: f[2].trim(), note: f[3] || '', line: i, end: i, labels: [], asm: /\basm\b/.test(f[2]) }
-                     : { name: 'data', sig: '', note: d[1] || '', line: i, end: i, labels: [], data: true };
+                     : { name: d[2] || 'data', sig: d[1], note: d[3] || '', line: i, end: i, labels: [], data: true, named: Boolean(d[2]) };
             block.funcs.push(func);
             return;
         }
@@ -64,7 +64,7 @@ function resolve(doc, line, col) {
     const func = funcAt(block, line);
     const lab = func && func.labels.find(l => l.name === name);
     if (lab) return { name, line: lab.line, scope: [func.line, func.end] };
-    const fn = block.funcs.find(f => f.name === name && !f.data);
+    const fn = block.funcs.find(f => f.name === name && (!f.data || f.named));
     if (fn) return { name, line: fn.line, scope: [block.line, block.end] };
     const nm = block.names.find(n => n.name === name);
     if (nm) return { name, line: nm.line, scope: [block.line, block.end] };

@@ -1,6 +1,7 @@
 """BDS: a C-like, exactly round-trippable view of KH1 enemy behavior bytecode (.bd blocks in xa_*.mdls).
 decompile_block(...) -> text and compile_block(text) -> bytes; functions the decompiler can't express
-are kept as `asm` listings and unreachable bytes as `data` blocks.
+are kept as `asm` listings and unreachable bytes as `data` blocks. The text covers the whole block:
+the header jump to init, the data area records (see data_area.py), then the code.
 """
 import json
 import re
@@ -12,9 +13,18 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / 'asm'))
 import kh1_bd_disasm as bd
 import kh1_bd_asm as bdasm
-from kh1_motion_dict import read_motion_dict
+import data_area
+import records
 
 NAMES_DIR = HERE.parent / 'data' / 'names'
+MAX_SECTIONS = 64
+WORD_SIZE = 4
+VECTOR_WORDS = 4
+FRAME_HEADER_WORDS = 2
+FRAME_ALIGN_WORDS = 4
+TWO_PARAMETERS_IN_ORDER_FRAME = 6
+MODE_PASSES = 3
+PARAMETER_PREFIX = 'arg'
 
 CLASS_MISC = 0
 CLASS_ARITH = 1
@@ -49,9 +59,10 @@ MODE_BITS, MODE_SHIFT = 0x0030, 4
 BASE_BITS, BASE_SHIFT = 0x00C0, 6
 SUB_BITS, SUB_SHIFT = 0xFF00, 8
 
+BASE_LOC = 0
 BASE_GLOB = 1
 BASE_DATA = 3
-BASE_NAMES = {0: 'loc', 1: 'glob', 2: 'heap'}
+BASE_NAMES = {0: 'locals', 1: 'globals', 2: 'heap'}
 BASE_IDS = {name: base for base, name in BASE_NAMES.items()}
 
 YIELD = 0
@@ -83,12 +94,25 @@ VECTOR_WIDTH = 4
 MIN_FUNCTION_REF = 10
 
 RESERVED = {'func', 'asm', 'data', 'bd', 'names', 'if', 'else', 'while', 'loop', 'switch', 'case',
-            'default', 'goto', 'return', 'yield', 'abort', 'frame', 'seed', 'loc', 'glob', 'heap',
+            'default', 'goto', 'return', 'yield', 'abort', 'frame', 'seed', 'locals', 'globals', 'heap',
             'self', 'load', '__push'} | set(UNARY_FUNCTION_IDS)
 IDENT = re.compile(r'[A-Za-z_]\w*')
+NAMES_FILE_KEYS = {'globals', 'subroutines'}
+SUBROUTINE_SETTING_KEYS = {'name', 'arguments', 'locals'}
+GLOBAL_KEY_RE = re.compile(r'globals\[(\d+)\]')
+LOCAL_KEY_RE = re.compile(r'locals\[(\d+)\]')
+ARGUMENT_KEY_RE = re.compile(r'arg(\d+)')
+FUNCTION_NAMES_START = 'names {'
 RAW_NATIVE_RE = re.compile(r'__t(\d)_(0x[0-9a-fA-F]+)$')
-BLOCK_RE = re.compile(r'^bd (\S+) code (0x[0-9A-Fa-f]+) \{$')
-FUNC_RE = re.compile(r'^    func ([A-Za-z_]\w*\??)(?:\((.*?)\))?(?: (asm))?(?: \((\d+)\))?(?: -> (\d+))?'
+BLOCK_RE = re.compile(r'^bd (\S+)(?: code (0x[0-9A-Fa-f]+))? \{$')
+HEADER_OPCODE = 0x0314
+HEADER_JUMP_SIZE = 4
+NAME_PADDING = b'\x00\x00_1\x00\x00b'
+MIN_NAME_PADDING = 6
+INIT_FUNC_PREFIX = '    init func '
+DATA_NAMED_RE = re.compile(r'^    data ([A-Za-z_]\w*) \{$')
+ASM_DATA_REF_RE = re.compile(r'@D([0-9A-F]{4})\b')
+FUNC_RE = re.compile(r'^    (?:init )?func ([A-Za-z_]\w*\??)(?:\((.*?)\))?(?: (asm))?(?: \((\d+)\))?(?: -> (\d+))?'
                      r'(?: frame (\d+))?(?: seed (0x[0-9A-Fa-f]{4}))? \{(?:\s*//.*)?$')
 ASM_LABEL_RE = re.compile(r'^\s*(@L-?[0-9A-Fa-f]+):\s*$')
 ASM_EXACT_OPCODE_RE = re.compile(r'\s~(0x[0-9A-Fa-f]{4})$')
@@ -110,8 +134,8 @@ class Fail(Exception):
     pass
 
 
-def glob_offset(name_and_offset):
-    return name_and_offset[1]
+def glob_offset(offset_and_name):
+    return offset_and_name[0]
 
 
 def unique_native_names():
@@ -153,6 +177,27 @@ def float_text(four_bytes):
     return text
 
 
+RESULT_MODES = {'int': MODE_INT, 'float': MODE_FLOAT}
+FIXED_TYPE_KINDS = ('int', 'flt', 'nat', 'cmp', 'sc', 'fref', 'un')
+
+
+def load_native_result_modes():
+    verb_table = json.loads(Path(bd.VERBS_PATH).read_text(encoding='utf-8'))
+    modes = {}
+    for key, entry in verb_table.items():
+        if key.startswith('_') or not isinstance(entry, dict):
+            continue
+        result = entry.get('result')
+        if result in RESULT_MODES:
+            table, index = key.split(':')
+            modes[(int(table), int(index, 16))] = RESULT_MODES[result]
+    return modes
+
+
+NATIVE_RESULT_MODES = load_native_result_modes()
+VARIABLE_MODES = {}
+
+
 def inferred_mode(e):
     kind = e[0]
     if kind in ('int', 'fref', 'cmp', 'sc'):
@@ -163,7 +208,75 @@ def inferred_mode(e):
         return e[2]
     if kind == 'un':
         return UNARY_RESULT_MODES.get(e[1])
+    if kind == 'nat':
+        return NATIVE_RESULT_MODES.get((e[1], e[2]))
+    if kind == 'val' and e[3] == 1:
+        return VARIABLE_MODES.get((e[1], e[2]))
     return None
+
+
+def stored_value_mode(value, parameter_modes):
+    if value[0] in FIXED_TYPE_KINDS:
+        return inferred_mode(value)
+    if value[0] == 'param':
+        return parameter_modes.get(value[1])
+    return None
+
+
+def argument_mode(value):
+    if value[0] in FIXED_TYPE_KINDS or value[0] == 'val':
+        return inferred_mode(value)
+    return None
+
+
+def collect_calls(node, calls):
+    if isinstance(node, list):
+        for child in node:
+            collect_calls(child, calls)
+        return
+    if not isinstance(node, tuple) or not node:
+        return
+    if node[0] == 'call' and len(node) == 3 and isinstance(node[1], str):
+        calls.append(node)
+    for child in node[1:]:
+        if isinstance(child, (list, tuple)):
+            collect_calls(child, calls)
+
+
+def collect_stores(node, stores):
+    if isinstance(node, list):
+        for child in node:
+            collect_stores(child, stores)
+        return
+    if not isinstance(node, tuple) or not node:
+        return
+    if node[0] == 'store' and len(node) == 4 and isinstance(node[1], int):
+        stores.append(node)
+    for child in node[1:]:
+        if isinstance(child, (list, tuple)):
+            collect_stores(child, stores)
+
+
+def variable_modes_from_stores(stores, base, parameter_modes):
+    seen = {}
+    for _, store_base, offset, value in stores:
+        if store_base != base:
+            continue
+        mode = stored_value_mode(value, parameter_modes)
+        if mode is None:
+            continue
+        seen.setdefault(offset, set()).add(mode)
+    modes = {}
+    for offset, found in seen.items():
+        if len(found) == 1:
+            modes[(base, offset)] = found.pop()
+    return modes
+
+
+def use_variable_modes(variable_modes, function_name):
+    VARIABLE_MODES.clear()
+    VARIABLE_MODES.update(variable_modes['globals'])
+    VARIABLE_MODES.update(variable_modes['locals'].get(function_name, {}))
 
 
 def operation_mode(a, b):
@@ -775,14 +888,25 @@ def renumber(statements):
 
 
 class Names:
-    def __init__(self, glob, routines=None, self_slot=None):
+    def __init__(self, glob, routines=None, self_slot=None, data=None):
         self.glob = dict(glob)
         if self_slot is not None:
             self.glob[self_slot] = 'self'
         self.glob_id = {name: offset for offset, name in self.glob.items()}
+        self.data = {}
+        if data is not None:
+            self.data = dict(data)
+        self.data_id = set(self.data.values())
         self.routines = {}
         if routines is not None:
             self.routines = dict(routines)
+        self.use_function({}, {})
+
+    def use_function(self, local_names, parameter_names):
+        self.local_names = dict(local_names)
+        self.local_id = {name: offset for offset, name in self.local_names.items()}
+        self.parameter_names = dict(parameter_names)
+        self.parameter_id = {name: index for index, name in self.parameter_names.items()}
 
 
 def is_actor(e, names):
@@ -868,11 +992,21 @@ def compare_text(e, names, top):
 def variable_text(base, offset, names):
     if base == BASE_GLOB and offset in names.glob:
         return names.glob[offset]
+    if base == BASE_LOC and offset in names.local_names:
+        return names.local_names[offset]
     return f'{BASE_NAMES[base]}[{offset}]'
+
+
+def parameter_text(index, names):
+    if index in names.parameter_names:
+        return names.parameter_names[index]
+    return f'{PARAMETER_PREFIX}{index}'
 
 
 def address_text(base, offset, names):
     if base == BASE_DATA:
+        if offset in names.data:
+            return f'&{names.data[offset]}'
         return f'&data[0x{offset:04X}]'
     return f'&{variable_text(base, offset, names)}'
 
@@ -914,7 +1048,7 @@ def expr_text(e, names, top=True):
     if kind == 'flt':
         return float_text(e[1])
     if kind == 'param':
-        return f'a{e[1]}'
+        return parameter_text(e[1], names)
     if kind == 'fref':
         return f'@{e[1]}'
     if kind == 'val':
@@ -968,34 +1102,9 @@ def no_jump_mark(has_jump):
     return '.nj'
 
 
-MOTION_VERBS = {(0, 0x0C), (0, 0x0D), (0, 0x0E)}
-MOTION_ID_MASK = 0xFFFF
-
-
-def constant_motion_id(expression):
-    if expression[0] != 'nat' or (expression[1], expression[2]) not in MOTION_VERBS:
-        return None
-    arguments = expression[3]
-    if len(arguments) < 2 or arguments[1][0] != 'int':
-        return None
-    return arguments[1][1] & MOTION_ID_MASK
-
-
-def motion_comment(expression, motions):
-    if motions is None:
-        return ''
-    motion_id = constant_motion_id(expression)
-    if motion_id is None:
-        return ''
-    if motion_id in motions:
-        return f'  // -> anim{motions[motion_id]:04d}'
-    return f'  // motion_id {motion_id} (no anim)'
-
-
 class StatementPrinter:
-    def __init__(self, names, motions=None):
+    def __init__(self, names):
         self.names = names
-        self.motions = motions
 
     def text(self, e):
         return expr_text(e, self.names)
@@ -1012,15 +1121,13 @@ class StatementPrinter:
         if kind == 'label':
             return [f'{"    " * max(depth - 1, 0)}{s[1]}:']
         if kind == 'store':
-            comment = motion_comment(s[3], self.motions)
-            return [f'{pad}{self.text(("val", s[1], s[2], 1))} = {self.text(s[3])};{comment}']
+            return [f'{pad}{self.text(("val", s[1], s[2], 1))} = {self.text(s[3])};']
         if kind == 'storei':
             return [f'{pad}{pointer_target_text(s[1], self.names)} = {self.text(s[2])};']
         if kind == 'rmw':
             return [pad + self.read_modify_write_text(s)]
         if kind == 'expr':
-            comment = motion_comment(s[1], self.motions)
-            return [f'{pad}{self.text(s[1])};{comment}']
+            return [f'{pad}{self.text(s[1])};']
         if kind == 'keep':
             return [f'{pad}__push({self.text(s[1])});']
         if kind in ('yield', 'abort'):
@@ -1086,8 +1193,8 @@ class StatementPrinter:
         return out
 
 
-def statement_lines(statements, names, depth, motions=None):
-    return StatementPrinter(names, motions).lines(statements, depth)
+def statement_lines(statements, names, depth):
+    return StatementPrinter(names).lines(statements, depth)
 
 
 MODE_MARK = r'(?:\.(?:i|f|m2|m3)\b)?'
@@ -1235,6 +1342,8 @@ class Parser:
             return e[1]
         if e[0] == 'datalea':
             return ('lea', BASE_DATA, e[1])
+        if e[0] == 'dataname':
+            return ('lea', BASE_DATA, e[1])
         raise SyntaxError(f'cannot take the address of {e}')
 
     def postfix_expr(self):
@@ -1299,8 +1408,14 @@ class Parser:
             offset = self.take_value()
             self.take(']')
             return ('datalea', offset)
-        if re.fullmatch(r'a\d+', value) and next_value != '(':
-            return ('param', int(value[1:]))
+        if value in self.names.data_id and next_value != '(':
+            return ('dataname', value)
+        if re.fullmatch(PARAMETER_PREFIX + r'\d+', value) and next_value != '(':
+            return ('param', int(value[len(PARAMETER_PREFIX):]))
+        if value in self.names.parameter_id and next_value != '(':
+            return ('param', self.names.parameter_id[value])
+        if value in self.names.local_id and next_value != '(':
+            return ('val', BASE_LOC, self.names.local_id[value], self.optional_width())
         if value in self.names.glob_id and next_value != '(':
             return ('val', BASE_GLOB, self.names.glob_id[value], self.optional_width())
         if next_value == '(':
@@ -1503,6 +1618,7 @@ class Emitter:
         self.scope = ''
         self.frame = 0
         self.funcs = {}
+        self.unframed_functions = []
 
     def fresh_label(self):
         self.label_count += 1
@@ -1769,13 +1885,23 @@ class Emitter:
         elif operand_kind == 'off':
             encoded += struct.pack('<h', value)
         elif operand_kind == 'data':
-            encoded += struct.pack('<h', value - (position + 2))
+            if isinstance(value, str):
+                target = data_target(value, labels)
+            else:
+                target = value
+            encoded += struct.pack('<h', target - (position + 2))
         elif operand_kind == 'rel':
             target = jump_target(value, labels)
             encoded += struct.pack('<h', (target - (position + 4)) // 2)
         if len(encoded) != length:
             raise ValueError(f'encoded {len(encoded)} bytes, expected {length}')
         return opcode, encoded
+
+
+def data_target(name, labels):
+    if name not in labels:
+        raise ValueError(f'unknown data record {name}')
+    return labels[name]
 
 
 def jump_target(label, labels):
@@ -1790,10 +1916,69 @@ def jump_target(label, labels):
 
 def load_names(block_name):
     path = NAMES_DIR / f'{block_name}.json'
-    try:
-        return json.loads(path.read_text(encoding='utf-8'))
-    except (OSError, ValueError):
+    if not path.exists():
         return {}
+    return json.loads(path.read_text(encoding='utf-8'))
+
+
+def check_new_name(name, where):
+    if not isinstance(name, str) or not IDENT.fullmatch(name):
+        raise ValueError(f'{where}: {name!r} is not a valid name')
+    if name in RESERVED or name in BASE_IDS or name in NATIVE_IDS:
+        raise ValueError(f'{where}: {name!r} is already a keyword or native name')
+    if re.fullmatch(PARAMETER_PREFIX + r'\d+', name) or name == 'entry':
+        raise ValueError(f'{where}: {name!r} is a generic name')
+
+
+def subroutine_settings(value, where):
+    if isinstance(value, str):
+        return {'name': value}
+    if not isinstance(value, dict):
+        raise ValueError(f'{where}: expected a name or {{"name", "arguments", "locals"}}')
+    for key in value:
+        if key not in SUBROUTINE_SETTING_KEYS:
+            raise ValueError(f'{where}: unknown setting {key!r}')
+    return value
+
+
+def names_file_variables(values, key_pattern, example, where):
+    result = {}
+    for key, name in values.items():
+        match = key_pattern.fullmatch(key)
+        if not match:
+            raise ValueError(f'{where}: {key!r} should look like {example}')
+        check_new_name(name, f'{where}: {key}')
+        result[int(match.group(1))] = name
+    return result
+
+
+def names_file_globals(names_file, where):
+    for key in names_file:
+        if key not in NAMES_FILE_KEYS:
+            raise ValueError(f'{where}: unknown section {key!r}')
+    glob = names_file_variables(names_file.get('globals', {}), GLOBAL_KEY_RE, 'globals[16]', where)
+    seen = set()
+    for name in glob.values():
+        if name in seen:
+            raise ValueError(f'{where}: global name {name!r} is used twice')
+        seen.add(name)
+    return glob
+
+
+def check_routine_names_unique(routines, where):
+    seen = set()
+    for name in routines.values():
+        if name in seen:
+            raise ValueError(f'{where}: subroutine name {name!r} is used twice')
+        seen.add(name)
+
+
+def check_function_variable_names(local_names, parameter_names, glob, routines, where):
+    taken = set(glob.values()) | set(routines.values())
+    for name in list(local_names.values()) + list(parameter_names.values()):
+        if name in taken:
+            raise ValueError(f'{where}: {name!r} is already used')
+        taken.add(name)
 
 
 def asm_listing(data, block_off, name, size):
@@ -1811,10 +1996,21 @@ def asm_listing(data, block_off, name, size):
     return listing
 
 
+def section_offsets(data):
+    count = struct.unpack_from('<I', data, 0)[0]
+    if 0 < count < MAX_SECTIONS and 4 + 4 * count <= len(data):
+        return set(struct.unpack_from(f'<{count}I', data, 4))
+    return set()
+
+
 def code_region(data, block_off, name, size):
     end = min(block_off + 4 + size, len(data))
     start = bd.code_start(data, block_off, name, end)
-    return start, bd.extend_end(data, block_off, start, end)
+    end = bd.extend_end(data, block_off, start, end)
+    for section in section_offsets(data):
+        if start < section < end:
+            end = section
+    return start, end
 
 
 def is_scaffolding(instruction):
@@ -1834,27 +2030,97 @@ class Part:
         self.seed = None
 
 
+def local_offset(instruction):
+    if instruction['c'] == CLASS_STORE and instruction['base'] == BASE_LOC:
+        return instruction['arg']
+    is_push = instruction['c'] == CLASS_PUSH and instruction['mode'] in (PUSH_VALUE, PUSH_ADDRESS)
+    if is_push and instruction['base'] == BASE_LOC:
+        return instruction['arg']
+    return None
+
+
+def is_local_load(instruction):
+    return instruction['c'] == CLASS_PUSH and instruction['mode'] == PUSH_VALUE
+
+
+def stores_two_parameters_in_order(instructions):
+    stored = []
+    for instruction in instructions:
+        if local_offset(instruction) is None:
+            continue
+        if instruction['c'] != CLASS_STORE:
+            break
+        stored.append(instruction['arg'])
+        if len(stored) == 2:
+            break
+    return stored == [WORD_SIZE, 0]
+
+
+def parameter_offsets(instructions):
+    offsets = []
+    for instruction in instructions:
+        if instruction['c'] != CLASS_STORE or instruction['base'] != BASE_LOC:
+            break
+        offsets.append(instruction['arg'])
+    return offsets
+
+
+def round_up(value, step):
+    return (value + step - 1) // step * step
+
+
+def predicted_frame(instructions):
+    parameters = parameter_offsets(instructions)
+    offsets = []
+    loaded_widths = {}
+    for instruction in instructions:
+        offset = local_offset(instruction)
+        if offset is None:
+            continue
+        if offset not in offsets:
+            offsets.append(offset)
+        if is_local_load(instruction):
+            width = max(instruction['sub'], 1)
+            loaded_widths[offset] = max(loaded_widths.get(offset, 1), width)
+    words = 0
+    for offset in offsets:
+        if offset in loaded_widths:
+            width = loaded_widths[offset]
+        elif offset in parameters:
+            width = 1
+        elif offset % (VECTOR_WORDS * WORD_SIZE) == 0:
+            width = VECTOR_WORDS
+        else:
+            width = 1
+        words = max(words, offset // WORD_SIZE + width)
+    if words == 2 and stores_two_parameters_in_order(instructions):
+        return TWO_PARAMETERS_IN_ORDER_FRAME
+    return round_up(words + FRAME_HEADER_WORDS, FRAME_ALIGN_WORDS) - FRAME_HEADER_WORDS
+
+
 class Block:
-    def __init__(self, data, block_off, name, size, motions=None):
+    def __init__(self, data, block_off, name, size):
         self.data = data
-        self.motions = motions
         self.block_off = block_off
         self.name = name
-        self.start, self.end = code_region(data, block_off, name, size)
+        _, self.end = code_region(data, block_off, name, size)
+        self.area = data_area.DataArea(data, block_off, self.end)
+        self.start = self.area.code_start
+        self.init_entry = block_off + 4 + size * 2
         self.instructions, self.order = bd._decode(data, self.start, self.end)
         self.signatures, analysis, calls = bd._signatures(self.instructions, self.order, self.start)
         self.entries = sorted({self.start} | set(calls))
         self.parts = self.split_parts(analysis)
+        self.drop_trailing_zeros()
         self.targets = set()
         for instruction in self.instructions.values():
             if instruction['c'] in JUMP_CLASSES:
                 self.targets.add(bd._target(instruction))
         self.listing = asm_listing(data, block_off, name, size)
-        names_file = load_names(name)
-        self.routines = self.routine_names(names_file)
+        glob = self.apply_names_file(load_names(name))
         roles = bd.detect_roles(data, block_off, name, size)
-        glob = {int(offset): glob_name for offset, glob_name in names_file.get('glob', {}).items()}
-        self.names = Names(glob, self.routines, roles.get('self'))
+        self.lay_out_data_area()
+        self.names = Names(glob, self.routines, roles.get('self'), self.data_names())
         self.funcs = {}
         for entry in self.entries:
             name_of_entry = self.routines[entry]
@@ -1868,6 +2134,42 @@ class Block:
 
     def signature(self, entry):
         return self.signatures.get(entry, (0, 0))
+
+    def lay_out_data_area(self):
+        header = header_name_bytes(self.name)
+        name_start = self.block_off + HEADER_JUMP_SIZE
+        if self.data[name_start:name_start + len(header)] != header:
+            raise AssertionError(f'{self.name}: the header bytes after the jump are not the usual name and padding')
+        self.area.add_leading_record(name_start + len(header))
+        for pc in self.order:
+            instruction = self.instructions[pc]
+            if instruction['c'] == CLASS_PUSH and instruction['mode'] == PUSH_ADDRESS and instruction['base'] == BASE_DATA:
+                self.area.split_at(pc + 2 + instruction['arg'])
+
+    def data_names(self):
+        prefixes = []
+        for record in self.area.records:
+            raw = self.data[record.lo:record.hi]
+            keyword = records.keyword_for(record.kinds, len(raw))
+            offset = record.lo - self.block_off
+            if keyword is None:
+                prefixes.append((offset, 'data'))
+                continue
+            for record_offset in records.record_offsets(keyword, offset, raw):
+                prefixes.append((record_offset, records.NAME_PREFIXES[keyword]))
+        totals = {}
+        for offset, prefix in prefixes:
+            totals[prefix] = totals.get(prefix, 0) + 1
+        next_numbers = {}
+        names = {}
+        for offset, prefix in prefixes:
+            if totals[prefix] == 1 and prefix != 'data':
+                names[offset] = prefix
+                continue
+            number = next_numbers.get(prefix, 0)
+            names[offset] = f'{prefix}_{number}'
+            next_numbers[prefix] = number + 1
+        return names
 
     def pcs_between(self, lo, hi):
         return [pc for pc in self.order if lo <= pc < hi]
@@ -1896,18 +2198,58 @@ class Block:
                 parts.append(Part('data', hi, next_entry, None))
         return parts
 
-    def routine_names(self, names_file):
+    def drop_trailing_zeros(self):
+        last = self.parts[-1]
+        if last.kind != 'data':
+            return
+        hi = last.hi
+        while hi > last.lo and self.data[hi - 2:hi] == b'\x00\x00':
+            hi -= 2
+        if hi == last.lo:
+            self.parts.pop()
+        else:
+            last.hi = hi
+        self.end = hi
+
+    def generic_routine_names(self):
         routines = {}
+        number = 0
         for entry in self.entries:
             if entry == self.start:
                 routines[entry] = 'entry'
             else:
-                routines[entry] = f'sub_{entry - self.block_off:04X}'
-        for label, routine in names_file.get('routines', {}).items():
-            offset = int(label[2:], 16) + self.block_off
-            if offset in routines and IDENT.fullmatch(routine) and routine not in RESERVED:
-                routines[offset] = routine
+                routines[entry] = f'subroutine_{number}'
+                number += 1
         return routines
+
+    def apply_names_file(self, names_file):
+        where = f'{NAMES_DIR.name}/{self.name}.json'
+        self.routines = self.generic_routine_names()
+        entry_of_generic_name = {}
+        for entry, generic_name in self.routines.items():
+            entry_of_generic_name[generic_name] = entry
+        glob = names_file_globals(names_file, where)
+        self.function_variables = {}
+        for generic_name, value in names_file.get('subroutines', {}).items():
+            if generic_name not in entry_of_generic_name:
+                raise ValueError(f'{where}: there is no {generic_name}')
+            settings = subroutine_settings(value, f'{where}: {generic_name}')
+            entry = entry_of_generic_name[generic_name]
+            if 'name' in settings:
+                check_new_name(settings['name'], f'{where}: {generic_name}')
+                self.routines[entry] = settings['name']
+            local_names = names_file_variables(settings.get('locals', {}), LOCAL_KEY_RE, 'locals[16]', f'{where}: {generic_name}')
+            parameter_names = names_file_variables(settings.get('arguments', {}), ARGUMENT_KEY_RE, 'arg0', f'{where}: {generic_name}')
+            self.function_variables[entry] = (local_names, parameter_names)
+        check_routine_names_unique(self.routines, where)
+        for entry, (local_names, parameter_names) in self.function_variables.items():
+            check_function_variable_names(local_names, parameter_names, glob, self.routines, f'{where}: {self.routines[entry]}')
+        return glob
+
+    def variable_names_of(self, entry):
+        if entry in self.function_variables:
+            return self.function_variables[entry]
+        return {}, {}
 
     def previous_opcode(self, pc):
         k = self.order.index(pc)
@@ -1928,8 +2270,6 @@ class Block:
                     part.seed = first['op']
             previous_kind = part.kind
 
-    def header_comment(self, entry):
-        return f' {{  // @L{entry - self.block_off:04X}'
 
 
 def link_function_refs(node, thread_starts):
@@ -1965,8 +2305,8 @@ def count_label_refs(statements):
     return refs
 
 
-def function_header(name, param_count, return_count, frame, seed):
-    params = ', '.join(f'a{k}' for k in range(param_count))
+def function_header(name, param_count, return_count, frame, seed, names):
+    params = ', '.join(parameter_text(k, names) for k in range(param_count))
     head = f'    func {name}({params})'
     if return_count:
         head += f' -> {return_count}'
@@ -1983,7 +2323,8 @@ def check_labels_survive(lines, block, frame):
     emitter.scope = 'v.'
     if frame is not None:
         emitter.frame = frame
-    for s in parse_statements('\n'.join(lines[1:-1]), block.names, block.funcs):
+    _, body = split_function_names(lines[1:-1])
+    for s in parse_statements('\n'.join(body), block.names, block.funcs):
         emitter.stmt(s)
     defined = {item[1] for item in emitter.items if item[0] == 'label'}
     for item in emitter.items:
@@ -2002,10 +2343,54 @@ def structured_lines(block, part):
         if label not in own_labels:
             raise Fail('jump out of the function')
     tree = renumber(structure(statements, refs))
-    head = function_header(block.routines[part.entry], param_count, return_count, builder.frame, part.seed)
-    lines = [head + block.header_comment(part.entry)] + statement_lines(tree, block.names, 2, block.motions) + ['    }']
+    written_frame = builder.frame
+    part_instructions = [block.instructions[pc] for pc in block.pcs_between(part.lo, part.hi)]
+    if written_frame == predicted_frame(part_instructions):
+        written_frame = None
+    local_names, parameter_names = block.variable_names_of(part.entry)
+    block.names.use_function(local_names, parameter_names)
+    head = function_header(block.routines[part.entry], param_count, return_count, written_frame, part.seed, block.names)
+    lines = [head + ' {'] + function_names_lines(local_names) + statement_lines(tree, block.names, 2) + ['    }']
     check_labels_survive(lines, block, builder.frame)
     return lines
+
+
+def function_names_lines(local_names):
+    if not local_names:
+        return []
+    lines = ['        ' + FUNCTION_NAMES_START]
+    for offset in sorted(local_names):
+        lines.append(f'            {local_names[offset]} = {BASE_NAMES[BASE_LOC]}[{offset}];')
+    lines.append('        }')
+    return lines
+
+
+def split_function_names(body):
+    index = 0
+    while index < len(body) and not body[index].strip():
+        index += 1
+    if index == len(body) or body[index].strip() != FUNCTION_NAMES_START:
+        return {}, body
+    local_names = {}
+    index += 1
+    while body[index].strip() != '}':
+        local_name, _, value = body[index].strip().rstrip(';').partition('=')
+        offset = int(LOCAL_KEY_RE.fullmatch(value.strip()).group(1))
+        local_names[offset] = local_name.strip()
+        index += 1
+    return local_names, body[index + 1:]
+
+
+def parameter_names_from_header(func_match):
+    parameter_names = {}
+    if not func_match.group(2):
+        return parameter_names
+    parameters = func_match.group(2).split(',')
+    for index in range(len(parameters)):
+        parameter = parameters[index].strip()
+        if parameter != f'{PARAMETER_PREFIX}{index}':
+            parameter_names[index] = parameter
+    return parameter_names
 
 
 def try_structured_lines(block, part):
@@ -2015,14 +2400,21 @@ def try_structured_lines(block, part):
         record_stat('fail: ' + str(failure)[:50])
     except (SyntaxError, ValueError, KeyError, IndexError, TypeError) as ex:
         record_stat(f'text: {type(ex).__name__}: {str(ex)[:50]}')
+    finally:
+        block.names.use_function({}, {})
     return None
 
 
-def asm_operand_names(operand, routines, block_off):
+def asm_operand_names(operand, routines, block_off, data_names):
     def routine_or_label(match):
         offset = int(match.group(1), 16) + block_off
         return routines.get(offset, match.group(0))
-    return re.sub(r'@L([0-9A-F]{4})\b', routine_or_label, operand)
+
+    def data_name(match):
+        offset = int(match.group(1), 16)
+        return data_names.get(offset, match.group(0))
+    operand = re.sub(r'@L([0-9A-F]{4})\b', routine_or_label, operand)
+    return ASM_DATA_REF_RE.sub(data_name, operand)
 
 
 def asm_lines(block, part):
@@ -2032,7 +2424,7 @@ def asm_lines(block, part):
         head += f' ({param_count}) -> {return_count}'
     if part.seed is not None:
         head += f' seed 0x{part.seed:04x}'
-    out = [head + block.header_comment(part.entry)]
+    out = [head + ' {']
     if part.seed is not None:
         previous_opcode = part.seed
     else:
@@ -2041,7 +2433,7 @@ def asm_lines(block, part):
         if pc != part.entry and (pc in block.targets or pc in block.routines):
             out.append(f'    @L{pc - block.block_off:04X}:')
         mnemonic, operand = block.listing[pc]
-        operand = asm_operand_names(operand, block.routines, block.block_off)
+        operand = asm_operand_names(operand, block.routines, block.block_off, block.names.data)
         instruction = block.instructions[pc]
         cls, fields = canonical_fields(instruction)
         exact = ''
@@ -2053,20 +2445,59 @@ def asm_lines(block, part):
 
 
 def data_lines(block, part):
-    out = [f'    data {{  // 0x{part.lo - block.block_off:04X}-0x{part.hi - block.block_off - 1:04X}']
+    out = ['    data {']
     raw = block.data[part.lo:part.hi]
     for k in range(0, len(raw), 16):
         out.append('        ' + raw[k:k + 16].hex(' '))
     return out + ['    }']
 
 
-def block_text(name, code_offset, names, body):
-    lines = [f'bd {name} code 0x{code_offset:04X} {{']
+def hex_lines(raw):
+    out = []
+    for k in range(0, len(raw), 16):
+        out.append('        ' + raw[k:k + 16].hex(' '))
+    return out
+
+
+def header_name_bytes(name):
+    name_bytes = name.encode('ascii')
+    padding_length = MIN_NAME_PADDING
+    while (HEADER_JUMP_SIZE + len(name_bytes) + padding_length) % 4 != 0:
+        padding_length += 1
+    padding = NAME_PADDING + bytes(padding_length)
+    return name_bytes + padding[:padding_length]
+
+
+def record_lines(block, record):
+    raw = block.data[record.lo:record.hi]
+    keyword = records.keyword_for(record.kinds, len(raw))
+    if keyword is not None:
+        return records.record_lines(keyword, record.lo - block.block_off, raw, block.names.data)
+    out = [f'    data {block.names.data[record.lo - block.block_off]} {{']
+    out += hex_lines(raw)
+    return out + ['    }']
+
+
+def data_area_lines(block):
+    out = []
+    for record in block.area.records:
+        out += record_lines(block, record)
+    return out
+
+
+def marked_as_init(lines):
+    if not lines[0].startswith('    func '):
+        raise AssertionError(f'cannot mark {lines[0]!r} as the init function')
+    return [INIT_FUNC_PREFIX + lines[0][len('    func '):]] + lines[1:]
+
+
+def block_text(name, names, body):
+    lines = [f'bd {name} {{']
     declarations = sorted(names.glob.items(), key=glob_offset)
     if declarations:
         lines.append('    names {')
         for offset, glob_name in declarations:
-            lines.append(f'        {glob_name} = glob[{offset}];')
+            lines.append(f'        {glob_name} = globals[{offset}];')
         lines += ['    }', '']
     return '\n'.join(lines + body + ['}']) + '\n'
 
@@ -2079,12 +2510,19 @@ class PartRenderer:
             self.forced = set(force_asm)
         self.structured = {}
         self.asm = {}
+        self.variable_modes = no_variable_modes()
 
     def lines(self, part):
+        if part.kind == 'func' and part.entry == self.block.init_entry:
+            return marked_as_init(self.function_lines(part))
+        return self.function_lines(part)
+
+    def function_lines(self, part):
         if part.kind == 'data':
             return data_lines(self.block, part)
         if part.lo not in self.forced:
             if part.lo not in self.structured:
+                use_variable_modes(self.variable_modes, self.block.routines[part.entry])
                 self.structured[part.lo] = try_structured_lines(self.block, part)
             if self.structured[part.lo] is not None:
                 return self.structured[part.lo]
@@ -2094,16 +2532,19 @@ class PartRenderer:
 
     def text(self):
         block = self.block
-        body = []
+        if block.init_entry not in block.routines:
+            raise AssertionError(f'{block.name}: init entry 0x{block.init_entry - block.block_off:04X} is not a function start')
+        body = data_area_lines(block)
         for part in block.parts:
             body += self.lines(part)
-        return block_text(block.name, block.start - block.block_off, block.names, body)
+        return block_text(block.name, block.names, body)
 
 
 def mismatched_functions(block, code, span_list):
     spans = {}
-    if len(span_list) == len(block.parts):
-        for part, (lo, hi) in zip(block.parts, span_list):
+    code_span_list = span_list[len(span_list) - len(block.parts):]
+    if len(code_span_list) == len(block.parts):
+        for part, (lo, hi) in zip(block.parts, code_span_list):
             spans[part.lo] = (lo + block.block_off, hi + block.block_off)
     functions = [part for part in block.parts if part.kind == 'func']
     wrong = []
@@ -2118,17 +2559,22 @@ def mismatched_functions(block, code, span_list):
         return wrong
     for part in functions:
         start, end = spans[part.lo]
-        if code[start - block.start:end - block.start] != block.data[part.lo:part.hi]:
+        if code[start - block.block_off:end - block.block_off] != block.data[part.lo:part.hi]:
             wrong.append(part.lo)
     return wrong
 
 
-def decompile_block(data, block_off, name, size, force_asm=None, motions=None):
-    block = Block(data, block_off, name, size, motions)
+def decompile_block(data, block_off, name, size, force_asm=None):
+    block = Block(data, block_off, name, size)
     renderer = PartRenderer(block, force_asm)
-    original = data[block.start:block.end]
-    for _ in range(len(block.parts) + 2):
+    original = data[block.block_off:block.end]
+    for _ in range(len(block.parts) + MODE_PASSES + 2):
         text = renderer.text()
+        variable_modes = block_variable_modes(text)
+        if variable_modes != renderer.variable_modes:
+            renderer.variable_modes = variable_modes
+            renderer.structured = {}
+            continue
         code, span_list = compile_block(text, with_spans=True)
         if code == original:
             return text
@@ -2148,14 +2594,14 @@ def parse_names_section(lines):
         i += 1
         while lines[i].strip() != '}':
             glob_name, _, value = lines[i].strip().rstrip(';').partition('=')
-            offset = int(re.fullmatch(r'\s*glob\[(-?\d+)\]\s*', value).group(1))
+            offset = int(re.fullmatch(r'\s*globals\[(-?\d+)\]\s*', value).group(1))
             glob[offset] = glob_name.strip()
             i += 1
         i += 1
     return glob, i
 
 
-def emit_asm_body(emitter, body, funcs):
+def emit_asm_body(emitter, body, names, funcs):
     for line in body:
         line = line.split(';')[0].rstrip()
         if not line.strip():
@@ -2178,9 +2624,15 @@ def emit_asm_body(emitter, body, funcs):
             operand = '@L0000'
             if target_match.group(2):
                 operand += target_match.group(2)
+        data_name = None
+        if mnemonic == 'lea' and operand in names.data_id:
+            data_name = operand
+            operand = '@D0000'
         cls, fields, operand_kind, value = bdasm.meaning(mnemonic, operand, 0)
         if function_target:
             value = function_target
+        if data_name:
+            value = data_name
         emitter.ins(cls, fields, operand_kind, value, exact)
 
 
@@ -2190,12 +2642,38 @@ def emit_bds_body(emitter, name, frame, body, names, funcs):
         emitter.frame = int(frame)
     else:
         emitter.frame = 0
+    first_item = len(emitter.items)
     try:
         for s in parse_statements('\n'.join(body), names, funcs):
             emitter.stmt(s)
     except (SyntaxError, ValueError, KeyError, IndexError, TypeError) as ex:
         raise PartError(name, ex) from ex
+    if not frame:
+        part_number = count_parts(emitter.items) - 1
+        emitter.unframed_functions.append((part_number, first_item, len(emitter.items)))
     emitter.scope = ''
+
+
+def count_parts(items):
+    count = 0
+    for item in items:
+        if item[0] == 'part':
+            count += 1
+    return count
+
+
+def fill_in_predicted_frames(emitter):
+    if not emitter.unframed_functions:
+        return
+    code, spans = emitter.assemble()
+    data = bytes(emitter.code_offset) + code
+    for part_number, first_item, end_item in emitter.unframed_functions:
+        start, end = spans[part_number]
+        instructions, order = bd._decode(data, start, end)
+        frame = predicted_frame([instructions[pc] for pc in order])
+        for item in emitter.items[first_item:end_item]:
+            if item[0] == 'ins' and item[1] == CLASS_CALL:
+                item[2]['sub'] = frame
 
 
 def data_bytes(body):
@@ -2203,8 +2681,26 @@ def data_bytes(body):
     return bytes.fromhex(hex_text.replace(' ', ''))
 
 
-def emit_part(emitter, header, body, names, funcs):
+def emit_header(emitter, block_name, init_name):
+    emitter.ins(CLASS_JUMP, {}, 'rel', init_name, HEADER_OPCODE)
+    emitter.items.append(('raw', header_name_bytes(block_name)))
+
+
+def emit_part(emitter, header, body, names, funcs, variable_modes):
     emitter.items.append(('part', len(emitter.items)))
+    record_match = records.RECORD_HEADER_RE.match(header)
+    if record_match:
+        emitter.label(record_match.group(2))
+        try:
+            emitter.items.append(('raw', records.record_bytes(record_match.group(1), body)))
+        except ValueError as ex:
+            raise PartError(record_match.group(2), ex) from ex
+        return
+    data_match = DATA_NAMED_RE.match(header)
+    if data_match:
+        emitter.label(data_match.group(1))
+        emitter.items.append(('raw', data_bytes(body)))
+        return
     if header.startswith('    data {'):
         emitter.items.append(('raw', data_bytes(body)))
         return
@@ -2216,9 +2712,13 @@ def emit_part(emitter, header, body, names, funcs):
         emitter.items.append(('seed', int(seed, 16)))
     emitter.label(name)
     if is_asm:
-        emit_asm_body(emitter, body, funcs)
+        emit_asm_body(emitter, body, names, funcs)
     else:
+        use_variable_modes(variable_modes, name)
+        local_names, body = split_function_names(body)
+        names.use_function(local_names, parameter_names_from_header(match))
         emit_bds_body(emitter, name, frame, body, names, funcs)
+        names.use_function({}, {})
 
 
 def declared_return_count(func_match):
@@ -2227,21 +2727,29 @@ def declared_return_count(func_match):
     return 0
 
 
-def compile_block(text, with_spans=False):
-    lines = text.rstrip('\n').split('\n')
-    header = BLOCK_RE.match(lines[0])
-    if not header:
-        raise SyntaxError(f'expected "bd NAME code 0x... {{", got {lines[0]!r}')
-    code_offset = int(header.group(2), 16)
-    glob, i = parse_names_section(lines)
+def block_symbols(lines, first_part_line):
+    glob, _ = parse_names_section(lines)
     names = Names(glob)
     funcs = {}
-    for line in lines[i:]:
+    init_names = []
+    for line in lines[first_part_line:]:
         match = FUNC_RE.match(line)
         if match:
             funcs[match.group(1)] = (match.group(1), declared_return_count(match))
-    emitter = Emitter(code_offset)
-    emitter.funcs = funcs
+            if line.startswith(INIT_FUNC_PREFIX):
+                init_names.append(match.group(1))
+        record_match = records.RECORD_HEADER_RE.match(line)
+        if record_match:
+            names.data_id.add(record_match.group(2))
+        data_match = DATA_NAMED_RE.match(line)
+        if data_match:
+            names.data_id.add(data_match.group(1))
+    return names, funcs, init_names
+
+
+def block_parts(lines, first_part_line):
+    parts = []
+    i = first_part_line
     while i < len(lines):
         line = lines[i]
         if not line.strip() or line == '}':
@@ -2250,30 +2758,112 @@ def compile_block(text, with_spans=False):
         part_end = i + 1
         while lines[part_end] != '    }':
             part_end += 1
-        emit_part(emitter, line, lines[i + 1:part_end], names, funcs)
+        parts.append((line, lines[i + 1:part_end]))
         i = part_end + 1
+    return parts
+
+
+def no_variable_modes():
+    return {'globals': {}, 'locals': {}}
+
+
+def parameter_modes_from_calls(calls_by_function, variable_modes):
+    seen = {}
+    for function_name, calls in calls_by_function.items():
+        use_variable_modes(variable_modes, function_name)
+        for _, called_name, arguments in calls:
+            for index, argument in enumerate(arguments):
+                mode = argument_mode(argument)
+                if mode is None:
+                    continue
+                seen.setdefault((called_name, index), set()).add(mode)
+    VARIABLE_MODES.clear()
+    parameter_modes = {}
+    for (called_name, index), found in seen.items():
+        if len(found) == 1:
+            parameter_modes.setdefault(called_name, {})[index] = found.pop()
+    return parameter_modes
+
+
+def variable_modes_of_parts(parts, names, funcs):
+    VARIABLE_MODES.clear()
+    global_stores = []
+    stores_by_function = {}
+    calls_by_function = {}
+    for header, body in parts:
+        match = FUNC_RE.match(header)
+        if not match or match.group(3):
+            continue
+        local_names, body = split_function_names(body)
+        names.use_function(local_names, parameter_names_from_header(match))
+        try:
+            statements = parse_statements('\n'.join(body), names, funcs)
+        except (SyntaxError, ValueError, KeyError, IndexError, TypeError) as ex:
+            raise PartError(match.group(1), ex) from ex
+        finally:
+            names.use_function({}, {})
+        stores = []
+        collect_stores(statements, stores)
+        calls = []
+        collect_calls(statements, calls)
+        global_stores += stores
+        stores_by_function[match.group(1)] = stores
+        calls_by_function[match.group(1)] = calls
+    variable_modes = no_variable_modes()
+    variable_modes['globals'] = variable_modes_from_stores(global_stores, BASE_GLOB, {})
+    for function_name, stores in stores_by_function.items():
+        variable_modes['locals'][function_name] = variable_modes_from_stores(stores, BASE_LOC, {})
+    parameter_modes = parameter_modes_from_calls(calls_by_function, variable_modes)
+    for function_name, stores in stores_by_function.items():
+        modes_of_parameters = parameter_modes.get(function_name, {})
+        variable_modes['locals'][function_name] = variable_modes_from_stores(stores, BASE_LOC, modes_of_parameters)
+    return variable_modes
+
+
+def block_variable_modes(text):
+    lines = text.rstrip('\n').split('\n')
+    _, first_part_line = parse_names_section(lines)
+    names, funcs, _ = block_symbols(lines, first_part_line)
+    return variable_modes_of_parts(block_parts(lines, first_part_line), names, funcs)
+
+
+def compile_block(text, with_spans=False):
+    lines = text.rstrip('\n').split('\n')
+    header = BLOCK_RE.match(lines[0])
+    if not header:
+        raise SyntaxError(f'expected "bd NAME code 0x... {{", got {lines[0]!r}')
+    if header.group(2):
+        code_offset = int(header.group(2), 16)
+    else:
+        code_offset = 0
+    _, i = parse_names_section(lines)
+    names, funcs, init_names = block_symbols(lines, i)
+    parts = block_parts(lines, i)
+    variable_modes = variable_modes_of_parts(parts, names, funcs)
+    emitter = Emitter(code_offset)
+    emitter.funcs = funcs
+    if code_offset == 0:
+        if len(init_names) != 1:
+            raise SyntaxError(f'{header.group(1)}: a full block needs exactly one `init func`, found {len(init_names)}')
+        emit_header(emitter, header.group(1), init_names[0])
+    elif init_names:
+        raise SyntaxError(f'{header.group(1)}: `init func` only works in a full block (no `code 0x...`)')
+    for part_header, body in parts:
+        emit_part(emitter, part_header, body, names, funcs, variable_modes)
+    fill_in_predicted_frames(emitter)
     code, spans = emitter.assemble()
     if with_spans:
         return code, spans
     return code_offset, code
 
 
-def sibling_motions(mdls_path):
-    mset_path = Path(mdls_path).with_suffix('.mset')
-    try:
-        return read_motion_dict(str(mset_path))
-    except (FileNotFoundError, struct.error):
-        return None
-
-
 def decompile_file(path, only=None):
     data = Path(path).read_bytes()
-    motions = sibling_motions(path)
     out = []
     for block_off, name, size in bd.find_blocks(data):
         if only is not None and only != name:
             continue
-        out.append(decompile_block(data, block_off, name, size, motions=motions))
+        out.append(decompile_block(data, block_off, name, size))
     return '\n'.join(out)
 
 

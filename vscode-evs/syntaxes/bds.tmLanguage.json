@@ -24,12 +24,14 @@
     "block-header": {
       "patterns": [
         { "match": "^(bd)\\s+(\\S+)\\s+(code)\\s+(0x[0-9A-Fa-f]+)", "captures": { "1": { "name": "storage.type.block.bds" }, "2": { "name": "entity.name.type.block.bds" }, "3": { "name": "storage.modifier.bds" }, "4": { "name": "constant.numeric.hex.bds" } } },
+        { "match": "^(bd)\\s+(\\S+)\\s*(?=\\{)", "captures": { "1": { "name": "storage.type.block.bds" }, "2": { "name": "entity.name.type.block.bds" } } },
+        { "match": "^\\s*(stat_page|drop_table|attack_data|target_weights|data)\\s+([A-Za-z_]\\w*)\\s*(?=\\{)", "captures": { "1": { "name": "storage.type.declarations.bds" }, "2": { "name": "variable.other.constant.bds" } } },
         { "match": "^\\s*(names|data)\\s*(?=\\{)", "captures": { "1": { "name": "storage.type.declarations.bds" } } }
       ]
     },
     "func-header": {
-      "match": "^\\s*(func)\\s+([A-Za-z_]\\w*\\??)",
-      "captures": { "1": { "name": "storage.type.function.bds" }, "2": { "name": "entity.name.function.bds" } }
+      "match": "^\\s*(?:(init)\\s+)?(func)\\s+([A-Za-z_]\\w*\\??)",
+      "captures": { "1": { "name": "storage.modifier.bds" }, "2": { "name": "storage.type.function.bds" }, "3": { "name": "entity.name.function.bds" } }
     },
     "label": { "match": "^\\s*(L\\d+|@L-?[0-9A-Fa-f]+)(:)\\s*$", "captures": { "1": { "name": "entity.name.label.bds" } } },
     "asm": {
@@ -49,7 +51,7 @@
     },
     "fref": { "name": "entity.name.function.reference.bds", "match": "@[A-Za-z_]\\w*\\??" },
     "memory": {
-      "match": "\\b(loc|glob|heap|data)(?=\\[)",
+      "match": "\\b(locals|globals|heap|data)(?=\\[)",
       "captures": { "1": { "name": "variable.language.memory.bds" } }
     },
     "field": {
@@ -59,13 +61,13 @@
     "native-unknown": { "name": "support.function.native.unnamed.bds", "match": "\\b__t[01]_0x[0-9a-f]{2}\\b" },
     "call": {
       "patterns": [
-        { "match": "\\b(sub_[0-9A-F]{4})(?=\\s*\\()", "captures": { "1": { "name": "entity.name.function.unnamed.bds" } } },
+        { "match": "\\b(subroutine_\\d+)(?=\\s*\\()", "captures": { "1": { "name": "entity.name.function.unnamed.bds" } } },
         { "match": "\\b([a-z_][a-z0-9_]*)(?=\\s*\\()", "captures": { "1": { "name": "entity.name.function.bds" } } },
         { "match": "\\b([A-Z][A-Za-z0-9_]*\\??)(?=\\s*\\()", "captures": { "1": { "name": "support.function.native.bds" } } }
       ]
     },
     "self": { "name": "variable.language.self.bds", "match": "\\bself\\b" },
-    "param": { "name": "variable.parameter.bds", "match": "\\ba\\d+\\b" },
+    "param": { "name": "variable.parameter.bds", "match": "\\barg\\d+\\b" },
     "number": {
       "patterns": [
         { "name": "constant.numeric.float.bds", "match": "-?\\b\\d+\\.\\d*(?:e[+-]?\\d+)?\\b|\\b\\d+e[+-]?\\d+\\b" },

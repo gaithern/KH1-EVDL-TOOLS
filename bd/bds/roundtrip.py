@@ -55,7 +55,7 @@ def main(names):
                 errors[f'{type(e).__name__}: {e}'[:90]] += 1
                 continue
             exact += 1
-            headers = [line for line in text.split('\n') if line.startswith('    func ')]
+            headers = [line for line in text.split('\n') if lang.FUNC_RE.match(line)]
             function_count += len(headers)
             asm_count += sum(1 for line in headers if is_asm_function(line))
     print(f'files {len(files)}  blocks round-tripped exactly: {exact}/{exact + failed}  ({time.time() - started:.0f}s)')

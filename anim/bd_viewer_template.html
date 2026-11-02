@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>BD viewer</title>
+<style>
+body { margin: 0; font-family: sans-serif; background: #1e1e1e; color: #ddd; display: flex; height: 100vh; overflow: hidden; }
+#code { flex: 1; overflow: auto; font-family: Consolas, monospace; font-size: 13px; padding: 8px 0; border-right: 1px solid #444; }
+.line { white-space: pre; padding: 0 8px; min-height: 16px; }
+.line .number { display: inline-block; width: 44px; color: #666; user-select: none; }
+.line.motion { color: #9cdcfe; cursor: pointer; }
+.line.motion:hover { background: #2a2d2e; }
+.line.current { background: #3a3d1e; color: #ffe66d; }
+#side { width: 46%; display: flex; flex-direction: column; }
+#canvas { flex: 1; background: #8a8f99; cursor: grab; }
+#controls { padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid #444; }
+#controls select, #controls button, #controls input { background: #333; color: #ddd; border: 1px solid #555; }
+#frame { flex: 1; min-width: 160px; }
+#uses { padding: 0 8px 8px 8px; font-size: 13px; max-height: 22vh; overflow: auto; }
+#uses div { cursor: pointer; padding: 2px 0; }
+#uses div:hover { color: #ffe66d; }
+</style>
+</head>
+<body>
+<div id="code"></div>
+<div id="side">
+<canvas id="canvas"></canvas>
+<div id="controls">
+<select id="motion"></select>
+<button id="play">Pause</button>
+<input id="frame" type="range" min="0" max="0" value="0">
+<span id="frame_label"></span>
+<select id="speed">
+<option value="0.25">0.25x</option>
+<option value="0.5">0.5x</option>
+<option value="1" selected>1x</option>
+<option value="2">2x</option>
+</select>
+<label><input id="show_mesh" type="checkbox" checked> mesh</label>
+<label><input id="show_bones" type="checkbox"> bones</label>
+</div>
+<div id="uses"></div>
+</div>
+<script id="viewer_data" type="application/json">__VIEWER_DATA__</script>
+<script>
+const data = JSON.parse(document.getElementById("viewer_data").textContent);
+const canvas = document.getElementById("canvas");
+const motionSelect = document.getElementById("motion");
+const playButton = document.getElementById("play");
+const frameSlider = document.getElementById("frame");
+const frameLabel = document.getElementById("frame_label");
+const speedSelect = document.getElementById("speed");
+const showMesh = document.getElementById("show_mesh");
+const showBones = document.getElementById("show_bones");
+const usesPanel = document.getElementById("uses");
+const codePanel = document.getElementById("code");
+const floatsPerBone = 12;
+
+let currentSlot = 0;
+let motionTime = 0;
+let playing = true;
+let yaw = 0.6;
+let pitch = 0.25;
+let distance = 420;
+let dragging = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+let lastTimestamp = null;
+let lineElements = [];
+const targetHeight = 60;
+
+function decodeMatrices(motion) {
+  if (motion.decoded) {
+    return motion.decoded;
+  }
+  motion.decoded = new Float32Array(decodeBase64(motion.matrices).buffer);
+  return motion.decoded;
+}
+
+function slotsOfLine(line) {
+  const slots = [];
+  for (const call of line.calls) {
+    if (call.slot !== null && call.slot !== undefined) {
+      slots.push(call.slot);
+    }
+  }
+  return slots;
+}
+
+function usesOfSlot(slot) {
+  const uses = [];
+  for (let lineNumber = 0; lineNumber < data.code.length; lineNumber++) {
+    const line = data.code[lineNumber];
+    for (const call of line.calls) {
+      if (call.slot === slot) {
+        uses.push({ lineNumber: lineNumber, call: call, functionName: line.function });
+      }
+    }
+  }
+  return uses;
+}
+
+function motionLabel(motion) {
+  let label = "anim " + motion.slot + " (" + motion.frames + " frames)";
+  const idsShown = 4;
+  if (motion.motion_ids.length > 0) {
+    label = label + " id " + motion.motion_ids.slice(0, idsShown).join(", ");
+  }
+  if (motion.motion_ids.length > idsShown) {
+    label = label + " +" + (motion.motion_ids.length - idsShown) + " more";
+  }
+  const useCount = usesOfSlot(motion.slot).length;
+  if (useCount > 0) {
+    label = label + " - " + useCount + " in code";
+  }
+  return label;
+}
+
+function buildCodePanel() {
+  for (let lineNumber = 0; lineNumber < data.code.length; lineNumber++) {
+    const line = data.code[lineNumber];
+    const element = document.createElement("div");
+    element.className = "line";
+    const number = document.createElement("span");
+    number.className = "number";
+    number.textContent = String(lineNumber + 1);
+    element.appendChild(number);
+    element.appendChild(document.createTextNode(line.text));
+    const slots = slotsOfLine(line);
+    if (slots.length > 0) {
+      element.classList.add("motion");
+      element.addEventListener("click", function () {
+        selectMotion(slots[0]);
+      });
+    }
+    codePanel.appendChild(element);
+    lineElements.push(element);
+  }
+}
+
+function buildMotionSelect() {
+  for (const motion of data.motions) {
+    const option = document.createElement("option");
+    option.value = String(motion.slot);
+    option.textContent = motionLabel(motion);
+    motionSelect.appendChild(option);
+  }
+  motionSelect.addEventListener("change", function () {
+    selectMotion(Number(motionSelect.value));
+  });
+}
+
+function showUses(slot) {
+  usesPanel.innerHTML = "";
+  const uses = usesOfSlot(slot);
+  if (uses.length === 0) {
+    usesPanel.textContent = "No literal motion call in the code plays this animation.";
+    return;
+  }
+  for (const use of uses) {
+    const entry = document.createElement("div");
+    entry.textContent = "line " + (use.lineNumber + 1) + "  " + (use.functionName || "") + "  " + use.call.verb + " id " + use.call.motion_id;
+    entry.addEventListener("click", function () {
+      lineElements[use.lineNumber].scrollIntoView({ block: "center" });
+    });
+    usesPanel.appendChild(entry);
+  }
+}
+
+function highlightLines(slot) {
+  for (let lineNumber = 0; lineNumber < data.code.length; lineNumber++) {
+    const slots = slotsOfLine(data.code[lineNumber]);
+    if (slots.includes(slot)) {
+      lineElements[lineNumber].classList.add("current");
+    } else {
+      lineElements[lineNumber].classList.remove("current");
+    }
+  }
+}
+
+function selectMotion(slot) {
+  currentSlot = slot;
+  motionTime = 0;
+  motionSelect.value = String(slot);
+  const motion = data.motions[slot];
+  frameSlider.max = String(Math.max(motion.frames - 1, 0));
+  highlightLines(slot);
+  showUses(slot);
+}
+
+const vertexShaderSource = `#version 300 es
+in vec3 position;
+in vec3 normal;
+in vec2 uv;
+uniform float yaw;
+uniform float pitch;
+uniform float distance;
+uniform float targetHeight;
+uniform float focal;
+uniform float aspect;
+uniform float pointSize;
+out vec2 textureUv;
+out vec3 viewNormal;
+
+vec3 rotateToView(vec3 upPoint) {
+  float turnedX = upPoint.x * cos(yaw) - upPoint.z * sin(yaw);
+  float turnedZ = upPoint.x * sin(yaw) + upPoint.z * cos(yaw);
+  float tiltedY = upPoint.y * cos(pitch) - turnedZ * sin(pitch);
+  float tiltedZ = upPoint.y * sin(pitch) + turnedZ * cos(pitch);
+  return vec3(turnedX, tiltedY, tiltedZ);
+}
+
+void main() {
+  vec3 view = rotateToView(vec3(position.x, -position.y - targetHeight, position.z));
+  float depth = view.z + distance;
+  float near = 10.0;
+  float far = 20000.0;
+  float depthScale = (far + near) / (far - near);
+  float depthOffset = -2.0 * far * near / (far - near);
+  gl_Position = vec4(view.x * focal / aspect, view.y * focal, depth * depthScale + depthOffset, depth);
+  gl_PointSize = pointSize;
+  textureUv = uv;
+  viewNormal = rotateToView(vec3(normal.x, -normal.y, normal.z));
+}`;
+
+const fragmentShaderSource = `#version 300 es
+precision mediump float;
+uniform sampler2D image;
+uniform bool useTexture;
+uniform bool useLighting;
+uniform vec4 flatColor;
+in vec2 textureUv;
+in vec3 viewNormal;
+out vec4 outColor;
+
+void main() {
+  vec4 color = flatColor;
+  if (useTexture) {
+    color = texture(image, textureUv);
+    if (color.a < 0.1) {
+      discard;
+    }
+  }
+  if (useLighting) {
+    vec3 lightDirection = normalize(vec3(0.3, 0.6, -0.75));
+    float facing = abs(dot(normalize(viewNormal), lightDirection));
+    color.rgb = color.rgb * (0.55 + 0.6 * facing);
+  }
+  outColor = color;
+}`;
+
+function compileShader(type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error(gl.getShaderInfoLog(shader));
+  }
+  return shader;
+}
+
+function createProgram() {
+  const newProgram = gl.createProgram();
+  gl.attachShader(newProgram, compileShader(gl.VERTEX_SHADER, vertexShaderSource));
+  gl.attachShader(newProgram, compileShader(gl.FRAGMENT_SHADER, fragmentShaderSource));
+  gl.linkProgram(newProgram);
+  if (!gl.getProgramParameter(newProgram, gl.LINK_STATUS)) {
+    throw new Error(gl.getProgramInfoLog(newProgram));
+  }
+  return newProgram;
+}
+
+function decodeBase64(text) {
+  const binary = atob(text);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+function createTextures() {
+  const textures = [];
+  for (const image of data.textures) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, image.width, image.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, decodeBase64(image.rgba));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    textures.push(texture);
+  }
+  return textures;
+}
+
+function createBuffer(values, usage) {
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, values, usage);
+  return buffer;
+}
+
+function attachAttribute(name, buffer, size) {
+  const location = gl.getAttribLocation(program, name);
+  if (location < 0) {
+    return;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.enableVertexAttribArray(location);
+  gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+}
+
+function createMeshGroups() {
+  const indicesByTexture = new Map();
+  for (const triangle of data.triangles) {
+    const texture = triangle[3];
+    if (!indicesByTexture.has(texture)) {
+      indicesByTexture.set(texture, []);
+    }
+    indicesByTexture.get(texture).push(triangle[0], triangle[1], triangle[2]);
+  }
+  const groups = [];
+  for (const [texture, indices] of indicesByTexture) {
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(indices), gl.STATIC_DRAW);
+    groups.push({ texture: texture, indexBuffer: indexBuffer, count: indices.length });
+  }
+  return groups;
+}
+
+function createFloorLines() {
+  const points = [];
+  for (let step = -4; step <= 4; step++) {
+    points.push(step * 50, 0, -200, step * 50, 0, 200);
+    points.push(-200, 0, step * 50, 200, 0, step * 50);
+  }
+  return new Float32Array(points);
+}
+
+const gl = canvas.getContext("webgl2", { antialias: true });
+const program = createProgram();
+const glTextures = createTextures();
+const vertexCount = data.vertices.length;
+const skinnedPositions = new Float32Array(vertexCount * 3);
+const skinnedNormals = new Float32Array(vertexCount * 3);
+const vertexUvs = new Float32Array(vertexCount * 2);
+for (let vertex = 0; vertex < vertexCount; vertex++) {
+  vertexUvs[vertex * 2] = data.vertices[vertex][7];
+  vertexUvs[vertex * 2 + 1] = data.vertices[vertex][8];
+}
+const positionBuffer = createBuffer(skinnedPositions, gl.DYNAMIC_DRAW);
+const normalBuffer = createBuffer(skinnedNormals, gl.DYNAMIC_DRAW);
+const uvBuffer = createBuffer(vertexUvs, gl.STATIC_DRAW);
+const meshGroups = createMeshGroups();
+const meshVertexArray = gl.createVertexArray();
+gl.bindVertexArray(meshVertexArray);
+attachAttribute("position", positionBuffer, 3);
+attachAttribute("normal", normalBuffer, 3);
+attachAttribute("uv", uvBuffer, 2);
+const floorLines = createFloorLines();
+const floorBuffer = createBuffer(floorLines, gl.STATIC_DRAW);
+const floorVertexArray = gl.createVertexArray();
+gl.bindVertexArray(floorVertexArray);
+attachAttribute("position", floorBuffer, 3);
+const boneBuffer = createBuffer(new Float32Array(data.bone_count * 6), gl.DYNAMIC_DRAW);
+const boneVertexArray = gl.createVertexArray();
+gl.bindVertexArray(boneVertexArray);
+attachAttribute("position", boneBuffer, 3);
+gl.bindVertexArray(null);
+
+function uniform(name) {
+  return gl.getUniformLocation(program, name);
+}
+
+function bonePoint(matrices, frameStart, bone, x, y, z) {
+  const base = frameStart + bone * floatsPerBone;
+  return [
+    x * matrices[base] + y * matrices[base + 3] + z * matrices[base + 6] + matrices[base + 9],
+    x * matrices[base + 1] + y * matrices[base + 4] + z * matrices[base + 7] + matrices[base + 10],
+    x * matrices[base + 2] + y * matrices[base + 5] + z * matrices[base + 8] + matrices[base + 11]
+  ];
+}
+
+function boneDirection(matrices, frameStart, bone, x, y, z) {
+  const base = frameStart + bone * floatsPerBone;
+  return [
+    x * matrices[base] + y * matrices[base + 3] + z * matrices[base + 6],
+    x * matrices[base + 1] + y * matrices[base + 4] + z * matrices[base + 7],
+    x * matrices[base + 2] + y * matrices[base + 5] + z * matrices[base + 8]
+  ];
+}
+
+function skinMesh(matrices, frameStart) {
+  for (let vertex = 0; vertex < vertexCount; vertex++) {
+    const values = data.vertices[vertex];
+    const position = bonePoint(matrices, frameStart, values[0], values[1], values[2], values[3]);
+    const normal = boneDirection(matrices, frameStart, values[0], values[4], values[5], values[6]);
+    for (let axis = 0; axis < 3; axis++) {
+      skinnedPositions[vertex * 3 + axis] = position[axis];
+      skinnedNormals[vertex * 3 + axis] = normal[axis];
+    }
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, skinnedPositions, gl.DYNAMIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, skinnedNormals, gl.DYNAMIC_DRAW);
+}
+
+function boneLines(matrices, frameStart, skipped) {
+  const points = [];
+  for (let bone = 0; bone < data.bone_count; bone++) {
+    const parent = data.parents[bone];
+    if (skipped.includes(bone) || parent >= data.bone_count || skipped.includes(parent)) {
+      continue;
+    }
+    points.push(...bonePoint(matrices, frameStart, parent, 0, 0, 0));
+    points.push(...bonePoint(matrices, frameStart, bone, 0, 0, 0));
+  }
+  return new Float32Array(points);
+}
+
+function setCamera() {
+  gl.uniform1f(uniform("yaw"), yaw);
+  gl.uniform1f(uniform("pitch"), pitch);
+  gl.uniform1f(uniform("distance"), distance);
+  gl.uniform1f(uniform("targetHeight"), targetHeight);
+  gl.uniform1f(uniform("focal"), 2.4);
+  gl.uniform1f(uniform("aspect"), canvas.width / canvas.height);
+}
+
+function setColor(useTexture, useLighting, red, green, blue, alpha) {
+  gl.uniform1i(uniform("useTexture"), useTexture ? 1 : 0);
+  gl.uniform1i(uniform("useLighting"), useLighting ? 1 : 0);
+  gl.uniform4f(uniform("flatColor"), red, green, blue, alpha);
+}
+
+function drawFloor() {
+  setColor(false, false, 1, 1, 1, 0.3);
+  gl.bindVertexArray(floorVertexArray);
+  gl.drawArrays(gl.LINES, 0, floorLines.length / 3);
+}
+
+function drawMesh(matrices, frameStart) {
+  skinMesh(matrices, frameStart);
+  setColor(true, true, 1, 1, 1, 1);
+  gl.bindVertexArray(meshVertexArray);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.uniform1i(uniform("image"), 0);
+  for (const group of meshGroups) {
+    gl.bindTexture(gl.TEXTURE_2D, glTextures[group.texture] || null);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, group.indexBuffer);
+    gl.drawElements(gl.TRIANGLES, group.count, gl.UNSIGNED_INT, 0);
+  }
+}
+
+function drawBones(matrices, frameStart, skipped) {
+  const lines = boneLines(matrices, frameStart, skipped);
+  gl.bindBuffer(gl.ARRAY_BUFFER, boneBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, lines, gl.DYNAMIC_DRAW);
+  gl.bindVertexArray(boneVertexArray);
+  gl.disable(gl.DEPTH_TEST);
+  setColor(false, false, 1, 0.9, 0.43, 1);
+  gl.drawArrays(gl.LINES, 0, lines.length / 3);
+  gl.uniform1f(uniform("pointSize"), 5);
+  setColor(false, false, 1, 0.43, 0.43, 1);
+  gl.drawArrays(gl.POINTS, 0, lines.length / 3);
+  gl.enable(gl.DEPTH_TEST);
+}
+
+function draw() {
+  const width = Math.floor(canvas.clientWidth * window.devicePixelRatio);
+  const height = Math.floor(canvas.clientHeight * window.devicePixelRatio);
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(0.54, 0.56, 0.6, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.useProgram(program);
+  setCamera();
+  drawFloor();
+  const motion = data.motions[currentSlot];
+  const matrices = decodeMatrices(motion);
+  let bakedFrame = Math.floor(motionTime / data.frame_step);
+  if (bakedFrame >= motion.baked_frames) {
+    bakedFrame = motion.baked_frames - 1;
+  }
+  const frameStart = bakedFrame * data.bone_count * floatsPerBone;
+  if (showMesh.checked) {
+    drawMesh(matrices, frameStart);
+  }
+  if (showBones.checked) {
+    drawBones(matrices, frameStart, motion.skipped_bones);
+  }
+  frameSlider.value = String(Math.floor(motionTime));
+  frameLabel.textContent = "frame " + Math.floor(motionTime) + " / " + motion.frames;
+}
+
+function tick(timestamp) {
+  if (lastTimestamp === null) {
+    lastTimestamp = timestamp;
+  }
+  const seconds = Math.min((timestamp - lastTimestamp) / 1000, 0.1);
+  lastTimestamp = timestamp;
+  const motion = data.motions[currentSlot];
+  if (playing) {
+    motionTime = motionTime + seconds * motion.fps * Number(speedSelect.value);
+    if (motionTime >= motion.frames) {
+      motionTime = 0;
+    }
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
+
+playButton.addEventListener("click", function () {
+  playing = !playing;
+  playButton.textContent = playing ? "Pause" : "Play";
+});
+frameSlider.addEventListener("input", function () {
+  playing = false;
+  playButton.textContent = "Play";
+  motionTime = Number(frameSlider.value);
+});
+canvas.addEventListener("mousedown", function (event) {
+  dragging = true;
+  lastMouseX = event.clientX;
+  lastMouseY = event.clientY;
+});
+window.addEventListener("mouseup", function () {
+  dragging = false;
+});
+window.addEventListener("mousemove", function (event) {
+  if (!dragging) {
+    return;
+  }
+  yaw = yaw + (event.clientX - lastMouseX) * 0.01;
+  pitch = Math.max(-1.4, Math.min(1.4, pitch + (event.clientY - lastMouseY) * 0.01));
+  lastMouseX = event.clientX;
+  lastMouseY = event.clientY;
+});
+canvas.addEventListener("wheel", function (event) {
+  event.preventDefault();
+  distance = Math.max(60, Math.min(3000, distance * (event.deltaY > 0 ? 1.1 : 0.9)));
+});
+
+buildCodePanel();
+buildMotionSelect();
+document.title = "BD viewer - " + data.name;
+const startHash = Number(window.location.hash.slice(1));
+if (window.location.hash.length > 1 && startHash < data.motions.length) {
+  selectMotion(startHash);
+  const firstUses = usesOfSlot(startHash);
+  if (firstUses.length > 0) {
+    lineElements[firstUses[0].lineNumber].scrollIntoView({ block: "center" });
+  }
+} else {
+  selectMotion(0);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

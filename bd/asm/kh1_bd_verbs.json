@@ -3,17 +3,20 @@
  "_build_note": "func_steam addresses: KINGDOM HEARTS FINAL MIX.exe (Steam / HD 1.5+2.5 ReMIX), image base 0x140000000.",
  "0:0x02": {
   "func_steam": "0x1402B9840",
-  "name": "SinDeg"
+  "name": "SinDeg",
+  "result": "float"
  },
  "0:0x05": {
   "func_steam": "0x1402B98E0",
   "name": "FrameDelta",
-  "_note": "Ghidra: returns the global float at 0x14233FBDC. Scripts subtract it from timers every update and scale speeds by it (e.g. 8.0 * FrameDelta()), i.e. the per-update time step. 2468 call sites, all 138 scripts."
+  "_note": "Ghidra: returns the global float at 0x14233FBDC. Scripts subtract it from timers every update and scale speeds by it (e.g. 8.0 * FrameDelta()), i.e. the per-update time step. 2468 call sites, all 138 scripts.",
+  "result": "float"
  },
  "0:0x06": {
   "func_steam": "0x1402B99C0",
   "name": "VecLength",
-  "_note": "Ghidra-confirmed, not a guess: resolves the arg handle then calls FUN_1402a9240, which decompiles to `sqrtf(ABS(Dot(v,v)))` - literally vector magnitude. Matches usage across many enemies: always follows a VecSub(delta, a, b)-shaped call and either feeds a distance threshold compare or is tailcalled directly as a GetDistance(a,b)-style helper's return value."
+  "_note": "Ghidra-confirmed, not a guess: resolves the arg handle then calls FUN_1402a9240, which decompiles to `sqrtf(ABS(Dot(v,v)))` - literally vector magnitude. Matches usage across many enemies: always follows a VecSub(delta, a, b)-shaped call and either feeds a distance threshold compare or is tailcalled directly as a GetDistance(a,b)-style helper's return value.",
+  "result": "float"
  },
  "0:0x07": {
   "func_steam": "0x1402B99F0",
@@ -44,8 +47,8 @@
  },
  "0:0x0f": {
   "func_steam": "0x1402BB560",
-  "name": "AttachSubObj?",
-  "_note": "Ghidra: resolves arg0, calls FUN_1402ae5b0(resolved, arg1, arg2) directly and returns the wrapped handle - the generic/direct form of the same call 0:0x4b (AttachStatusEffect?) wraps with a fixed self-field and a hardcoded 20000. Notable call site: the VERY FIRST instruction of BOTH of Red Nocturne's suffixed blocks (ex_2110_00.bd / ex_2110_01.bd) - already identified in project_ai_motion_id_resolution.md as 'a strong shape match for a separately-spawned projectile's own flight-control script' - is `loc[4] = NATIVE_t0_0xf(heapblk[1], 7, 20000)` in block _00 and `(heapblk[1], 11, 20000)` in block _01. Reads as CreateLinkedObj(owner, type_id, lifetime) -> handle, with type 7 vs 11 plausibly two variants of the fireball object. Directly relevant to that memory's still-open question of where the fireball's damage actually lands - worth a live breakpoint on func_steam next, since this is the object creation point for whatever the projectile actually is."
+  "name": "SpawnEffectFromSet",
+  "_note": "Ghidra: resolves args[0] (an effect table, usually obj[3]) and calls fnc_spawn_effect_from_set(set, flags, lifetime), which takes a free 0x3C-byte effect instance from the ring pool and activates effect ID flags&0x7FF from that table. Returns the instance handle. The unbound form of 0x4b SpawnActorEffect: no owner, bone or follow job. Scripts pass lifetime 20000 (0x4E20) and later end it with 0x61 KillEffect. Red Nocturne's suffixed blocks call it as (heapblk[1], 7/11, 20000), spawning effect 7 or 11, not a projectile object."
  },
  "0:0x10": {
   "func_steam": "0x1402BB590",
@@ -70,11 +73,13 @@
  },
  "0:0x19": {
   "func_steam": "0x1402B98C0",
-  "name": "RandFloat01"
+  "name": "RandFloat01",
+  "result": "float"
  },
  "0:0x33": {
   "func_steam": "0x1402BA320",
-  "name": "GetActionState"
+  "name": "GetActionState",
+  "result": "int"
  },
  "0:0x37": {
   "func_steam": "0x1402BB7A0",
@@ -90,31 +95,34 @@
  },
  "0:0x8b": {
   "func_steam": "0x1402BAD60",
-  "name": "IsFacingSora?"
+  "name": "IsSoraLineOfSightBlocked",
+  "_note": "Ghidra: fnc_bd_t0_8B_is_sora_line_of_sight_blocked(actor) -> 1 if map collision blocks the segment from Sora's attach point 0 to the actor's centre (0x8003) (fnc_is_line_of_sight_clear -> fnc_map_collision_segment_test, also used by lock-on auto-pick), or if Sora does not exist; 0 when the line is clear. No facing check. Usually tested as !IsSoraLineOfSightBlocked(self) before attacking (al_3030, ex_2172, ex_2190).",
+  "result": "int"
  },
  "0:0x91": {
   "func_steam": "0x1402BB9B0",
-  "name": null
+  "name": "FadeOutAndKillEffect",
+  "_note": "Ghidra-confirmed: FadeOutAndKillEffect(effect, frames). Its helper (0x1402ADA20) starts an async job that, while the effect is alive, lowers float +0xC of resolve(effect+0xC) by g_TxtSpeed/frames each frame; at 0 it ends the effect the way KillEffect (0x61) does (fnc_end_trail_effect). Compare 0x1A FadeOutEffect, which only fades. args[0] is an effect handle from SpawnActorEffect or SpawnEffectFromSet. Scripts use 8, 20 or 90."
  },
  "0:0x04": {
   "func_steam": "0x1402B9ED0",
-  "name": "GetTargetEntity?",
-  "_note": "Ghidra: resolves its arg through the EXISTING labeled function fnc_select_tgt_entity(selector), then re-wraps the result as a handle. Cross-enemy survey (kh1_bd_verb_survey.py) found this in 138/500 enemies - always glob[N] = NATIVE_t0_0x4(0 or 1), or a packed tailcall NATIVE_t0_0x4((65536 | locblk[0])). Likely GetTargetEntity(selector) with the selector picking which target slot (0/1) or packing mode bits. Not deep-decompiled past fnc_select_tgt_entity."
+  "name": "GetEntity",
+  "_note": "Ghidra: fnc_bd_t0_04_get_entity -> fnc_select_tgt_entity(selector), result re-minted as a handle (null handle when no match). Selector high byte = mode: 0 -> low word 0/1/2 = Sora/party member 1/party member 2; 1 -> first live entity (party slots, then the entity pool) whose type record (+0x130) id at +0x4C equals the low word; 0xB -> same but matching type record +0x4E; any other mode -> entity whose +0x04 field equals the whole selector. 138/500 enemies, e.g. glob[N] = GetEntity(0), GetEntity(65536 | id)."
  },
  "0:0x09": {
   "func_steam": "0x1402B9A90",
-  "name": "VecNormalize?",
-  "_note": "Ghidra: single vector arg; both operands to its callee FUN_1402a93d0 resolve to the SAME handle (there's only one arg), i.e. an in-place op on one vector. Sits immediately next to VecAdd(0x07)/VecSub(0x08)/VecLength(0x06) in the funcptr table and address range. Usage across 128/500 enemies always follows a VecSub-computed delta (e.g. NATIVE_t0_0x9(loc[32])), matching a normalize-the-delta idiom. FUN_1402a93d0 itself not decompiled - confirm before relying on it."
+  "name": "VecNormalize",
+  "_note": "Ghidra-confirmed: fnc_bd_09_vec_normalize -> fnc_vec_normalize_store_length(v, v) (0x1402A93D0). Normalizes v.xyz in place and stores the old xyz length in v.w (fnc_vec3_normalize_ret_length 0x1400E8250). A zero vector becomes (0,0,1,0). Scripts normalize a VecSub delta with it. 128/500 scripts."
  },
  "0:0x0b": {
   "func_steam": "0x1402B9EF0",
-  "name": "FaceTarget?",
-  "_note": "Ghidra: resolves self + a target/point arg, computes atan2f(dx,dz)-style angle, stores it into self+0x150 (a facing/yaw field), THEN calls an apply function (FUN_140297e10) to actually turn - the apply call is what distinguishes it from 0x24 (GetAngleToTarget?, compute+store only, never applies). 124/500 enemies, e.g. NATIVE_t0_0xb(self, globblk[4][12])."
+  "name": "FaceDir",
+  "_note": "Ghidra: yaw = atan2f(dir.x, dir.z) of args[1], a direction vector (scripts build it as VecSub(target_pos, self_pos)). Writes it to the target yaw +0x150, then fnc_actor_set_yaw sets forward +0x30 = (sin, 0, cos) and current yaw +0x3C at once, unless actor+0x374 & 0x1000. An instant face; the gradual form is 0x24 TurnTowardDir. 124/500 enemies."
  },
  "0:0x13": {
   "func_steam": "0x1402B9FE0",
-  "name": "QueryPosition?",
-  "_note": "Ghidra: 4-arg native (self, query_id, extra, out_ref); resolves self and out_ref as handles, calls FUN_14029eb20(self, query_id, extra, out). 121/500 enemies call it as NATIVE_t0_0x13(self, 32771, 0.0, loc[16]) - 32771 = 0x8003, the SAME magic number already identified as 'position query' inside KH1_BuildHitContext's own dispatch. Strong evidence this is the generic query-dispatch verb AI scripts use to ask the engine for a position (and possibly other 0x80xx query codes elsewhere, not yet surveyed)."
+  "name": "GetAttachPointPos",
+  "_note": "Ghidra: fnc_bd_t0_13_get_attach_point_pos(actor, point, t, out_vec) is a thin wrapper over fnc_get_entity_attach_point_pos. point 0x8003 = entity centre (+0x50), 0x8004/0x8006 = offset heights, 0x8005 = via hitbox table, 0x30 = equipped weapon with t as a fraction along the blade, bit 15 clear = model/bone point. 121/500 enemies call it as GetAttachPointPos(self, 0x8003, 0.0, &loc[16])."
  },
  "0:0x20": {
   "func_steam": "0x1402BA0A0",
@@ -133,8 +141,8 @@
  },
  "0:0x24": {
   "func_steam": "0x1402BA110",
-  "name": "GetAngleToTarget?",
-  "_note": "Ghidra: resolves self + a target arg, fills a local vector via FUN_140386ad0, computes atan2f, stores into self+0x150 (facing/yaw field) - but unlike 0x0b (FaceTarget?) never calls an apply/turn function afterward, so this looks like a pure query/set-desired-angle without actually turning yet. 131/500 enemies, e.g. NATIVE_t0_0x24(locblk[0], loc[16])."
+  "name": "TurnTowardDir",
+  "_note": "Ghidra: sets only the actor's target yaw +0x150 = atan2f(dir.x, dir.z); args[1] is a direction vector, usually VecSub(target.pos, self.pos). Returns nothing. The per-frame turn step (e.g. KH1_HitReactionUpdate) rotates the current yaw +0x3C toward +0x150 at the turn speed stats+0xD0 set by 0x7d SetTurnSpeedDeg, so this is a gradual turn. The instant form is 0x0b FaceDir. Same as engine helper fnc_actor_set_target_yaw_from_dir (0x140297FB0). 131/500 enemies."
  },
  "0:0x28": {
   "func_steam": "0x1402BA1A0",
@@ -143,18 +151,18 @@
  },
  "0:0x2c": {
   "func_steam": "0x1402BA210",
-  "name": "ApplyHitOutcome?",
-  "_note": "Ghidra: its callee FUN_1402beee0 is a large state-machine keyed on a sub-mode nibble (values 9/10/11/12 handled distinctly), touches HP-ish float fields on a linked object (param_1[0x1b]) with *60.0 scaling, and every exit path ends by calling the EXISTING labeled function fnc_handle_hp_prize before returning - i.e. this is closely tied to applying a hit/state outcome and possibly awarding an HP prize, echoing the already-documented fnc_handle_mp_prize in the KH1_ApplyDamage_FireOnHitScript pipeline. 123/500 enemies, e.g. loc[8] = NATIVE_t0_0x2c(self, locblk[0]). Exact semantics of the sub-mode values not chased down - good live-confirm candidate."
+  "name": "ApplyHitDamage",
+  "_note": "Ghidra: calls fnc_default_on_hit(victim, hit) and returns the victim's HP after the hit (stats+0x3C). Damage = -hit power, or 0 when the victim has flags 0x1000080 or the debug command flag is on. Hit kinds 9 Stop / 10 Stun / 11 heal +power / 12 object timer are special. HP changes through fnc_actor_add_hp (old name fnc_handle_hp_prize), clamped to [0, max HP]. Summon hits (type 6/7) and hits with flag 0x20 change nothing. Scripts compare the result to 0 for death; a hit handler that aborts before calling this deals no damage. 123/500 enemies."
  },
  "0:0x2d": {
   "func_steam": "0x1402BBDF0",
-  "name": "TriggerEffect?",
-  "_note": "Ghidra: resolves self + one more arg, calls FUN_1402a58e0(a,b), no return. 137/500 enemies, always called as NATIVE_t0_0x2d(self, imm[-NNNN]) with a large signed-immediate 2nd arg (e.g. -6026, -4646, -16570) - the immediate is likely an effect/sound ID living in the .bd's own compact 16-bit signed immediate slot, not a computed value. Shape matches a fire-and-forget 'play this effect/sound' call; exact ID meaning unconfirmed."
+  "name": "SetBattleParams",
+  "_note": "Ghidra-confirmed: SetBattleParams(actor, &stat_page). KH1_AICmd_SetBattleParams -> KH1_ApplyBdBattleParams (0x1402A58E0) copies a 0x6C-byte stat page from the .bd data into the runtime battle params (actor+0x6C): HP cur/max, ATK/DEF level, min/max damage per hit, MP recovery, knockback weight, EXP, hit-spark id, outgoing damage multiplier, 16 resist percents, +0x68. Scripts pick the page (often by GetMapInfo world). See vault 'Enemy stat pages (bd battle params)'. 137/500 scripts."
  },
  "0:0x30": {
   "func_steam": "0x1402BBE30",
-  "name": "DispatchReactionTable?",
-  "_note": "Ghidra: 4 args, returns a value via FUN_1402b8250(self, arg1, arg2, arg3). Matches the mechanism project_ai_motion_id_resolution.md already documented from a live trace of Shadow's script: 'reached via an indirect/computed jump-table call (NATIVE_t0_0x30), shaped like an on-hit/flinch-reaction handler'. 115/500 enemies, e.g. loc[20] = NATIVE_t0_0x30(heapblk[0], ((locblk[12] * 20) + heapblk[4]), locblk[8], locblk[4]) - the '* 20' scaling of an index looks like it's computing an offset into a jump/reaction table."
+  "name": "PickTargetWeighted",
+  "_note": "Ghidra 2026-10-30: wrapper for fnc_bd_pick_target_weighted (0x1402B8250). (actor, int weights[5], float max_range, int max_targeters) -> entity or 0. Candidates are the actor's living enemies within max_range whose +0x80 targeter count is below max_targeters, sorted by distance; rolls rand*100 and walks the weights: nearest, second nearest, farthest, current target (+0x74), last attacker (+0x7C). The weights are a 0x14-byte entry in the block's data area, reached as index * 20 + table base. See vault note 'Enemy target weight tables (bd)'."
  },
  "0:0x31": {
   "func_steam": "0x1402BBE80",
@@ -163,33 +171,35 @@
  },
  "0:0x32": {
   "func_steam": "0x1402BA290",
-  "name": "SetVectorSafe?",
-  "_note": "Ghidra: NaN-guards a full 4-float (x,y,z,w) vector (zeroes it if any component is NaN), then resolves self and calls FUN_1402b7f20(self, field_id, vec). Looks like a defensively-guarded 'write this vector into actor field N' setter, sibling to SetVec (0x10) but 4-component and NaN-safe. 103/500 enemies, e.g. NATIVE_t0_0x32(locblk[0], locblk[8], locblk[4])."
+  "name": "Jump",
+  "_note": "Ghidra-confirmed: Jump(actor, height, &move). fnc_bd_32_jump zeroes move if it has a NaN, then fnc_actor_start_jump (0x1402B7F20): fnc_entity_start_vertical_launch(actor, height) (arc, air state 2), then horizontal velocity actor+0x3C0 = normalize(move.xyz) * move.w (w = speed; move is normalized in place). Scripts use it in a jump helper after the jump motion, and with height 0 / w 0 to just go airborne, then wait while self.air == 2. 103/500 scripts."
  },
  "0:0x3d": {
   "func_steam": "0x1402BB870",
-  "name": "SetObjRotationFromVec?",
-  "_note": "Ghidra (FUN_1402ada80): converts the vector arg to three angles (FUN_1402a9290) and stores them as 16-bit turn units (angle/2pi*65536) into the rotation of the object referenced at obj+4."
+  "name": "SetEffectDirection",
+  "_note": "Ghidra-confirmed: fnc_bd_3D_set_effect_direction -> fnc_effect_set_rotation_from_dir(effect, &dir) (0x1402ADA80). Turns dir into pitch/yaw (fnc_dir_to_pitch_yaw 0x1402A9290: atan2(-y, len_xz), atan2(x, z), roll 0) and writes them as 16-bit turn units into the effect instance's rotation (instance+4 handle = effect slot +0x10). Scripts call it on the result of SpawnObj (an effect instance) to point it along a direction. 115/500 scripts."
  },
  "0:0x42": {
   "func_steam": "0x1402B9910",
-  "name": "DebugNop",
+  "name": "DebugNop42",
   "_note": "Ghidra-confirmed (bytes at the funcptr): the engine function is a bare RET (c2 00 00) - a debug print/assert compiled out of the retail build. Declared argcount 1, so the VM pops one stack item, but scripts call it with nothing pushed (e.g. Sabor tz_3000 @L3158: `if (@L336E(x,0)==0) DebugNop()`), which is why its arg always looked like an unresolved '?'. kh1_bd_disasm treats it as consuming nothing (STUB_VERBS) so stack analysis follows the compiler's intent. 134/500 enemies."
  },
  "0:0x4b": {
   "func_steam": "0x1402BA410",
-  "name": "AttachStatusEffect?",
-  "_note": "Ghidra: resolves self via a field at self+0x68 (an existing attached-effect slot), calls FUN_1402ae5b0(resolved, flagbits, 20000) - the SAME callee as 0:0xf (AttachSubObj?), just with the target field and the 20000 lifetime/pool-size constant baked in rather than passed by the script. Bits 0x800 (bit 11) and 0x1000 (bit 12) of the flag arg are checked afterward to set 'infinite duration'(0xffff)/'enabled'(|1) style fields on the created sub-object. 129/500 enemies, always called as NATIVE_t0_0x4b(self, 2048) or (self, 2049) - both values have bit 0x800 set. Reads like 'attach a persistent status/aura effect to self with these flags'."
+  "name": "SpawnActorEffect",
+  "_note": "Ghidra: fnc_spawn_actor_effect(actor, flags) spawns visual effect ID flags&0x7FF from the actor's own effect table (actor+0x68, same layout as xw_*.wpn effect tables) via fnc_spawn_effect_from_set(table, flags, 20000), binds it to the actor, attaches it to the effect's bone or starts a follow job, and returns the instance handle. Flag 0x800 = loop forever, 0x1000 = instance flag bit 0. VFX, not status effects. End it with 1:0x03 StopEffect (fade out) or 0:0x61 KillEffect (immediate). Example: guard_effect = SpawnActorEffect(self, 7) in Leon ex_1030."
  },
  "0:0x4d": {
   "func_steam": "0x1402BC340",
   "name": "RayCast",
-  "_note": "Ghidra-confirmed (FUN_140299530): RayCast(from, delta, &hit) -> hit polygon index + 1 (0 = nothing hit). Steps from `from` along `delta` in 100-unit increments testing collision; writes the hit point."
+  "_note": "Ghidra-confirmed (FUN_140299530): RayCast(from, delta, &hit) -> hit polygon index + 1 (0 = nothing hit). Steps from `from` along `delta` in 100-unit increments testing collision; writes the hit point. Correction (2026-11-01, RayCastMasked research): the helper fnc_ray_cast_stepped returns fnc_bg_face_surface_class (or -1), so RayCast returns the hit face's surface class + 1, not a polygon index + 1.",
+  "result": "int"
  },
  "0:0x64": {
   "func_steam": "0x1402B9D10",
   "name": "CosAngle",
-  "_note": "Ghidra-confirmed (FUN_1402a8c70): dot(a,b)/(|a||b|) clamped to [-1,1], 0 if either is zero - cosine of the angle between two vectors."
+  "_note": "Ghidra-confirmed (FUN_1402a8c70): dot(a,b)/(|a||b|) clamped to [-1,1], 0 if either is zero - cosine of the angle between two vectors.",
+  "result": "float"
  },
  "0:0x69": {
   "func_steam": "0x1402BC600",
@@ -198,18 +208,19 @@
  },
  "0:0x72": {
   "func_steam": "0x1402BA950",
-  "name": "GetActionMode?",
-  "_note": "Ghidra: resolves self, follows a nested handle at self+0x130, returns a 16-bit field from THAT resolved object at +0x4c. Matches project_ai_motion_id_resolution.md's Shadow/Red Nocturne trace notes referencing an 'IsFacingSora? + mode==301' counter-attack-setup check that was never previously named. 100/500 enemies, e.g. if (!((NATIVE_t0_0x72(self) - 301) ==0)) - this IS that mode-flag getter."
+  "name": "GetCharacterId",
+  "_note": "Ghidra: returns the u16 at resolve(actor+0x130)+0x4C, the character/type ID the engine uses everywhere: fnc_select_tgt_entity type 1 finds entities by it, and party checks use 0 = Sora, 1/2 = Donald/Goofy, <10 = party member (voice bank, abilities, MP). Scripts compare it to 0x12D (most common), 0x190, 0x151, 0x206, 0x208 to branch shared code by enemy kind. Not an action mode. Which character 0x12D is has not been checked. 100/500 enemies.",
+  "result": "int"
  },
  "0:0x7a": {
   "func_steam": "0x1402BC640",
-  "name": "SpawnPrizeDrops?",
-  "_note": "UPDATED after decompiling the shared callee (see 0:0xd7): FUN_1402abc40 loops 7 slots spawning drop/prize particles with randomized offsets (fnc_generate_rand_float_0_to_1 scatter), then rolls per-item drop chance and calls the EXISTING labeled fnc_spawn_prize - this is death/hit prize-drop spawning, not a generic gated action. This verb calls it with mode = (DAT_14298c9a0 != 0) i.e. 0 or 1 chosen by an internal global flag (never the '2' branch 0xd7 can't reach either). 120/500 enemies, e.g. NATIVE_t0_0x7a(locblk[4], loc[16])."
+  "name": "SpawnPrizeDrops",
+  "_note": "Ghidra-confirmed: SpawnPrizeDrops(&drop_table, &pos). fnc_bd_7A_spawn_drops -> fnc_spawn_enemy_drops(table, pos, mode) with mode = g_dwPrizeDropMode (1 in world 9 / world 0x10 area 0x15 = floating orbs, else 0 = normal). Spawns the orb counts (fnc_spawn_prize_orb) and rolls the three (chance, item) prizes into fnc_spawn_prize. No entity is passed. See vault 'Enemy drop tables and prize pickup chain'. 120/500 scripts."
  },
  "0:0x81": {
   "func_steam": "0x1402BAC20",
-  "name": "SetActorFlag_0x80000?",
-  "_note": "Ghidra: resolves self, unconditionally sets bit 0x80000 in field self+0x374 - a fixed single-purpose flag setter (no dynamic value/2nd arg). 127/500 enemies, e.g. NATIVE_t0_0x81(self). Exact meaning of that specific bit/field not chased down."
+  "name": "SetDefeated",
+  "_note": "Ghidra-confirmed: SetDefeated(actor): actor+0x374 |= 0x80000. With it, fnc_hit_dispatch_to_victim ignores all hits, FUN_1402aac50 stops counting the actor as a live encounter member, and fnc_encounter_member_despawned marks its spawn record done (wave/respawn bookkeeping). Called first in death routines (before RecordDefeat) and when a placement-mode-0 enemy leaves (Shadow sinking). 126/500 scripts."
  },
  "0:0xa4": {
   "func_steam": null,
@@ -223,13 +234,13 @@
  },
  "0:0xa7": {
   "func_steam": "0x1402BC960",
-  "name": "GiveExp?",
-  "_note": "Ghidra: resolves self, calls the EXISTING labeled function fnc_____handle_exp(self, arg1) directly - the label name alone is strong evidence this is an EXP-award verb. 122/500 enemies, e.g. NATIVE_t0_0xa7(heapblk[1][26], heapblk[1])."
+  "name": "GiveExp",
+  "_note": "Ghidra: fnc_bd_t0_A7_give_exp(actor, exp) -> fnc_award_exp_at_entity: only while Sora HP > 0; exp *= adr_exp_mult (rounded); unless ability id 0x40 is active in the party ability list, shows the EXP popup at the actor's 0x8004 point and calls fnc_give_exp_to_party. 122/500 enemies, e.g. GiveExp(heapblk[1][26], heapblk[1])."
  },
  "0:0xce": {
   "func_steam": "0x1402BC300",
-  "name": "SetControllerVibration?",
-  "_note": "Ghidra: single float arg (an angle-looking value), calls FUN_1400d2af0(0, 0, angle*4) and again with player-index 1 - a completely different code region (0x1400d2af0) from the rest of the AI verb cluster, consistent with an input/rumble subsystem call for both controller ports. 98/500 enemies, always called with the same literal 180.0, e.g. NATIVE_t0_0xce(180.0)."
+  "name": "FadeOutBGM",
+  "_note": "Ghidra: fnc_bd_t0_CE_fade_out_bgm(frames): fnc_bgm_set_volume_fade(slot, 0, frames*4) for BGM slots 0 (field) and 1 (battle); time is in 1/240 s, so frames is 60 fps frames (180.0 = 3 s). The same call as the field/battle BGM crossfade. 98/500 enemies, always FadeOutBGM(180.0), in the boss defeat sequence right before RecordDefeat. Was SetControllerVibration? (that is 0xAB PlayVibrationPattern)."
  },
  "0:0xad": {
   "func_steam": "0x1402BC100",
@@ -238,52 +249,54 @@
  },
  "0:0xd7": {
   "func_steam": "0x1402BC6B0",
-  "name": "SpawnPrizeDropsForced?",
-  "_note": "Same callee as 0:0x7a (FUN_1402abc40, the drop/prize-spawn loop that ends in fnc_spawn_prize) but with mode HARD-CODED to 1 instead of a dynamic global flag - i.e. this is the 'always mode 1' variant of the same prize-drop call. 98/500 enemies, e.g. NATIVE_t0_0xd7(locblk[4], loc[16])."
+  "name": "SpawnPrizeDropsFloating",
+  "_note": "Ghidra-confirmed: SpawnPrizeDropsFloating(&drop_table, &pos). fnc_bd_D7_spawn_drops -> fnc_spawn_enemy_drops(table, pos, 1): same as SpawnPrizeDrops but always mode 1, the floating/underwater orb movement (fnc_spawn_prize_orb gives a small launch; fnc_prize_orb_update_floating 0x1402AC830 applies drag x0.95 and buoyancy). It is in 98 scripts as shared library code, but reached in only 13 (Shadow-family + ew_2010), only when GetMapInfo = world 0x10 room 0x22."
  },
  "0:0x2b": {
   "func_steam": "0x1402BA1E0",
-  "name": "GetMotionDuration?",
-  "_note": "Ghidra: resolves self, calls FUN_14029eed0(self, motion_id) and returns the wrapped result. Usage args are real motion_ids from the SAME numbering project_ai_motion_id_resolution.md already resolves (e.g. 204 -> anim0049 for Shadow), and the result is consistently used as `NATIVE_t0_0x2b(self, motion_id) - 2.0` - subtracting a small constant looks like accounting for blend-out frames. 95/500 enemies, e.g. loc[60] = (NATIVE_t0_0x2b(self, 204) - 2.0). Likely returns the motion's frame/duration length; not confirmed against a live frame count."
+  "name": "GetMotionLength",
+  "_note": "Ghidra: fnc_actor_get_motion_length resolves motionId to an .mset slot (fnc_resolve_motion_id on actor+0x1D0) and returns (float) the int at +4 of that motion (slot table at actor+0x1D4), the motion's length in frames. fnc_motion_transition_dispatch stores the same value as the playing motion's length actor+0x280. Does not play the motion. Scripts offset it (-2.0, +8.0, -30.0) to time waits around the end of a motion. 95/500 enemies.",
+  "result": "float"
  },
  "0:0x5d": {
   "func_steam": "0x1402B9CD0",
-  "name": "VecScale?",
-  "_note": "Ghidra: resolves its single vector arg TWICE (the same in-place-op shape as VecNormalize/0x09) then calls FUN_140386d00(v, v, scalar) - an in-place vector operation taking one extra scalar parameter. 92/500 enemies, e.g. NATIVE_t0_0x5d(loc[32], 0.5) / (loc[48], 3000.0) - fits the Vec* cluster (VecAdd/VecSub/VecLength/VecNormalize) as a scale-by-scalar op."
+  "name": "VecScale",
+  "_note": "Ghidra-confirmed: fnc_bd_5D_vec_scale -> (thunk 0x140386D00) fnc_vec3_scale_keep_w(v, v, s): v.xyz *= s in place, w kept. E.g. VecAdd then VecScale(&v, 0.5) for a midpoint. 92/500 scripts."
  },
  "0:0x7d": {
   "func_steam": "0x1402BABA0",
-  "name": "SetTurnSpeedDeg?",
-  "_note": "Ghidra: resolves self, follows a nested linked object at self+0x6c (a movement/steering component), converts the 2nd arg from degrees to radians (`arg/180.0 * PI`) and stores it into that sub-object's field +0xd0. Usage args are all fractions of 360 (2.8125=360/128, 5.625=360/64, 11.25=360/32) - i.e. per-tick turn-rate presets. 79/500 enemies, e.g. NATIVE_t0_0x7d(self, 5.625)."
+  "name": "SetTurnSpeedDeg",
+  "_note": "Ghidra-confirmed: fnc_bd_7D_set_turn_speed_deg sets battle params (actor+0x6C) +0xD0 = deg in radians. Every frame KH1_HitReactionUpdate turns the yaw (+0x3C) toward the desired yaw (+0x150, set by TurnTowardDir/FaceDir) by at most this much times the frame step (fnc_turn_angle_toward_capped 0x1402A8300). Args are fractions of 360 (2.8125/5.625/11.25). 79/500 scripts."
  },
  "0:0x76": {
   "func_steam": "0x1402BAA80",
-  "name": "GetVelocity?",
-  "_note": "Ghidra: resolves self and a 2nd handle, calls FUN_140386d10(other, self+0x10, self+0x490) - passes two of self's own fields (a position-like field at +0x10, another at +0x490) alongside the 2nd handle into the callee, filling the 2nd handle as an OUT vector. Confirmed by usage seen in Red Nocturne: NATIVE_t0_0x76(self, loc[16]) is immediately followed by VecLength(loc[16]) compared against (speed * frametime * 0.5) - i.e. this fills loc[16] with something whose magnitude is compared to 'how far I'd move in half a frame', consistent with a current-velocity query. 75/500 enemies."
+  "name": "GetMoveDelta",
+  "_note": "Ghidra: fnc_bd_t0_76_get_move_delta(actor, out_vec): out = position (+0x10) - previous position (+0x490, saved at the start of fnc_actor_physics_step), the distance moved in the last physics step, not divided by frame time. Scripts check VecLength(out) < k * FrameDelta() to detect being stuck or stopped (di_1030, ex_2172, ex_2190). 75/500 enemies."
  },
  "1:0x03": {
   "func_steam": "0x140394DE0",
-  "name": "CancelTimedTask?",
-  "_note": "Ghidra: resolves its single arg; if non-null, resolves it again and writes 1 into a byte at +0x10, then ALWAYS returns a wrapped null handle regardless. The lone arg's expected type plus the always-null return read like 'mark this timed task as done/cancelled', possibly the counterpart to the timed-task allocation seen behind 0:0x91 (which also lives in the t1/SetTimedMove-adjacent cluster). 80/500 enemies, e.g. NATIVE_t1_0x3(locblk[88])."
+  "name": "StopEffect",
+  "_note": "Ghidra: args[0] is an effect instance (from 0:0x4b SpawnActorEffect / 0:0x0f SpawnEffectFromSet). Writes 1 to the effect slot's stop byte +0x91 (instance[4] handle) and returns a null handle, so scripts write h = StopEffect(h). With +0x91 set, a looping effect (+0x90) stops repeating and ends once its remaining children (+0x78) are gone (FUN_14031c4f0 / FUN_14031ce10): a graceful stop. The immediate version is 0:0x61 KillEffect. 80/500 enemies."
  },
  "0:0x61": {
   "func_steam": "0x1402BB900",
-  "name": "DestroyObj?",
-  "_note": "Ghidra: resolves its single arg; if non-null, calls thunk_FUN_1401ec470(handle) (a teardown-shaped call), then ALWAYS returns a wrapped null handle regardless. Usage matches an 'obj = Destroy(obj)' idiom that clears the reference after destroying it, e.g. loc[8] = NATIVE_t0_0x61(locblk[8]). 74/500 enemies."
+  "name": "KillEffect",
+  "_note": "Ghidra: args[0] is an effect instance (from 0x4b SpawnActorEffect / 0x0f SpawnEffectFromSet). fnc_end_trail_effect finds the active effect slot (table 0x142678280, stride 0xE0, slot+0xB0 == instance), stops its sound and frees the slot at once. Returns a null handle (h = KillEffect(h)). The fade-out version is 1:0x03 StopEffect. Effects only, not general objects. 74/500 enemies."
  },
  "0:0x5e": {
-  "func_steam": null,
-  "name": "ScheduleCallback?",
-  "_note": "Already solved via live Ghidra trace in a prior session (see project_ai_motion_id_resolution.md, Red Nocturne section): traced 4 levels deep (FUN_14028f6d0 -> FUN_1402bcec0) and found it's a deferred script-callback scheduler that re-enters the .bd interpreter later, rather than a direct action call - this is why an enemy can appear to have 'no attack' in its script even when it clearly attacks in-game (Red Nocturne's fireball damage was never chased past this call). 71/500 enemies, e.g. NATIVE_t0_0x5e(self, 2, 0, imm[-8306], 0). func_steam not re-derived this session; see the referenced memory for the two known engine addresses."
+  "func_steam": "0x1402BC030",
+  "name": "LaunchEffectScript",
+  "_note": "Ghidra 2026-10-30: fnc_bd_5E_launch_effect_script. (actor, section_index, target, &hit_params, &hit_params2). Starts one of the actor's own effect/projectile scripts (section index of the +0x13C container) through fnc_launch_actor_effect_script (0x14028F0A0) and fnc_spell_script_launch. Args 4/5 point into the data area and become start args of the child script, so their type is whatever the child does with them: usually 0x70-byte Hit Parameters (the child calls MakeAttack), but ex_2040/ex_2450 pass a 0x34-byte drop-table-shaped record. This is why an enemy's damage can be missing from its main script: the projectile carries it."
  },
  "0:0xac": {
-  "func_steam": null,
-  "name": "IsActionDone?",
-  "_note": "Best-guess from usage only, NOT Ghidra-verified. Arity [1,1] (takes self, returns a value). In Red Nocturne (ex_2110.bd), both call sites appear as `while (!NATIVE_t0_0xac(self)) { ...; return }` immediately after starting an action - once right after SetMotion/QueueMotion, once right after picking one of two attack subroutines - i.e. a spin-and-yield-per-frame gate that waits for the just-started motion/action to finish before falling back into the combat loop. Confirm via live breakpoint on func_steam (t0 base 0x140529180 + 0xac*0x10) before trusting the name for anything load-bearing."
+  "func_steam": "0x1402BB0E0",
+  "name": "IsMotionDone",
+  "_note": "Ghidra: func_steam 0x1402BB0E0 (slot 0x140529C40, flags 0x40000001). fnc_bd_t0_AC_is_motion_done(actor) -> fnc_entity_is_motion_done: 1 when no set-motion is pending (+0x160 bit 0), no blend is running (+0x170), no motion is queued (+0x178), and the current frame +0x16C plus frame delta * speed +0x284 reaches the length +0x280. Same check as EVDL fnc_067_wait_motion_end. Used as a per-frame wait after SetMotion/QueueMotion."
  },
  "0:0xb2": {
   "func_steam": "0x1402B9750",
-  "name": "ClearChainFlags?"
+  "name": "ExitThread",
+  "_note": "Ghidra: inlined fnc_release_state_record on the running thread record (g_pCurrentScriptActor). A child thread started by 0x14 StartThread (bit 2) only clears its running bit 1, so fnc_script_actor_list_run unlinks it next pass. The main record frees its 0x800-byte heap buffer and clears bit 0 on the whole +0x740 thread chain, ending the script instance. No args. Scripts call it as the last statement of thread functions. 0x22 ReplaceThread uses the same release on another thread's handle."
  },
  "0:0xd5": {
   "func_steam": "0x1402BBC10",
@@ -298,13 +311,13 @@
   "name": "SetTimedMove"
  },
  "0:0x26": {
-  "name": "ScriptedKnockback?",
-  "_note": "Ghidra + live (Leon ex_1030, 2026-09-27): (actor, hit, motion_base, up, horizontal, 0) -> result; engine FUN_1402b79f0. Plays the knockback reaction from motion_base (Leon: 0xFA ground / 0x104 air, picked by self.air) and launches the actor with the given up/horizontal speeds. Leon vanilla 5.0/50.0 = back flip; 90.0/5.0 = near-vertical launch. Used by boss hit handlers that own their reactions (entity+0x374 bit 0x10000).",
+  "name": "ScriptedKnockback",
+  "_note": "Ghidra + live (Leon ex_1030, 2026-09-27): (actor, hit, motion_base, up_speed, horizontal_speed, extra) -> null handle. Engine fnc_reaction_knockback_scripted: motion_base 0 -> 0x52 ground / 0x5C air; if the actor lacks motion_base it falls back to the generic fnc_reaction_knockback. Otherwise it picks a side by dot(actor+0x30, hit dir): >= 0 -> SetMotion base+5 then queue base+6, else base then base+1; turns along the hit, moves along it at horizontal_speed, vertical launch at up_speed, stores extra at +0x3E4 (meaning unknown), marks the hit handled. If hit flags bit 0x800 is set, calls FUN_1402b8790 at a random hit point first (probably the hit effect). Leon: 0xFA ground / 0x104 air; 5.0/50.0 = back flip, 90.0/5.0 = near-vertical launch.",
   "func_steam": "0x1402BBC80"
  },
  "0:0x2a": {
-  "name": "PushOnHit?",
-  "_note": "Ghidra + live (Leon ex_1030, 2026-09-27): (actor, hit); engine FUN_1402b7e60, the reaction-level-2 handler: pushes the actor along the hit direction (btltbl2+0x2C x weight) with no flinch motion. Boss hit handlers call it for hits they absorb without hitstun.",
+  "name": "PushOnHit",
+  "_note": "Ghidra + live (Leon ex_1030, 2026-09-27): (actor, hit). Engine fnc_reaction_push (reaction level 2): pushes the actor along the hit direction with strength btltbl2+0x2C * stats+0xC4 via fnc_entity_apply_knockback_push, no motion change, marks the hit handled (hit |= 2). If hit flags bit 0x800 is set, calls FUN_1402b8790 at a random hit point first (probably the hit effect). Boss hit handlers use it for hits they absorb without hitstun.",
   "func_steam": "0x1402BBD80"
  },
  "0:0x3b": {
@@ -313,8 +326,8 @@
   "func_steam": "0x1402BA370"
  },
  "0:0x6b": {
-  "name": "SpawnEffect?",
-  "_note": "Usage only (Leon ex_1030): (actor, effect_id, blend/start) called right before each attack's MakeAttack/SetMotion with a per-attack id (slashes 8/9, jump slash 0xA/0x17; guard-mode variants 0xC/0xD/0xE/0x18). Reads as attaching the attack's swing effect. Not Ghidra-verified.",
+  "name": "SpawnEffectDelayed",
+  "_note": "Ghidra-confirmed: SpawnEffectDelayed(actor, effect_id, delay_frames). fnc_queue_actor_effect_delayed (0x1402AE220) starts a job (fnc_delayed_actor_effect_job 0x1402AEBE0) that waits delay frames, then, if the actor is still alive, spawns effect_id from the actor's own effect set (actor+0x68) on the effect's attach bone. No return. The immediate version is 0x4b SpawnActorEffect. Leon passes per-attack swing effect ids just before MakeAttack; the delay is usually 8.0. 21/500 scripts.",
   "func_steam": "0x1402BA790"
  },
  "_arity_t0": [
@@ -1313,15 +1326,17 @@
  "0:0x7b": {
   "func_steam": null,
   "name": "SendEventComm",
-  "_note": "Usage-verified, not Ghidra-traced. Sends a message (comm ID, num) from the .bd script to the room's EVDL event scripts, which poll for it with Get_comm_ID()/Get_comm_Num(). Found in Sabor (tz_3000.bd, Deep Jungle Tree House tz01): NATIVE_t0_0x7b(200..205, 10) breaks the floor holes mo_ana_1..3 (0xC8-0xCA), junk pile mo_junk_1 (0xCB) and front walls mo_kabe_1/2 (0xCC/0xCD); every tz01 set script has a thread waiting for exactly (id, 0xA). Also seen with other num values (e.g. (301,51)..(304,54))."
+  "_note": "Usage-verified, not Ghidra-traced. Sends a message (comm ID, num) from the .bd script to the room's EVDL event scripts, which poll for it with Get_comm_ID()/Get_comm_Num(). Found in Sabor (tz_3000.bd, Deep Jungle Tree House tz01): NATIVE_t0_0x7b(200..205, 10) breaks the floor holes mo_ana_1..3 (0xC8-0xCA), junk pile mo_junk_1 (0xCB) and front walls mo_kabe_1/2 (0xCC/0xCD); every tz01 set script has a thread waiting for exactly (id, 0xA). Also seen with other num values (e.g. (301,51)..(304,54)).",
+  "result": "int"
  },
  "0:0x54": {
   "func_steam": "0x1402BA510",
   "name": "IsInZone",
-  "_note": "Ghidra-confirmed. IsInZone(actor, zone_id) -> 0/1. FUN_1402ba510 -> FUN_1402a9e40 tests bit (zone_id-1) of FUN_1402a9960(actor), which overlaps the actor's AABB with every box in the room's zone table (global DAT_142d60c90) and ORs 1<<(id-1) per hit (entries with flags&2 always count). Zone table comes from the current ARD set section: magic 'ZN\u0000\u001e', u8 count @+4, then 0x30-byte entries from +0x10 (u8 id, u8 flags, ..., min xyz f32 @+0x10, max xyz f32 @+0x20). No table in the set -> always 0. Used by Sabor (tz_3000.bd, Tree House set 15) to pick which wall/junk pile to break when a hit puts him into his reaction state (mode 1) inside zones 5/6/7, and to track which of 4 perches (zones 1-4) he's on."
+  "_note": "Ghidra-confirmed. IsInZone(actor, zone_id) -> 0/1. FUN_1402ba510 -> FUN_1402a9e40 tests bit (zone_id-1) of FUN_1402a9960(actor), which overlaps the actor's AABB with every box in the room's zone table (global DAT_142d60c90) and ORs 1<<(id-1) per hit (entries with flags&2 always count). Zone table comes from the current ARD set section: magic 'ZN\u0000\u001e', u8 count @+4, then 0x30-byte entries from +0x10 (u8 id, u8 flags, ..., min xyz f32 @+0x10, max xyz f32 @+0x20). No table in the set -> always 0. Used by Sabor (tz_3000.bd, Tree House set 15) to pick which wall/junk pile to break when a hit puts him into his reaction state (mode 1) inside zones 5/6/7, and to track which of 4 perches (zones 1-4) he's on.",
+  "result": "int"
  },
  "1:0x00": {
-  "name": "DebugNop",
+  "name": "DebugNopInt",
   "_note": "Ghidra: the engine function is a bare RET (compiled-out debug call). Unlike t0 0x42 the scripts do push its 1 argument, so the stack stays consistent.",
   "func_steam": "0x140394D80"
  },
@@ -1333,17 +1348,19 @@
  "0:0x51": {
   "name": "SendMessage",
   "_note": "Ghidra-confirmed (FUN_140297ca0): SendMessage(to_actor, from_actor, msg) -> result. If the receiver is active and has a script (+0x144, flag bit 16 of +0x374) it runs that script's handler via FUN_1402bcd60 with (from, msg) and returns its result; otherwise calls the actor's native handler (+0x4A0) or a default. Actor-to-actor messaging (vs SendEventComm, which talks to the room's event script).",
-  "func_steam": "0x1402BBFF0"
+  "func_steam": "0x1402BBFF0",
+  "result": "int"
  },
  "0:0xa8": {
-  "name": "QueueVoice?",
-  "_note": "Ghidra (FUN_140290080): (actor, n) fills this actor's entry (indexed by stats+0xBD) in a global request table at 0x142D371D0 with type 2 and value n, using the enemy type record (+0x130, id at +0x4C) or a per-actor table (+0x4A8). Read back by 0xB5. Exact meaning not pinned down. Live (Leon ex_1030, 2026-09-27): the value picks a voice clip (VAGp) - scripts call it with random 0xF/0x10 when hurt, 0x11 on defeat, 1/0/3/5 per attack - so it queues a voice line, not an action.",
+  "name": "PlayVoice",
+  "_note": "Ghidra: fnc_bd_t0_A8_play_voice(actor, clip) -> fnc_actor_request_voice (also used by EVDL fnc_287_play_battle_voice and fnc_play_voice_clip): stops the actor's current voice channel (stats+0xBD) and writes a request (state 2, clip, actor) into the 4-slot table 0x142D371D0. Party characters (type id < 10) use the shared bank, others the actor's voice pack +0x4A8 (clip < pack count). fnc_voice_request_update plays it next frame at the actor's voice attach point. Leon: random 0xF/0x10 when hurt, 0x11 on defeat, 1/0/3/5 per attack. Read back by 0xB5 GetCurrentVoice.",
   "func_steam": "0x1402BB010"
  },
  "0:0x84": {
   "name": "GetPlacementMode",
   "_note": "Ghidra-confirmed (FUN_1402bac40): returns byte +0x5A of the actor's placement record - actor+0x130 is a handle to the room ARD's 0x78-byte actor placement record (set by fnc_spawn_world_gimmick_entity, puVar13[0x4c]). The engine itself uses 2/3/4 of that byte to place/orient the actor relative to Sora; other values are free flags for the script. In the file the record starts 0x68 bytes before its name string. Sabor (tz_3000): tz01 story-fight record has 5, tz03 story-fight record has 6, every other Sabor record has 1.",
-  "func_steam": "0x1402BAC40"
+  "func_steam": "0x1402BAC40",
+  "result": "int"
  },
  "0:0x74": {
   "name": "SetActorFlags",
@@ -1351,23 +1368,25 @@
   "func_steam": "0x1402BAA00"
  },
  "0:0x59": {
-  "name": "GetActorTimer?",
-  "_note": "Ghidra: returns the float at actor +0x3D4. Used as `while (x > 0.0)` waits; which timer it is (hitstun/invulnerability) not confirmed.",
-  "func_steam": "0x1402BA5D0"
+  "name": "GetHeightAboveFloor",
+  "_note": "Ghidra: returns float actor+0x3D4. fnc_actor_move_with_collision writes floorY - pos.y there (KH1 Y points down, so positive = above the floor) and 0 when grounded. Glide/flight start and hit reactions read it as a minimum-height check. Not a timer. Scripts use while (h > 0) to wait for landing and h < 70 / h > 100 for height checks.",
+  "func_steam": "0x1402BA5D0",
+  "result": "float"
  },
  "0:0x03": {
   "name": "CosDeg",
   "_note": "Ghidra-confirmed: cos(deg * pi/180). Pair of SinDeg (0x02).",
-  "func_steam": "0x1402B9880"
+  "func_steam": "0x1402B9880",
+  "result": "float"
  },
  "0:0xab": {
-  "name": "LoadScriptTable?",
-  "_note": "Ghidra: validates a data blob (first byte 0x14) inside the script and installs its two sub-tables into a global slot (FUN_1401e1400). Called with &data_XXXX; what the tables drive is not confirmed.",
+  "name": "PlayVibrationPattern",
+  "_note": "Ghidra: fnc_bd_t0_AB_play_vibration_pattern(&blob) -> fnc_vibration_pattern_start(blob, slot 0) when blob[0] == 0x14. Blob: u32 0x14, u32 flags (bit 0 = loop), u32 off1, u32 off2, u32 count1, u32 count2, then two keyframe tables of {u8 frames, u8 level} at blob+off1 (small motor) / blob+off2 (large motor). fnc_vibration_pattern_update interpolates them each frame into the pad state 0x14298C9B0 bytes +2/+3, which fnc_pad_process_frame sends to the controller. Pierce (al_3030) picks one of four blobs by hit strength. Was InstallTableBlob?.",
   "func_steam": "0x1402BCAD0"
  },
  "0:0x7f": {
-  "name": "PlaySE?",
-  "_note": "Ghidra (FUN_1402a10b0): (actor, id) plays id (low 16 bits) through the actor's player at +0x15C, optionally with the bank at +0x14C; has a world-specific id remap (world 0xB area 2: 0x429 -> 0x40E). Most likely a sound effect.",
+  "name": "PlayTextureAnim",
+  "_note": "Ghidra: fnc_bd_t0_7F_play_texture_anim(actor, id) -> fnc_entity_play_texture_anim -> fnc_texanim_play: starts a texture animation from the model's MDLS TEXA chunk (entity+0x15C model object; bit 0x10000 = use the alternate/weapon model at +0x14C; id >= 0x400 = direct index, else looked up in the TEXA byte table). World 0xB area 2 remaps 0x429 -> 0x40E. Not a sound: the voice code plays texanim 0x23 with each voice clip (mouth). Was PlaySE?.",
   "func_steam": "0x1402BABE0"
  },
  "0:0xd6": {
@@ -1376,9 +1395,10 @@
   "func_steam": "0x1402BC150"
  },
  "0:0xb5": {
-  "name": "GetQueuedAction?",
-  "_note": "Ghidra (FUN_14028ff40): returns this actor's value in the request table written by QueueAction? (0xA8), or -1 if none.",
-  "func_steam": "0x1402BB160"
+  "name": "GetCurrentVoice",
+  "_note": "Ghidra (fnc_actor_get_voice_channel_clip, 0x14028FF40): looks up the actor's voice channel (stats+0xBD) in the 4-entry voice request table 0x142D371D0 (stride 0x28) and returns that channel's clip index while it is busy (state byte != 0), else -1. 0xa8 PlayVoice fills the table through fnc_actor_request_voice. Does not check that this actor owns the channel (fnc_actor_get_voice_channel_state does). Scripts wait on == -1 for the voice line to finish.",
+  "func_steam": "0x1402BB160",
+  "result": "int"
  },
  "0:0x96": {
   "func_steam": "0x1402B9800",
@@ -1401,18 +1421,601 @@
   "func_steam": "0x1402BAAD0"
  },
  "0:0x8a": {
-  "name": "GetGlobalB5C?",
-  "_note": "Ghidra: returns a handle to the global at 0x142DB7B5C (next to the other script-context singletons at 0x142DB7B48/B50). What it holds is not confirmed.",
+  "name": "GetRoomVars",
+  "_note": "Ghidra-confirmed: GetRoomVars() -> handle to g_dwRoomScriptVars (0x142DB7B5C), 0x80 bytes (32 dwords) that fnc_apply_loaded_ard zeroes on every room load, right after the GetMapInfo struct (0x142DB7B50). Room-wide scratch shared by all scripts in the room; used as a per-room instance counter (*p += 1 in init, reset with *p = 0). 24/500 scripts.",
   "func_steam": "0x1402BC620"
  },
  "0:0x79": {
-  "name": "SetLookTarget?",
-  "_note": "Ghidra (FUN_1402a28c0): SetLookTarget?(actor, other) stores other's handle at actor +0x470 and, if other is active, caches its body point (GetBodyPos) at actor +0x460. A secondary target, separate from SetTarget's +0x74.",
+  "name": "SetLookTarget",
+  "_note": "Ghidra-confirmed: fnc_bd_79_set_look_target -> fnc_actor_set_look_target(actor, other) (0x1402A28C0). Sets the head look-at target (actor+0x470; caches its body point at +0x460). fnc_actor_update_look_at (0x1402A2510) tracks it every frame: it turns the look direction at actor+0x450 toward the target inside the view cone (battle params +0x1C/+0x20) at +0x24 rad/frame and blends the head toward it (actor+0x1F0, flags actor+0x1CC). Separate from SetTarget (+0x74). SetLookTarget(self, self.target) turns it on, (self, 0) turns it off. 14/500 scripts.",
   "func_steam": "0x1402BAB30"
  },
  "0:0x15": {
-  "name": "SpawnAttached?",
-  "_note": "Ghidra (FUN_1402adc20): SpawnAttached?(obj_type, flags, actor, point_query, f) creates an object via the SpawnObj core (FUN_1402ae5b0, lifetime 20000) and binds it to a point on actor (FUN_14029eb20 query, e.g. 32771 = 0x8003 position), copying that point as its position. Returns the object handle.",
+  "name": "SpawnEffectAtPoint",
+  "_note": "Ghidra-confirmed: SpawnEffectAtPoint(effect_set, id_flags, actor, point, t) -> effect handle. fnc_spawn_effect_at_attach_point (0x1402ADC20): spawns effect id_flags & 0x7FF from effect_set (fnc_spawn_effect_from_set, lifetime 20000) and starts a follow job (fnc_effect_start_follow_job, mode 1) that keeps it on actor's attach point (fnc_get_entity_attach_point_pos: 0x8003 centre, 0x30 weapon blade with t = fraction along it, others = model points). id_flags bit 11 = loop. Scripts pass self[26] (actor+0x68, own effect set). 29/500 scripts.",
   "func_steam": "0x1402BB5F0"
+ },
+ "0:0xc6": {
+  "func_steam": "0x1402BC780",
+  "name": "IsGameCleared",
+  "_note": "Ghidra-confirmed: fnc_bd_t0_C6_is_game_cleared -> fnc_is_game_cleared (0x1401B66D0) returns world-progress save (section 1) +0xDC4 bit 0, the game-cleared flag set by fnc_24A_set_game_clear_flag. No args. 68/500 scripts, mostly bosses, choose their end-game stat pages with it (e.g. world 0x10, room >= 0x25 -> page 19)."
+ },
+ "0:0x18": {
+  "func_steam": "0x1402B9C70",
+  "name": "RotateDirToward",
+  "_note": "Ghidra-confirmed: RotateDirToward(&dir, &target_dir, max_deg). fnc_vec_rotate_toward_capped (0x1402A85C0) replaces dir with unit(dir) turned toward unit(target_dir) by at most max_deg * the per-frame scale g_TxtSpeed, about the axis dir x target. The result is a unit vector. Homing-steer helper, 39/500 scripts."
+ },
+ "0:0x3c": {
+  "func_steam": "0x1402BBA80",
+  "name": "ApplyAttackToActor",
+  "_note": "Ghidra-confirmed: ApplyAttackToActor(attack, victim) -> hit record handle (null if the victim is not hittable). KH1_ApplyDamage_FireOnHitScript queues the attack's hit directly on the victim with no collision test, grants the owner's MP-on-hit and runs the attack's on-hit script entry (+0x38). attack is a MakeAttack result. Used for scripted hits such as area sweeps over GetEntity lists. Not the same as 0x2c ApplyHitDamage."
+ },
+ "0:0xcc": {
+  "func_steam": "0x1402BB2F0",
+  "name": "GetMotionSpeed",
+  "_note": "Ghidra-confirmed: returns float actor+0x284, self.motion_speed, the value 0x3b SetMotionSpeed writes. Scripts scale timers with it (timer -= FrameDelta() * GetMotionSpeed(self)) so they stay in sync with slowed or sped-up motions.",
+  "result": "float"
+ },
+ "0:0xb9": {
+  "func_steam": "0x1402BCB20",
+  "name": "GetSpawnBudgetCap",
+  "_note": "Ghidra-confirmed: returns g_nGimmickSpawnBudgetCap (0x142D60C98), the room's spawn-weight cap from ARD ZN byte +3 (0 = no cap), loaded by fnc_encounter_zones_load. fnc_spawn_world_gimmick_entity refuses a spawn when used + type weight (+0x59) would exceed it. Pair of 0xae (returns g_nGimmickSpawnBudgetUsed); scripts compute the room left as GetSpawnBudgetCap() - 0xae().",
+  "result": "int"
+ },
+ "0:0x6a": {
+  "func_steam": "0x1402BA750",
+  "name": "SpawnActorEffectAtPoint",
+  "_note": "Ghidra-confirmed: SpawnActorEffectAtPoint(actor, id_flags, point, t) -> effect handle. fnc_spawn_actor_effect_at_attach_point (0x1402AE350) works like 0x15 SpawnEffectAtPoint, but the effect set is always the actor's own (actor+0x68). Spawns effect id_flags & 0x7FF (lifetime 20000) and starts a follow job that keeps it on attach point (point, t): 0x8003 centre, 0x30 blade with t = fraction, etc. Bit 11 = loop. End it with StopEffect / KillEffect. 9/500 scripts."
+ },
+ "0:0x83": {
+  "func_steam": "0x1402BC7F0",
+  "name": "EnableEncounterZone",
+  "_note": "Ghidra-confirmed: EnableEncounterZone(group) sets bit group-1 of the ARD ZN encounter-zone enable mask (0x142D60CA4, labelled adr_____loading_ind in Ghidra, a wrong old name). fnc_encounter_spawn_scheduler only spawns ambient Heartless of enabled groups; fnc_encounter_zones_load resets the mask to all-enabled on room load. The disable partner is 0x82 (fnc_clear_bit_in_loading_ind, also misnamed). 4/500 scripts (al_3030, ew_3020, ex_2450, nm_3010)."
+ },
+ "0:0x73": {
+  "func_steam": "0x1402BA980",
+  "name": "TransformByBone",
+  "_note": "Ghidra-confirmed: TransformByBone(actor, &in, bone, &out): out = actor's bone world matrix * in, so a bone-local offset becomes a world point (fnc_get_actor_bone_world with 0x1000 ORed into bone; bit 15 = attach-point frame). in and out may be the same vector. Seen as (self, &loc[16], 0x1043, &loc[32]). 7/500 scripts."
+ },
+ "0:0x89": {
+  "func_steam": "0x1402BAD40",
+  "name": "StealthOff",
+  "_note": "Ghidra-confirmed: StealthOff(actor, part) clears bit part-1 of actor+0x394 (fnc_actor_stealth_off, 0x1402A1150), the same engine call as EVDL Stealth_off (fnc_193). The mask goes to fnc_party_actor_draw_model as a per-part render mask. The set side is fnc_actor_stealth_on (EVDL Stealth_on, and t0 0x88). Used as (self, 4) / (self, 1) in tz_3020/3040, ex_2430."
+ },
+ "0:0xc1": {
+  "func_steam": "0x1402BC980",
+  "name": "GiveExpAtPos",
+  "_note": "Ghidra-confirmed: GiveExpAtPos(&pos, exp) -> fnc_award_exp_at_pos (0x1402A5040). The position form of 0xa7 GiveExp: only while Sora HP > 0, exp *= adr_exp_mult (rounded), and unless ability 0x40 is active it shows the EXP popup at pos and calls fnc_give_exp_to_party. Scripts pass stats[26] (exp) or a fraction of it. 4/500 scripts."
+ },
+ "0:0xdc": {
+  "func_steam": "0x1402BB500",
+  "name": "SetOnScreenCheck",
+  "_note": "Ghidra: SetOnScreenCheck(actor, enable). enable != 0 clears actor+0x374 bit 0x20000 and 0 sets it. With the bit set, fnc_party_actor_draw_model skips its 'whole bounding box on screen' test (FUN_1402a7f70), so draw flag 0x100 is never set; likely large models always take the clipped draw path. Draw flag 0x100's exact effect is not traced. 4/500 bosses (ex_2190, 2260, 2470, 3000) call (self, 0) at init."
+ },
+ "0:0xd4": {
+  "func_steam": "0x1402BB480",
+  "name": "SnapToSoraTrail",
+  "_note": "Ghidra: SnapToSoraTrail(actor). No-op unless g_StateBitFlags & 0x2000. Otherwise, through the special-mode handler FUN_140395af0(6), it copies the newest point of Sora's recorded position ring (DAT_142efb120, pushed each frame by FUN_1403985a0) into actor+0x10, unless Sora's state +0x70 == 8. The mode itself is not identified. Only xa_ex_4030 uses it, at the top of its per-frame update."
+ },
+ "1:0x0c": {
+  "func_steam": "0x140395130",
+  "name": "Acos",
+  "_note": "Ghidra-confirmed: Acos(x) -> radians, clamped (x > 1 -> 0, x < -1 -> pi). Scripts feed it CosAngle-style dot products.",
+  "result": "float"
+ },
+ "1:0x0f": {
+  "func_steam": "0x140395010",
+  "name": "YawOfVecSub",
+  "_note": "Ghidra-confirmed: YawOfVecSub(&a, &b) -> yaw in radians of the direction from b to a, atan2f(a.x-b.x, a.z-b.z) (the same convention as FaceDir). Only call: loc[204] = YawOfVecSub(&loc[144], &loc[128]) * 360 / 2pi.",
+  "result": "float"
+ },
+ "0:0x87": {
+  "func_steam": "0x1402BACB0",
+  "name": "StartInertialMove",
+  "_note": "Ghidra-confirmed: StartInertialMove(actor, &vel). Puts the actor in movement state 4 and sets its velocity +0x3C0 = vel.xyz * vel.w. In state 4 the move handler (fnc_fly_state_move) eases +0x3C0 toward the actor's move direction (+0x20) times its speed (+0x2C) by the blend factor stats+0x14 (self.stats[5]) every frame, takes y directly, and moves by it, so turns and speed changes are smooth and drifting. Scripts usually pass a zero vector right after setting stats[5] to 0.1 or 0.2. 54/500 scripts, mostly flying enemies."
+ },
+ "0:0x82": {
+  "func_steam": "0x1402BC7E0",
+  "name": "DisableEncounterZone",
+  "_note": "Ghidra-confirmed: DisableEncounterZone(group) clears bit group-1 of the room's ARD ZN zone enable mask (0x142D60CA4, fnc_disable_encounter_zone). The group's boxes stop counting: encounter waves for that group stop spawning, and IsInZone (0x54) returns 0 for it. EnableEncounterZone (0x83) turns it back on; fnc_encounter_zones_load sets the mask to all-on on every room load. al_3030 disables zones 3/4/6/7 at start and re-enables 6 later; nm_3010 disables 1..8."
+ },
+ "0:0x93": {
+  "func_steam": "0x1402BAEF0",
+  "name": "GetStandOnEntityId",
+  "_note": "Ghidra-confirmed: GetStandOnEntityId(actor) -> the +0x04 id of the entity the actor is standing on (+0x398, fnc_actor_set_stand_on), or -1 if it stands on none. Scripts compare it with != -1, or with another entity's id to check whether the target stands on a given platform.",
+  "result": "int"
+ },
+ "0:0x1e": {
+  "func_steam": "0x1402BA070",
+  "name": "NextLiveEntity",
+  "_note": "Ghidra-confirmed: NextLiveEntity(prev) -> the next live entity in the entity pool after prev (+0x374 bit 0 set, bit 1 clear; fnc_iterate_live_entities), starting from the first when prev is 0, and a null handle at the end. Scripts loop e = NextLiveEntity(0); while (e) { ...; e = NextLiveEntity(e); }, e.g. al_3030 sends message 0x13FD to every entity."
+ },
+ "0:0xbb": {
+  "func_steam": "0x1402BB220",
+  "name": "GetFloorMaterial",
+  "_note": "Ghidra-confirmed: GetFloorMaterial(actor) -> byte +0x39E, the material of what the actor stands on. Set each move by fnc_actor_move_with_collision: the map floor face's material, or the stood-on object's placement byte +0x5D, or 10-12 in water. Footstep sounds, splashes and walk motions use it. Scripts compare it with 3, 4 and 6 together with height checks.",
+  "result": "int"
+ },
+ "0:0xd0": {
+  "func_steam": "0x1402BB3A0",
+  "name": "DisableFloorTint",
+  "_note": "Ghidra: DisableFloorTint(actor) sets +0x374 bit 0x100000, so the actor is drawn with a neutral colour (128) instead of being tinted by the floor colour under it (+0x350 -> +0x370..0x372; fnc_actor_compute_tint_color). The summon intro sets the same bit on Sora, and ApplyFloorBgColor (0xD2) sets it too. Scripts call it once in setup (16 scripts) and have no way to clear it. Other readers of the bit can't be fully excluded."
+ },
+ "0:0xe1": {
+  "func_steam": "0x1402BB530",
+  "name": "SpawnActorEffectStopAware",
+  "_note": "Ghidra-confirmed: SpawnActorEffectStopAware(actor, flags) -> effect handle (fnc_spawn_actor_effect_stop_aware). Same as 0x4B SpawnActorEffect (effect flags&0x7FF from the actor's table +0x68, 0x800 = loop, 0x1000 = instance bit 0), except when the actor is Stopped (+0x88 bit 0): then a bone-bound effect is placed once at the bone's current world matrix instead of attached to it. Used by ex_2110..2151 to spawn follow-up effects."
+ },
+ "0:0x85": {
+  "func_steam": "0x1402BAC70",
+  "name": "GetAttachPointRotation",
+  "_note": "Ghidra-confirmed: GetAttachPointRotation(actor, point, &out) writes the euler rotation (radians) of an attach point or bone to out (fnc_get_entity_attach_point_rotation). The rotation counterpart of 0x13 GetAttachPointPos, same point encoding (bit 15 = actor matrix, bit 13 = raw bone, otherwise skeleton-mapped). A dead actor gets a default matrix. Only nm_3010."
+ },
+ "0:0xc4": {
+  "func_steam": "0x1402BCB00",
+  "name": "StopVibration",
+  "_note": "Ghidra-confirmed: StopVibration() stops the controller rumble in slot 0, the one started by 0xAB PlayVibrationPattern (fnc_vibration_pattern_stop(0)), by zeroing the motor bytes and the pattern slot."
+ },
+ "0:0x94": {
+  "func_steam": "0x1402BC4F0",
+  "name": "RayCastMasked",
+  "_note": "Ghidra-confirmed: RayCastMasked(&from, &delta, mask, &hit) -> surface class of the hit face + 1 (0 = nothing hit). It is 0x4D RayCast with a collision filter argument passed to fnc_bg_ray_cast (fnc_ray_cast_stepped): steps from `from` along `delta` in 100-unit pieces and writes the first hit point to hit. Scripts pass 0x80 or a variable as the mask; the mask bits are not traced.",
+  "result": "int"
+ },
+ "0:0x66": {
+  "func_steam": "0x1402BC0B0",
+  "name": "PickAllyWeighted",
+  "_note": "Ghidra-confirmed: PickAllyWeighted(actor, int weights[], float max_range, float max_hp_ratio) -> entity or 0 (fnc_bd_pick_ally_weighted). Candidates are the actor's living teammates (not itself) with HP/maxHP <= max_hp_ratio within max_range, sorted lowest HP ratio first. It rolls rand*100: below w[0] picks the lowest, below w[0]+w[1] the second lowest, otherwise the third lowest; with fewer candidates it falls back. The weights record has the same layout as 0x30 PickTargetWeighted. Used by ex_1040, ex_2140, ex_2270 (helper/healer AI)."
+ },
+ "1:0x0b": {
+  "func_steam": "0x140394FC0",
+  "name": "VecCross",
+  "_note": "Ghidra-confirmed: VecCross(&a, &b): a = a x b (cross product, w = 0), in place (fnc_vec3_cross). Two scripts."
+ },
+ "0:0xb8": {
+  "func_steam": "0x1402BB1D0",
+  "name": "ReleaseSpawnBudget",
+  "_note": "Ghidra-confirmed: ReleaseSpawnBudget(actor) gives the actor's spawn weight (placement record +0x59) back to the room's spawn budget (GetSpawnBudgetUsed) now instead of at despawn, so new enemies can spawn while it is still around. It runs once: +0x374 bit 0x400000 marks it done, and teardown then skips its own subtraction. Only ex_2080, during a death/split motion."
+ },
+ "0:0x44": {
+  "func_steam": "0x1402BC2C0",
+  "name": "StopSound",
+  "_note": "Ghidra-confirmed: StopSound(sound_no, slot_id) immediately stops a positional sound started by PlaySoundAtPos (0x43), found in the 128-entry tracked sound table by both values (fnc_tracked_sound_stop -> fnc_se_stop), and frees its slot. nm_3000 starts 0xDF5C with id 1 and stops it with StopSound(0xDF5C, 1)."
+ },
+ "0:0x56": {
+  "func_steam": "0x1402BA560",
+  "name": "SetPositionAndYaw",
+  "_note": "Ghidra-confirmed: SetPositionAndYaw(actor, &vec), vec = {x, y, z, yaw}. fnc_bd_t0_56_set_position_and_yaw -> fnc_entity_set_position_and_yaw (teleport): copies xyz to the position (+0x10, +0x50, +0x2A0) and sets the facing from w (+0x30 dir, +0x3C/+0x150 yaw) unless actor+0x374 & 0x1000; clears velocity +0x3C0. The actor is found again through its +0x04 id."
+ },
+ "0:0x48": {
+  "func_steam": "0x1402B9920",
+  "name": "DebugNop48",
+  "_note": "Ghidra-confirmed: the engine function is a bare RET (c2 00 00), a debug call compiled out of the retail build. Scripts push 1 argument (e.g. 0xD6037, 0x3E7, locals), probably a debug print value."
+ },
+ "0:0x8d": {
+  "func_steam": "0x1402BADF0",
+  "name": "IsDamageable",
+  "_note": "Ghidra-confirmed: IsDamageable(actor) -> 0/1 (fnc_actor_is_damageable). 1 when the actor is hittable (collision record +0x134 with parts, byte +6 != 2, flags & 0x8048 == 0x8000, some part not masked in +0x3A8) and its flags have neither 0x80 (no-damage timer) nor 0x1000000 (script hold). Scripts AND it with IsOnGround and a !(flags & 0x400) check when picking targets."
+ },
+ "0:0x63": {
+  "func_steam": "0x1402BA6D0",
+  "name": "ShowModelPart",
+  "_note": "Ghidra-confirmed: ShowModelPart(actor, part, part2). Clears bit (part-1) of actor+0x38C (the model's hidden-part mask) and bit (part2-1) of +0x390 (a second hidden-part mask, read by FUN_1402BE180, apparently the shadow pass). A value of 0 leaves that mask alone. Undoes t0 0x62 (fnc_actor_hide_model_part). Scripts call it after fading a part in with DrawModelPartTinted."
+ },
+ "0:0x99": {
+  "func_steam": "0x1402BAF30",
+  "name": "DrawModelPartTinted",
+  "_note": "Ghidra-confirmed: DrawModelPartTinted(actor, part, &rgba). Queues one extra draw of only model part `part` (hidden mask ~(1 << (part-1))), colour = actor colour * rgba (0-1 floats, w = alpha), stealth mask +0x394 still applied. The table flags it as returning, but nothing writes args[0] (it stays the actor). Scripts call it every frame with a ramping alpha to fade a hidden part in or out, then ShowModelPart once it is opaque."
+ },
+ "0:0x4f": {
+  "func_steam": "0x1402BBF40",
+  "name": "KnockbackOnHit",
+  "_note": "Ghidra-confirmed: KnockbackOnHit(actor, hit). fnc_reaction_knockback: ground knockback (fnc_reaction_knockback_ground) or air knock/blowaway when airborne, push (fnc_reaction_push) on some re-hit frames, and marks the hit handled (hit[0] |= 2). If hit+0xC & 0x800 it first spawns the hit's effect (set hit+0x34, id hit+0x38) at a random enabled body part. Sibling of PushOnHit (0x2a). Called from on-hit handlers."
+ },
+ "0:0x86": {
+  "func_steam": "0x1402B9D50",
+  "name": "PickRandomFloorPointInRing",
+  "_note": "Ghidra-confirmed: PickRandomFloorPointInRing(&center, min_radius, max_radius, &out). Random radius in [min,max] and random start angle. Tries 18 directions 20 deg apart, then shrinks the radius by 100 until it is below min. A candidate is snapped to the floor (probe +-1000) and accepted if the segment from center to 100 units above it is clear (fnc_segment_is_clear mode 2). If none passes, out = center snapped to the floor. The found/not-found result is discarded."
+ },
+ "0:0x6d": {
+  "func_steam": "0x1402BA800",
+  "name": "SpawnActorEffectOnBone",
+  "_note": "Ghidra-confirmed: SpawnActorEffectOnBone(actor, effect_flags, bone) -> effect handle. Spawns effect ID flags & 0x7FF from the actor's own effect table (actor+0x68, like SpawnActorEffect) and attaches it to bone `bone` (| 0x1000 added) through fnc_effect_attach_to_bone, so it follows the bone each frame. With flags & 0x800 (loop) the follow record +6 = 0xFFFF."
+ },
+ "0:0x00": {
+  "func_steam": "0x1402B9820",
+  "name": "DebugNop00",
+  "_note": "Ghidra-confirmed: bare RET (c2 00 00), a debug call compiled out of the retail build. Used only by xa_ex_1630, with ints (0, 1, 2, 0xDE, 0x457, 0x8AE), often next to t1 0x00 DebugNop: probably debug prints."
+ },
+ "1:0x05": {
+  "func_steam": "0x140395090",
+  "name": "GetCameraEyePos",
+  "_note": "Ghidra-confirmed: GetCameraEyePos(&out): out = g_vCameraEye, the camera position. Its neighbour 1:0x06 copies g_vCameraTarget the same way. Used by 3 bosses (al_3050, ew_3020, he_3010)."
+ },
+ "0:0x88": {
+  "func_steam": "0x1402BAD20",
+  "name": "StealthOn",
+  "_note": "Ghidra-confirmed: StealthOn(actor, part): actor+0x394 |= 1 << (part-1), the per-part stealth mask passed to the model draw (fnc_party_actor_draw_model arg 3). Same helper as EVDL Stealth_on (fnc_actor_stealth_on). The off partner is StealthOff (0x89)."
+ },
+ "0:0xbe": {
+  "func_steam": "0x1402BC5A0",
+  "name": "AddCommandMenuTarget",
+  "_note": "Ghidra-confirmed: AddCommandMenuTarget(actor, command_id) (fnc_cmdmenu_add_target). Appends the actor, with that battle command id, as a new row in the command menu's party target list (menu 4) and in menu 6, unblocked. Picking the row issues the command with this actor as the target. 0x142D53A3C |= 0x10 is also set (meaning unknown). The lists are rebuilt every frame by fnc_cmdmenu_fill_root, so it must be called every frame. Used only by the White Mushrooms (ex_2350/2351/2352) with command 0x50."
+ },
+ "0:0xc8": {
+  "func_steam": "0x1402BC5C0",
+  "name": "GetMenuCommand",
+  "_note": "Ghidra-confirmed: GetMenuCommand(slot) -> command id (btltbl command record index) in top-level command-menu entry `slot` (0x140528914 + slot; fnc_cmdmenu_get_root_command). Entry 0 is 1 Attack, 0x62 (world 6 / world 0x10 area 0x18) or 0x63 (special lock-on state). Entry 3 is the context command. No bounds check. xa_ex_1630 tests GetMenuCommand(0) == 0x61. The setter is fnc_cmdmenu_set_root_command.",
+  "result": "int"
+ },
+ "1:0x09": {
+  "func_steam": "0x140394EA0",
+  "name": "GetEffectScale",
+  "_note": "Ghidra: GetEffectScale(effect, &out): out = the vec4 at effect slot +0x20 (instance[2]), the field SetEffectScale (t0 0x27) writes. Instance handles: [0] position, [1] rotation, [2] scale, [3] colour. ex_2090 reads it, adds 1 to y and writes it back with SetEffectScale to stretch an effect."
+ },
+ "0:0x43": {
+  "func_steam": "0x1402BC290",
+  "name": "PlaySoundAtPos",
+  "_note": "Ghidra-confirmed: PlaySoundAtPos(sound_id, channel, &pos) (fnc_play_sound_at_pos). Plays sound effect `sound_id` at a world position: allocates a sound slot (an older sound on the same id/channel is stopped and replaced; channel < 1 = automatic), copies pos into it and queues the positional SE request (fnc_se_request). The engine's motion sound events use the same path with channel = actor id + 1. Used once (xa_nm_3000)."
+ },
+ "0:0x1c": {
+  "func_steam": "0x1402B96A0",
+  "name": "KillThread",
+  "_note": "Ghidra-confirmed (fnc_bd_t0_1C_kill_thread): KillThread(thread) ends the thread record given by handle. It is ExitThread's body applied to another thread: a child thread (record bit 2, from StartThread) has its running bit 1 cleared, so the scheduler unlinks it. A main record frees its 0x800 heap buffer and clears bit 0 on the whole +0x740 thread chain. Its only script use is tw_3010, which kills a stored thread handle after destroying its object."
+ },
+ "0:0x1f": {
+  "func_steam": "0x1402B9B60",
+  "name": "RotateZDeg",
+  "_note": "Ghidra-confirmed: RotateZDeg(&v, deg) rotates v in place about the Z axis: DegToRad, then fnc_mtx_rotate_z on the identity matrix, then fnc_mtx_transform_vec4(v, mtx, v). It is the twin of RotateDeg (0x0A), which rotates about Y (yaw, fnc_mtx_rotate_y). Scripts use it to tilt spread vectors, e.g. (180*RandFloat01())-90."
+ },
+ "0:0x41": {
+  "func_steam": "0x1402BA3A0",
+  "name": "FindNextOpponent",
+  "_note": "Ghidra-confirmed: FindNextOpponent(actor, prev) returns a handle to the next entity in the pool after prev (or the first one when prev is 0) that is alive (+0x374 bit 0 set, bit 1 clear), not flagged +0 0x200, and on a different nonzero team from actor (+0x374 bits 5-6). It returns a null handle at the end. Scripts call it in a loop to enumerate all opponents. The same helper (fnc_find_next_opponent_entity) is used by fnc_bd_pick_target_weighted."
+ },
+ "0:0x46": {
+  "func_steam": "0x1402BBF00",
+  "name": "IsKnockedDown",
+  "_note": "Ghidra: IsKnockedDown(actor) returns 1 when the actor's motion (+0x164) minus its reaction motion base (+0x3EA, e.g. 0x52 launched / 0x5C launched in the air) is 3 or 8 (fnc_actor_is_knocked_down). Those are the lying-on-the-ground motions of the launch/blow-away reaction (front and back variants; +2/+7 land, +4/+9 get up). The motion-offset maths is engine-confirmed; the 'lying down' meaning comes from the vault's launch reaction notes. Only use: ex_2040."
+ },
+ "0:0x68": {
+  "func_steam": "0x1402BA700",
+  "name": "IsAirborne",
+  "_note": "Ghidra-confirmed: IsAirborne(actor) is 1 if the actor's movement state (+0x70) is an air state (fnc_actor_is_airborne: class-1 states and 2/0xB/0x10/0x11/0x13/0x14/0x16) or a class-2 free-movement state (fnc_actor_in_class2_move_state: e.g. flight 8, Atlantica swim 0x18/0x19, carpet 0x1D, 0x17), else 0. The exact negation of IsOnGround (0xDA)."
+ },
+ "0:0xda": {
+  "func_steam": "0x1402BB4B0",
+  "name": "IsOnGround",
+  "_note": "Ghidra-confirmed: IsOnGround(actor) is 1 when the actor is in neither an air movement state nor a class-2 free-movement state (flight, swimming). The exact negation of IsAirborne (0x68)."
+ },
+ "0:0x6e": {
+  "func_steam": "0x1402BA840",
+  "name": "SpawnEffectOnBoneDelayed",
+  "_note": "Ghidra-confirmed: SpawnEffectOnBoneDelayed(actor, effect_id, bone, delay_frames). After delay frames (a float, counted down by the frame step) it spawns effect_id from the actor's own effect set (actor+0x68) and attaches it to bone (fnc_queue_actor_effect_on_bone_delayed; the engine ORs 0x1000 into bone). Skipped if the actor has died. The bone variant of SpawnEffectDelayed (0x6B)."
+ },
+ "0:0x8e": {
+  "func_steam": "0x1402BC820",
+  "name": "AddMunny",
+  "_note": "Ghidra-confirmed: AddMunny(amount) adds amount to the player's munny via fnc_handle_munny_prize (clamped to 0..99999; crossing 10000 unlocks the trophy) and returns the new total (fnc_get_munny). Scripts pass a negative amount to charge munny, and AddMunny(0) to just read it."
+ },
+ "0:0xa1": {
+  "func_steam": "0x1402BC860",
+  "name": "BlurOn",
+  "_note": "Ghidra-confirmed: BlurOn(&params) is the parameterised form of EVDL Blur_on (fnc_01F_blur_on), the motion-blur/afterimage screen effect. params is float[10]: [0..3] RGBA as 0..1 floats (scaled x128 by the engine), [4] and [5] raw dwords (0x100 / 0xC0 by default), [6] and [7] floats, [8] an angle in degrees, [9] a dword (1). Sets the blur-enable flag 0x14233FBE8. Used in 37 boss death sequences."
+ },
+ "0:0xa3": {
+  "func_steam": "0x1402BAFE0",
+  "name": "IsOnScreen",
+  "_note": "Ghidra-confirmed: IsOnScreen(actor) returns actor +0x374 bit 3. fnc_actor_draw_job clears that bit each frame, and the model draw functions set it again only when the model passed the camera view test (fnc_actor_in_camera_view) and was drawn. So it means 'was rendered on screen last frame'. Scripts pair it with IsSoraLineOfSightBlocked to pick attacks only while visible.",
+  "result": "int"
+ },
+ "0:0xb6": {
+  "func_steam": "0x1402BB180",
+  "name": "StopVoice",
+  "_note": "Ghidra-confirmed: StopVoice(actor) stops whatever voice clip is playing on the actor's voice channel (stats +0xBD; the same channel table GetCurrentVoice reads) and marks the channel free (fnc_actor_stop_voice). The counterpart of PlayVoice (0xA8)."
+ },
+ "0:0xbc": {
+  "func_steam": "0x1402BBC50",
+  "name": "GetHitAttackId",
+  "_note": "Ghidra-confirmed (fnc_bd_GetHitAttackId): GetHitAttackId(hit) resolves the hit record's attack data (+0x2C) and returns its attack ID (+0x6C). Bosses use it to react to, or nullify, specific attacks, e.g. Pink Agaricus ex_2410 ignores summon attack IDs.",
+  "result": "int"
+ },
+ "0:0xc7": {
+  "func_steam": "0x1402BB270",
+  "name": "GetZone",
+  "_note": "Ghidra-confirmed: GetZone(actor) returns byte +0x58 of the actor's placement record (actor+0x130): the zone / encounter group it was spawned in (the same field EVDL Get_enemies_in_zone matches). Typical use: GetEnemiesInZone(GetZone(self)) <= 1 to check 'last one left'.",
+  "result": "int"
+ },
+ "0:0xde": {
+  "func_steam": "0x1402BC800",
+  "name": "GetEnemiesInZone",
+  "_note": "Ghidra-confirmed: GetEnemiesInZone(zone) returns the number of enemies in zone that are still alive and not defeated (+0x374 0x80000), plus those not yet spawned (fnc_count_enemies_in_zone, the same helper as the EVDL syscall Get_enemies_in_zone fnc_1C9). Used with GetZone(self) to detect the last enemy of a wave.",
+  "result": "int"
+ },
+ "0:0xe0": {
+  "func_steam": "0x1402B99B0",
+  "name": "GetSummonIndex",
+  "_note": "Ghidra-confirmed: GetSummonIndex() returns g_dwSummonState (0x14298C7A0) & 7: the index of the current summon, set when a summon starts (0x140289210) and cleared to 0 when it ends normally. After an abort only bit 3 is cleared, so the index can be stale; scripts guard it with 0xDD (summon active), e.g. 0xDD() && GetSummonIndex() == 3.",
+  "result": "int"
+ },
+ "0:0x01": {
+  "func_steam": "0x1402B9830",
+  "name": "DebugNop01",
+  "_note": "Ghidra-confirmed: bare RET (c2 00 00), a compiled-out debug call (likely a print of its argument). 26/500 scripts call it once per frame inside a wait loop with the remaining-time float."
+ },
+ "0:0x1a": {
+  "func_steam": "0x1402BB650",
+  "name": "FadeOutEffect",
+  "_note": "Ghidra: FadeOutEffect(effect, frames). fnc_effect_start_fade_out (0x1402AD9C0) starts fnc_effect_fade_out_job: each frame it lowers the effect slot's float +0x3C (w of the vec4 at slot+0x30, reached through instance[3], most likely alpha) by FrameDelta/frames, clamped at 0. It stops at 0 or when the instance dies; it does not end the effect (compare 0x91 FadeOutAndKillEffect). Scripts call it `frames` frames before the effect's lifetime ends (35/500)."
+ },
+ "0:0x52": {
+  "func_steam": "0x1402BA4A0",
+  "name": "JumpArc",
+  "_note": "Ghidra-confirmed: JumpArc(actor, &vel, damping, frames) -> fnc_actor_start_timed_jump. vel.x/z = horizontal speed per frame. vel.y = arc height, reached after frames/2 (gravity = 2h/(frames/2)^2, start vertical speed -g*frames/2; Y is down). damping (scripts use 0.9) multiplies the horizontal speed every frame (fnc_timed_jump_state_move). Puts the actor in move state 3 (5 from state 4) and clears flag 0x10000. All-zero args = defaults 500 / 0.9 / 30. Different from Jump 0x32. 33/500."
+ },
+ "0:0xa9": {
+  "func_steam": "0x1402BB030",
+  "name": "StartFlying",
+  "_note": "Ghidra-confirmed: StartFlying(actor, &vel) puts the actor in move state 7 (free 3D flight: fnc_fly_state_move steers +0x3C0 toward forward +0x20 * speed +0x2C, Y included, no gravity; state 4 is the same mover with other collision flags, see StartInertialMove 0x87), then sets +0x3C0 = vel.xyz * vel.w. Nearly every call passes (0,0,0,1), i.e. start flying with no velocity. Not Sora's flight state 8. 23/500."
+ },
+ "0:0x62": {
+  "func_steam": "0x1402BA6A0",
+  "name": "HideModelPart",
+  "_note": "Ghidra-confirmed: HideModelPart(actor, part, part2) -> fnc_actor_hide_model_part. Sets bit part-1 of the actor's hidden-part mask +0x38C (read by the model draw) and bit part2-1 of a second mask +0x390 (0 = leave alone). Scripts usually pass the same index twice, e.g. (self, 2, 2). Undo with ShowModelPart (0x63). Leon's null+0x38C crash at exe+0x2A0895 is inside this helper. 31/500."
+ },
+ "0:0xc3": {
+  "func_steam": "0x1402BCA20",
+  "name": "GiveExpAtPosUnscaled",
+  "_note": "Ghidra-confirmed: GiveExpAtPosUnscaled(&pos, exp) awards exp straight to the party via fnc_give_exp_to_party and shows an EXP popup at pos, unless EXP Zero (ability 0x40) is equipped. Unlike GiveExpAtPos 0xC1 it does NOT apply adr_exp_mult and skips the Sora-alive check (the position form of GiveExpUnscaled 0xC2). Used for boss part / phase EXP (stats[26]/5, /10, /50 at a body point). 11/500."
+ },
+ "0:0x5f": {
+  "func_steam": "0x1402BBB00",
+  "name": "SetAttackTeam",
+  "_note": "Ghidra-confirmed: SetAttackTeam(attack, team) sets bits 12-13 of the hit record's flags word to team&3. The collision pass only pairs attack and body entries of different teams (body team = actor +0x374 bits 5-6, see GetTeam/SetTeam; 2 = enemy). So team 3 lets an enemy's attack hit both Sora's side and enemies, and 0 makes it neutral. Called right after MakeAttack (al_3060, ex_2180/2182/2184, ex_2270)."
+ },
+ "0:0xca": {
+  "func_steam": "0x1402BC220",
+  "name": "ReleaseLight",
+  "_note": "Ghidra-confirmed: ReleaseLight(light, frames) fades a light from CreateLight (g_abLights pool) back to neutral white (1,1,1,1) over `frames`, then frees it (fnc_light_free sets type 0). Scripts pair it with CreateLight and SetLightColor to darken the scene during a boss move and restore it. Caution: frames <= 0 only resets the colour and does not free the slot. 10/500."
+ },
+ "0:0xdd": {
+  "func_steam": "0x1402B99A0",
+  "name": "IsSummonActive",
+  "_note": "Ghidra-confirmed: returns bit 13 (0x2000) of g_StateBitFlags, set while a summon is out (cleared by fnc_summon_step3_wait_end / fnc_summon_abort_cleanup; also greys the Summon command and blocks first person). Only ex_3010 uses it, always with GetSummonIndex, e.g. IsSummonActive() && GetSummonIndex() == 3."
+ },
+ "0:0x65": {
+  "func_steam": "0x1402BC590",
+  "name": "SetCommandMenuSlot",
+  "_note": "Ghidra-confirmed: SetCommandMenuSlot(slot, command_id) tail-jumps to fnc_cmdmenu_set_root_command: replaces root command-menu entry `slot` (0 = the Attack slot) with command `command_id` and un-greys it. A second call for the same slot is ignored until the menu is rebuilt (override mask 0x142D53A3C). Only ex_2060 and ex_3010 use it: ex_3010 swaps slots 0-3 to commands 0x79/0x7C, and (0, 1) restores Attack. Read back with GetMenuCommand (0xC8)."
+ },
+ "0:0xd2": {
+  "func_steam": "0x1402BB410",
+  "name": "ApplyFloorBgColor",
+  "_note": "Ghidra-confirmed: ApplyFloorBgColor(actor) samples the map 'bg color' (floor lighting tint from the collision face attribute, or the bg color of an entity under it; fnc_sample_floor_bg_color) below the actor's 0x8003 point and stores it as the actor's bg color +0x350 (fnc_entity_set_bg_color). It also sets +0x374 bit 0x100000 (the bit DisableFloorTint 0xD0 sets). Same engine path as EVDL 0x26A extract_set_bg_color. 4/500, called with self."
+ },
+ "0:0x97": {
+  "func_steam": "0x1402BC840",
+  "name": "DebugNop97",
+  "_note": "Ghidra-confirmed: bare RET (c2 00 00), compiled-out. 3/500 scripts (ex_2430, tz_3020, tz_3040) call it every frame with (obj, two constants, (1 + SinDeg(t)*0.005)/512), which looks like a removed texture-scroll/wobble call. Safe to ignore."
+ },
+ "0:0x70": {
+  "func_steam": "0x1402BA890",
+  "name": "ClearActorFlags1CC",
+  "_note": "Ghidra-confirmed: actor+0x1CC &= ~mask, the AND-NOT partner of 0x6F SetActorFlags1CC. +0x1CC is the motion/state flag word (4/8 look-at, 0x400000 cancel window, 0x800000 weapon trail), rebuilt from the motion each update. 2/500: ex_2060 (self, 1) as the else branch of SetActorFlags1CC(self, 1), and he_3000 (x, 3)."
+ },
+ "1:0x14": {
+  "func_steam": "0x1403951B0",
+  "name": "SetOneHpZeroMp",
+  "_note": "Ghidra-confirmed: sets the actor's stats (actor+0x6C) HP +0x3C = 1, MP +0x44 = 0 and the MP charge gauge +0xBE = 0. Only Sephiroth (ex_3000) uses it, on his target right after the hit lands and only if its HP > 0: the Heartless Angel effect."
+ },
+ "0:0xa6": {
+  "func_steam": "0x1402B9970",
+  "name": "SetGameSpeed",
+  "_note": "Ghidra-confirmed: writes float args[0] to g_GameSpeed. Scripts use SetGameSpeed(0.1) for boss-defeat slow motion and SetGameSpeed(1.0) to restore it."
+ },
+ "0:0xc5": {
+  "func_steam": "0x1402BC730",
+  "name": "DisableHitDamage",
+  "_note": "Ghidra-confirmed: g_dwCommandFlags |= 2 and Sora/party +0 flags |= 0x1000080, then stops rumble slot 0. With these set, fnc_default_on_hit deals 0 damage and party flinch reactions are skipped. Bit 2 is global, so every victim takes 0 damage; it is also read by the command-menu magic list. Cleared by FUN_14028dde0 and reset by FUN_140293060 (command menu init). Called when a boss is defeated. 61 calls."
+ },
+ "0:0x53": {
+  "func_steam": "0x1402BA4E0",
+  "name": "SetJumpMotion",
+  "_note": "Ghidra-confirmed: SetJumpMotion(actor, motion) sets the jump motion base actor+0x3D0 = motion - 3. The engine jump (fnc_jump_start) plays base+4 (= motion+1) and lands with base+5 / base+6 (= motion+2 / motion+3). The arg is the script's jump-prep motion, e.g. 0xE1 with jump 0xE2. SetJumpMotion(self, 3) restores the default (base 0)."
+ },
+ "0:0xc2": {
+  "func_steam": "0x1402BC9A0",
+  "name": "GiveExpUnscaled",
+  "_note": "Ghidra-confirmed: GiveExpUnscaled(actor, exp). Same as GiveExp (0xA7) but exp is NOT multiplied by adr_exp_mult and there is no Sora-HP check. Does nothing if EXP Zero (ability 0x40) is equipped. Shows an EXP popup at the actor's 0x8004 point and calls fnc_give_exp_to_party. Used for per-hit EXP in sparring fights (stats[26]/10 + 1)."
+ },
+ "0:0x6f": {
+  "func_steam": "0x1402BA870",
+  "name": "SetActorFlags1CC",
+  "_note": "Ghidra-confirmed: actor+0x1CC |= mask (partner of 0x70, which clears). +0x1CC is a motion/state flag word: 4/8 = head look-at apply (fnc_actor_update_look_at), 0x400000 = attack cancel window, 0x800000 = weapon trail, 0x100000 = walk-motion pick. Scripts use 1 and 0x10, whose meaning is not traced."
+ },
+ "0:0xae": {
+  "func_steam": "0x1402BCB10",
+  "name": "GetSpawnBudgetUsed",
+  "_note": "Ghidra-confirmed: returns g_nGimmickSpawnBudgetUsed (0x142D60C9C), the summed spawn weight of live spawned actors (fnc_spawn_world_gimmick_entity adds to it, fnc_entity_teardown subtracts). Scripts compute free room as GetSpawnBudgetCap() - GetSpawnBudgetUsed() (17 call sites).",
+  "result": "int"
+ },
+ "0:0x8f": {
+  "func_steam": "0x1402BAE10",
+  "name": "GetLookDir",
+  "_note": "Ghidra-confirmed: GetLookDir(actor, &out). While the head look-at is active (actor+0x1CC bit 8), out = the world-space look direction (+0x450 transformed by the world matrix +0xD0). Otherwise out = the actor's facing direction +0x30."
+ },
+ "0:0x34": {
+  "func_steam": "0x1402BC190",
+  "name": "CreateLight",
+  "_note": "Ghidra-confirmed: CreateLight(type, flags, param) -> light handle (null if the 31-slot pool g_abLights at 0x142D5B030 is full; fnc_light_alloc). Types: 1 ambient, 2 directional, 3 point, 4 spot, 5 local ambient. The light is marked script-owned (flag 8) and freed on room reset. Scripts create ambient lights (1, 1, 0) and configure them with 0xC9/0xCA."
+ },
+ "0:0x60": {
+  "func_steam": "0x1402BA670",
+  "name": "SetTeam",
+  "_note": "Ghidra-confirmed write: actor+0x374 bits 5-6 = team & 3. Team 2 = enemy (counted and erased by the EVDL all-enemies syscalls); team 1 is set on world gimmicks. The field is used by hit dispatch, damage calc, lock-on and target picking (FindNextOpponent skips team 0 and the actor's own team). Meaning of team 3 (what scripts usually set) is not traced."
+ },
+ "0:0x9b": {
+  "func_steam": "0x1402BC690",
+  "name": "GetDropMunnyValue",
+  "_note": "Ghidra-confirmed: GetDropMunnyValue(&drop_table) -> the munny the table's munny orbs are worth: small*1 + medium*5 + large*20, each count scaled by g_flOrbDropMult (fnc_drop_table_munny_value). Pot-type scripts pass the negated value to AddMunny.",
+  "result": "int"
+ },
+ "0:0xb4": {
+  "func_steam": "0x1402BB130",
+  "name": "SetVoiceChannel",
+  "_note": "Ghidra-confirmed: SetVoiceChannel(actor, channel) writes battle params +0xBD, the voice channel byte that GetCurrentVoice, PlayVoice and StopVoice use."
+ },
+ "0:0x90": {
+  "func_steam": "0x1402B9DA0",
+  "name": "RotateEulerDeg",
+  "_note": "Ghidra-confirmed: RotateEulerDeg(&vec, &angles_deg) rotates vec in place by the x/y/z angles given in degrees (fnc_mtx_rotate_euler, rotation applied Z, then Y, then X). 3-axis version of RotateDeg (0x0A, yaw only)."
+ },
+ "0:0x39": {
+  "func_steam": "0x1402BBEC0",
+  "name": "BlowAwayOnHit",
+  "_note": "Ghidra-confirmed: BlowAwayOnHit(actor, hit) -> null handle. Runs the engine's level-5 blow-away reaction fnc_reaction_blowaway: motion 0x52 (0x5C if airborne) plus 5/6 or 0/1 for front/back, faces the hit, and launches with a speed from btltbl2. Falls back to fnc_reaction_knockback if the motion is missing. Sibling of PushOnHit (0x2A) and ScriptedKnockback (0x26)."
+ },
+ "0:0xdf": {
+  "func_steam": "0x1402B9E90",
+  "name": "DirToPitchYaw",
+  "_note": "Ghidra-confirmed: DirToPitchYaw(&dir, &out): out = (atan2(-y, len_xz), atan2(x, z), 0, 1), the pitch/yaw in radians that point along dir (fnc_dir_to_pitch_yaw)."
+ },
+ "0:0x7c": {
+  "func_steam": "0x1402BAB70",
+  "name": "SetCharWeight",
+  "_note": "Ghidra-confirmed: SetCharWeight(actor, weight). fnc_bd_t0_7C_set_char_weight writes the float at objentry (actor+0x130) +0x18, the 'char weight' field of EVDL change_char_weight (0x10B) and get_char_weight (0x189). Weight 0 makes fnc_actor_is_immovable true, so PushActor (0xCB) and the actor-overlap push skip the actor."
+ },
+ "0:0xb0": {
+  "func_steam": "0x1402BB100",
+  "name": "GetCallNum",
+  "_note": "Ghidra-confirmed: GetCallNum(actor) -> the u16 call number at objentry (actor+0x130) +0x4E, the key the EVDL callnum opcodes (0x1B5, 0x1DE) use to find placement records (and GetEntity mode 0xB / SpawnPlacedEntity match). Not GetCharacterId (0x72), which reads +0x4C. Lets one model's script act differently per placement. Scripts compare it to 4, 5, 6 and 0x9B.",
+  "result": "int"
+ },
+ "0:0xa2": {
+  "func_steam": "0x1402BC930",
+  "name": "BlurOff",
+  "_note": "Ghidra-confirmed: BlurOff(params) clears g_dwBlurEnabled (0x14233FBE8). The arg is ignored; scripts pass the same params block they gave BlurOn (0xA1). EVDL blur_on (0x1F) and blur_off (0x20) use the same flag."
+ },
+ "0:0xaa": {
+  "func_steam": "0x1402BB0A0",
+  "name": "GetTeam",
+  "_note": "Ghidra-confirmed: GetTeam(actor) -> (actor+0x374 >> 5) & 3. 1 = party side, 2 = enemy side, 0 = props or a null actor (see SetTeam 0x60). The same category fnc_queue_hit_on_victim uses to pick the reaction level. Scripts use GetTeam(x) != 1 to skip non-party targets.",
+  "result": "int"
+ },
+ "0:0xb3": {
+  "func_steam": "0x1402BC120",
+  "name": "ApplyStun",
+  "_note": "Ghidra-confirmed: ApplyStun(actor, frames) -> fnc_apply_stun, the same code as hit type 0xA. It only acts if the actor has motion 0x42; then it sets actor+0x88 |= 2 and the down timer +0x3E4 = frames. Scripts call it on self with 60-1800 frames, sometimes a random range."
+ },
+ "0:0x71": {
+  "func_steam": "0x1402BA8C0",
+  "name": "LendMotionSet",
+  "_note": "Ghidra-confirmed: LendMotionSet(owner, target). Picks the motion set for the target's character id (objentry +0x4C) out of the owner's motion bank (handle owner+0x1DC, offset table at +4) and installs it on the target (fnc_actor_override_motion_set). The target's own set is saved at +0x1E0 and +0x160 |= 0x20 is set. Bosses use it before SetMotion(target, 0x10000C8 / 0x1000051) to play grab or knock-out animations that live in the boss's file (ex_1630, ex_2040, ex_3010, he_3010 ...)."
+ },
+ "0:0xc9": {
+  "func_steam": "0x1402BC1E0",
+  "name": "SetLightColor",
+  "_note": "Ghidra-confirmed: SetLightColor(light, &rgba, frames) changes the colour (+0x30) of a light from CreateLight (0x34), lerping over `frames` frames, or instantly if frames <= 0 (fnc_light_set_color_over_time, shared with the event-light code). ReleaseLight (0xCA) fades back to (1,1,1,1) and then frees the light. Scripts pass RGBA such as (0.2, 0, 0.2, 1)."
+ },
+ "0:0x47": {
+  "func_steam": "0x1402BBF20",
+  "name": "IsInHitReaction",
+  "_note": "Ghidra-confirmed: IsInHitReaction(actor) -> 1 while the motion request (+0x164) is a hit-reaction motion: 0x48..0x6A (flinch, knock, knockdown, blow-away), or within 0..9 above +0x3EA (fnc_actor_is_in_hit_reaction). The normal-hit motion 0x6E is outside that range; scripts test it separately with GetActionState. Grab attacks use it to skip a target that is already reacting."
+ },
+ "1:0x06": {
+  "func_steam": "0x1403950B0",
+  "name": "GetCameraTargetPos",
+  "_note": "Ghidra-confirmed: GetCameraTargetPos(&out) copies g_vCameraTarget (the camera look-at point) into the out vec4. Pair of GetCameraEyePos (1:0x05)."
+ },
+ "0:0xcb": {
+  "func_steam": "0x1402BB2A0",
+  "name": "PushActor",
+  "_note": "Ghidra-confirmed: PushActor(actor, &vec) adds vec to actor+0x120, the push the physics step applies this frame and then clears. Skipped when fnc_actor_is_immovable: flags +0x00 & 0x200000, stopped (+0x88 bit 0), or char weight 0 (see SetCharWeight 0x7C)."
+ },
+ "0:0xdb": {
+  "func_steam": "0x1402B9980",
+  "name": "IsPalVersion",
+  "_note": "Ghidra: IsPalVersion() -> 1 unless g_dwRegionCode (0x14233FBC4) is 0, 1 or 7. PC writes 7 at startup and never changes it, so this is always 0 on PC. Only pc_3020 and di_1030 call it; on 1 they use event timings in multiples of 1.2 frames (50 Hz PAL steps). The PAL meaning comes from usage, not from code."
+ },
+ "0:0x5c": {
+  "func_steam": "0x1402BA630",
+  "name": "ProbeTerrainAhead",
+  "_note": "Ghidra-confirmed: ProbeTerrainAhead(actor, &dir) -> 0..3 (fnc_actor_probe_terrain_ahead). It probes 2 x radius along dir. 0 = clear, 1 = step up (floor ahead more than height/2 higher), 2 = drop (floor ahead more than the actor's height lower), 3 = no floor ahead, or the forward probe hit a face with non-zero surface class. ex_2120 and ex_4030 jump when it returns 1."
+ },
+ "0:0xd8": {
+  "func_steam": "0x1402BC7A0",
+  "name": "KnockOutSora",
+  "_note": "Ghidra-confirmed: KnockOutSora(event_id). Sets a flag bit in Sora's stats (+0x6C) word, plays Sora voice row 2 (fnc_play_voice_row), and cold-starts the KO event script `event_id` through fnc_trigger_ko_event_script (the entry a normal death uses with 0xC8: closes EV windows, cold-starts the event script and enters cutscene mode). Only ex_3010: KnockOutSora(0x51) for its scripted knock-out grab, right after LendMotionSet and SetMotion(target, 0x1000051)."
+ },
+ "0:0x25": {
+  "func_steam": "0x1402BA180",
+  "name": "SpawnPlacedEntity",
+  "_note": "Ghidra: fnc_bd_t0_25_spawn_placed_entity(type_id) -> fnc_spawn_world_gimmick_entity, result minted as a handle (null when nothing spawns). Scripts always pass 0xB0000 | id: category 0xB respawns the first placement record of the room whose +0x4E id matches and whose entity is not alive (the same +0x4E id as GetEntity mode 0xB). Null when every such record is alive or the spawn budget (GetSpawnBudgetCap) is full. 21/500 scripts."
+ },
+ "0:0x27": {
+  "func_steam": "0x1402BB760",
+  "name": "SetEffectScale",
+  "_note": "Ghidra: fnc_bd_t0_27_set_effect_scale(effect, &vec) copies vec into the effect slot vector at instance[2] (slot +0x20). That vector starts at (1,1,1,1), next to position +0x00 and rotation +0x10 (SetEffectDirection), and scripts pass scale-like values (2,2,2; 1,1,len/350) on SpawnObj / SpawnEffectAtPoint results, so it is the effect's scale. The renderer use is not traced. 28/500 scripts."
+ },
+ "0:0x29": {
+  "func_steam": "0x1402BBD10",
+  "name": "DefaultHitReaction",
+  "_note": "Ghidra: (actor, hit). Engine default enemy reaction (fnc_enemy_engine_reaction): if the actor is already in a damage motion it pushes like PushOnHit, else airborne -> small air knock, else flinch; always marks the hit handled (hit |= 2). If hit flags bit 0x800 is set it first spawns the hit's effect at a random enabled body collision entry (fnc_spawn_hit_effect_on_random_body_part, also used by PushOnHit and ScriptedKnockback). 12/500 scripts."
+ },
+ "0:0x49": {
+  "func_steam": "0x1402B9930",
+  "name": "DebugNop49",
+  "_note": "Ghidra: bare RET (c2 00 00), a debug call compiled out of the retail build. Declared 1 arg and scripts push one (self.stats[5], glob[N]), so the stack stays consistent. 6/500 scripts."
+ },
+ "0:0x58": {
+  "func_steam": "0x1402BA5B0",
+  "name": "SetMoveState",
+  "_note": "Ghidra: fnc_bd_t0_58_set_move_state(actor, state) -> fnc_actor_set_move_state: if the state changes, saves the old state (+0x378), sets actor+0x70 and runs the leave/enter handlers from the move-state table 0x142DB3848 (stride 0x40). Scripts always pass 0. 25/500 scripts."
+ },
+ "0:0x5a": {
+  "func_steam": "0x1402BC550",
+  "name": "IsShapeOverlappingActor",
+  "_note": "Ghidra: (&shape, actor) -> 1 if the shape overlaps any enabled body collision entry of the actor (fnc_shape_overlaps_actor_body -> fnc_collision_shape_overlap per entry; entries disabled in actor+0x3A8 are skipped), 0 otherwise or if the actor is dead or not hittable. Shape = collision entry {int type 1/2/3, f32 radius, f32 height, pad, vec4 pos at +0x10}. ew_2040 builds a type-2, 120 x 1000 shape and checks each target before applying an attack. 7/500 scripts."
+ },
+ "0:0x80": {
+  "func_steam": "0x1402BAC00",
+  "name": "StopTextureAnim",
+  "_note": "Ghidra: counterpart of 0x7F PlayTextureAnim. (actor, id): resolves id like PlayTextureAnim (>= 0x400 direct index, else TEXA byte table; bit 0x10000 = alternate/weapon model +0x14C) and, if that anim's channel is currently playing it, clears the channel (fnc_entity_stop_texture_anim -> fnc_texanim_stop). ew_3020 only."
+ },
+ "0:0x8c": {
+  "func_steam": "0x1402BC3A0",
+  "name": "MoveWithMapCollision",
+  "_note": "Ghidra: (&from, &delta, radius, &out) -> 1/0. Sweeps from along delta in steps of at most radius through the map collision (fnc_bg_collision_query, radius used as size and height), writing the resolved position to out. Returns bit 0 of the collision result flags: 1 = no floor under the point, 0 = on the floor. ex_2040/ex_2450 loop it on a falling object until it returns 0."
+ },
+ "0:0xb7": {
+  "func_steam": "0x1402BB1A0",
+  "name": "PlayVoiceDelayed",
+  "_note": "Ghidra: (actor, clip, delay). Delayed form of 0xA8 PlayVoice (fnc_actor_request_voice_delayed): stops the actor's current voice channel and queues a state-1 request in the 4-slot voice table 0x142D371D0; fnc_voice_request_update counts delay down by the frame step (g_TxtSpeed), then starts it via fnc_actor_request_voice. Skipped while g_StateBitFlags bit 20 is set. Read back by GetCurrentVoice. 13/500 scripts."
+ },
+ "0:0xbf": {
+  "func_steam": "0x1402BCB30",
+  "name": "CountLiveBarrels",
+  "_note": "Ghidra: returns the number of live entities whose type record kind (+0x130 -> +0x54) is 10, the barrel object kind (think fnc_barrel_think: fuse -> fnc_barrel_blast; type ids 0xCA/0xCB/0xCC). ex_4010 only: when it is 0 (and a global is 0) the script launches an effect script once.",
+  "result": "int"
+ },
+ "0:0xcd": {
+  "func_steam": "0x1402BC2D0",
+  "name": "SilenceLowHpAlarm",
+  "_note": "Ghidra: plays menu SE 0x41 and sets Sora's HUD flag g_nLowHpAlarmSilenced (0x1428124A8 = HUD gauge record 0 +0xAA8), which stops the looping critical-HP alarm (SE 0x2D) and keeps it off until EVDL blur_off (fnc_020_blur_off) or a HUD slot reset clears it. Called in boss defeat sequences after the finishing flash. 38/500 scripts."
+ },
+ "0:0xd3": {
+  "func_steam": "0x1402BCBA0",
+  "name": "GetSpeciesResourceBlob",
+  "_note": "Ghidra: (slot) -> handle to the species resource blob of species slot `slot` (g_abSpeciesResourceBlobs + slot*0x40000), obtained through fnc_release_species_slot_run(slot, 0), which releases nothing with run length 0 (a pending DAT_14286b1d0 release is flushed first). nm_3000 only: GetSpeciesResourceBlob(0x32) used as the effect set for SpawnObj, i.e. effects from another loaded model."
+ },
+ "0:0xd9": {
+  "func_steam": "0x1402BC5E0",
+  "name": "SetMagicDisabled",
+  "_note": "Ghidra-confirmed: SetMagicDisabled(disabled). disabled != 0 sets bit 0x4 of g_dwCommandFlags (0x142D53A38), 0 clears it. While the bit is set fnc_check_spell_castable returns 0 for every spell and fnc_cmdmenu_build_magic_list reads it too, so the player cannot cast magic. Used by al_3050 / ex_3010 (args 0 / 1). (Slot 0xD8 next to it is KnockOutSora.)"
+ },
+ "1:0x01": {
+  "func_steam": "0x140394D90",
+  "name": "DebugNopFloat",
+  "_note": "Ghidra: bare RET (c2 00 00), a compiled-out debug call (probably print-float; t1 0x00 DebugNop gets the ints next to it). 1 arg, pushed by scripts, so the stack stays consistent. 5/500 scripts."
  }
 }

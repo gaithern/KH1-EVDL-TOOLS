@@ -13,6 +13,7 @@ Python tools for modding **Kingdom Hearts Final Mix (HD 1.5 Remix)** scripts and
 | `bd/` | Enemy AI bytecode (`.bd` inside `xa_*.mdls`): `asm/` (disassembler/assembler) and `bds/` (C-like language). |
 | `binl/` | `.binl` text encoding, file format, commands and GUI behind `binl_tool.py`. |
 | `wdt/` | `.wdt` parsing behind `wdt_tool.py`. |
+| `anim/` | Enemy animation: the game's posing and IK ported from the exe, a live-pose checker and the AI + animation viewer. |
 | `vscode-evs/` | VS Code extension for `.evs`, `.bds` and `.bdasm` files. |
 
 ## Event scripts
@@ -65,6 +66,3 @@ python bd_tool.py verify <file.mdls>                    # assembler round-trip c
 If no original `.mdls` is given, `build` and `asm` look for it next to the text file, then in
 `KH1_GAME_DATA` (default `C:/OpenKH/OpenKHEGS/data/kh1`).
 
-BDS and the assembler round-trip exactly. BDS marks each motion call with the animation it plays
-(`// -> anim0048`). Per-enemy names go in `bd/data/names/<block>.json`.
-`motions` needs the enemy's `.mset` next to its `.mdls`.

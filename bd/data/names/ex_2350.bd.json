@@ -1,0 +1,197 @@
+{
+  "globals": {
+    "globals[4]": "ai_state",
+    "globals[16]": "home_pos",
+    "globals[32]": "request_motion",
+    "globals[36]": "outcome",
+    "globals[40]": "correct_hits",
+    "globals[44]": "last_spell",
+    "globals[48]": "spell",
+    "globals[52]": "spell_streak",
+    "globals[60]": "thunder_effect",
+    "globals[64]": "glow_effect"
+  },
+  "subroutines": {
+    "entry": "start_reaction",
+    "subroutine_0": "react",
+    "subroutine_1": "start_idle",
+    "subroutine_2": "idle_loop",
+    "subroutine_3": {
+      "name": "react_perfect",
+      "locals": { "locals[0]": "happy_motion" }
+    },
+    "subroutine_4": {
+      "name": "make_request",
+      "locals": { "locals[0]": "motion" }
+    },
+    "subroutine_5": "spin_happy",
+    "subroutine_6": "spin_request",
+    "subroutine_7": {
+      "name": "spin",
+      "locals": {
+        "locals[0]": "degrees_per_frame",
+        "locals[4]": "duration",
+        "locals[8]": "elapsed",
+        "locals[16]": "facing"
+      }
+    },
+    "subroutine_8": "pick_request",
+    "subroutine_9": { "name": "pick_any_spell", "locals": { "locals[0]": "roll" } },
+    "subroutine_10": { "name": "pick_with_stop", "locals": { "locals[0]": "roll" } },
+    "subroutine_11": { "name": "pick_with_aero", "locals": { "locals[0]": "roll" } },
+    "subroutine_12": { "name": "pick_with_gravity", "locals": { "locals[0]": "roll" } },
+    "subroutine_13": { "name": "pick_with_cure", "locals": { "locals[0]": "roll" } },
+    "subroutine_14": { "name": "pick_basic_spell", "locals": { "locals[0]": "roll" } },
+    "subroutine_15": "react_timed_out",
+    "subroutine_16": "drop_reward_and_vanish",
+    "subroutine_17": "react_correct",
+    "subroutine_18": {
+      "name": "give_reward_exp",
+      "locals": { "locals[0]": "exp" }
+    },
+    "subroutine_19": "react_wrong",
+    "subroutine_20": "idle_pause",
+    "subroutine_21": "approach_target",
+    "subroutine_22": {
+      "name": "wander",
+      "locals": {
+        "locals[0]": "second_point",
+        "locals[16]": "first_point",
+        "locals[32]": "far_radius",
+        "locals[36]": "near_radius",
+        "locals[40]": "home_distance"
+      }
+    },
+    "subroutine_23": "fade_out_music",
+    "subroutine_24": "flash_white",
+    "subroutine_25": {
+      "name": "ignore_non_player_hit",
+      "locals": { "locals[0]": "hit" }
+    },
+    "subroutine_26": "map_set",
+    "subroutine_27": "map_room",
+    "subroutine_28": "map_world",
+    "subroutine_30": "target_in_cone",
+    "subroutine_31": "target_side",
+    "subroutine_32": {
+      "name": "wait_facing_target",
+      "locals": { "locals[0]": "duration", "locals[4]": "elapsed" }
+    },
+    "subroutine_33": "wait_motion_facing_target",
+    "subroutine_34": "wait_motion",
+    "subroutine_35": "is_flinching",
+    "subroutine_36": "distance_to_target",
+    "subroutine_38": "floor_height_below",
+    "subroutine_39": "get_player",
+    "subroutine_40": "pick_target",
+    "subroutine_41": "start_state_thread",
+    "subroutine_42": "take_ai_state",
+    "subroutine_43": "set_ai_state",
+    "subroutine_44": "clear_ai_state",
+    "subroutine_45": {
+      "name": "random_ring_offset",
+      "locals": { "locals[0]": "max_distance", "locals[4]": "min_distance", "locals[8]": "out" }
+    },
+    "subroutine_46": {
+      "name": "random_between",
+      "locals": { "locals[0]": "high", "locals[4]": "low" }
+    },
+    "subroutine_47": {
+      "name": "drop_reward",
+      "locals": { "locals[0]": "drop_position", "locals[16]": "table" }
+    },
+    "subroutine_48": "is_perfect",
+    "subroutine_49": "drop_prizes_floating",
+    "subroutine_50": "drop_prizes",
+    "subroutine_51": {
+      "name": "distance_to",
+      "locals": { "locals[0]": "actor", "locals[4]": "target", "locals[16]": "offset" }
+    },
+    "subroutine_52": "jump",
+    "subroutine_54": {
+      "name": "vanish",
+      "locals": { "locals[0]": "actor", "locals[4]": "delay" }
+    },
+    "subroutine_55": {
+      "name": "set_target",
+      "locals": { "locals[0]": "actor", "locals[4]": "target" }
+    },
+    "subroutine_57": {
+      "name": "face_target",
+      "locals": { "locals[0]": "actor", "locals[4]": "target", "locals[16]": "direction" }
+    },
+    "subroutine_58": {
+      "name": "face_attacker",
+      "locals": { "locals[0]": "actor", "locals[4]": "target", "locals[16]": "direction" }
+    },
+    "subroutine_59": {
+      "name": "chase_target",
+      "locals": {
+        "locals[0]": "actor",
+        "locals[4]": "stop_distance",
+        "locals[8]": "retarget_interval",
+        "locals[12]": "time_left",
+        "locals[32]": "destination",
+        "locals[48]": "retarget_timer",
+        "locals[52]": "distance"
+      }
+    },
+    "subroutine_60": {
+      "name": "move_to",
+      "locals": { "locals[0]": "actor", "locals[4]": "time_left", "locals[12]": "destination", "locals[20]": "distance" }
+    },
+    "subroutine_61": "clear_hit_flags",
+    "subroutine_63": "fade_out_and_remove",
+    "subroutine_64": "start_fade_out",
+    "subroutine_65": "start_fade_in",
+    "subroutine_66": "difference",
+    "subroutine_67": "clear_effects",
+    "subroutine_68": "stop_glow",
+    "subroutine_69": "start_glow",
+    "subroutine_70": "stop_thunder_effect",
+    "subroutine_71": "start_thunder_effect",
+    "subroutine_73": "is_set",
+    "subroutine_74": {
+      "name": "hit_matches_request",
+      "locals": { "locals[0]": "record", "locals[4]": "hit", "locals[8]": "matches" }
+    },
+    "subroutine_75": {
+      "name": "record_spell_hit",
+      "locals": { "locals[0]": "hit" }
+    },
+    "subroutine_76": "is_reacting",
+    "subroutine_77": "set_hit_level",
+    "subroutine_80": "is_recoil_hit",
+    "subroutine_82": "hit_type",
+    "subroutine_83": "hit_level",
+    "subroutine_84": {
+      "name": "distance_between",
+      "locals": { "locals[0]": "from", "locals[4]": "to", "locals[16]": "offset" }
+    },
+    "subroutine_85": {
+      "name": "set_vector",
+      "locals": { "locals[0]": "out", "locals[4]": "w", "locals[8]": "z", "locals[12]": "y", "locals[16]": "x" }
+    },
+    "subroutine_86": {
+      "name": "main",
+      "locals": { "locals[0]": "actor", "locals[4]": "timed_out", "locals[8]": "state", "locals[12]": "time_left" }
+    },
+    "subroutine_87": "setup",
+    "subroutine_88": {
+      "name": "on_message",
+      "locals": { "locals[0]": "message", "locals[8]": "result" }
+    },
+    "subroutine_89": {
+      "name": "on_hit_check",
+      "locals": { "locals[4]": "hit" }
+    },
+    "subroutine_90": {
+      "name": "on_hit",
+      "locals": { "locals[0]": "hit" }
+    },
+    "subroutine_91": {
+      "name": "wait",
+      "locals": { "locals[0]": "time_left" }
+    }
+  }
+}

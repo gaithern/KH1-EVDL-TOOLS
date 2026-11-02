@@ -1,5 +1,6 @@
-"""Build one .bds file into an enemy .mdls: compile each `bd NAME code 0x... { }` block and write its
-code over that block's code region in a copy of the original file.
+"""Build one .bds file into an enemy .mdls. A full block (`bd NAME { records ... func ... }`)
+is compiled from offset 0 and written over the whole block. An old code-only block
+(`bd NAME code 0x... { }`) is written over that block's code region, keeping the original data area.
 """
 import re
 import struct
@@ -13,23 +14,15 @@ bd = lang.bd
 
 HELP = 'Build a .bds file into a copy of an enemy .mdls.'
 
-MAX_SECTIONS = 64
 NUMBER_IN_TEXT_RE = re.compile(r'(?<![\w.\[])(0x[0-9A-Fa-f]+|\d+)(?![\w.\]])')
 OLD_OFFSET_RE = re.compile(r'// @L([0-9A-F]{4})')
-
-
-def section_offsets(data):
-    count = struct.unpack_from('<I', data, 0)[0]
-    if 0 < count < MAX_SECTIONS and 4 + 4 * count <= len(data):
-        return set(struct.unpack_from(f'<{count}I', data, 4))
-    return set()
 
 
 def boundaries(data):
     limits = {len(data)}
     for block_off, _, _ in bd.find_blocks(data):
         limits.add(block_off)
-    return limits | section_offsets(data)
+    return limits | lang.section_offsets(data)
 
 
 def round_down_to_even(n):
@@ -50,17 +43,56 @@ def room_end(data, end, limits):
     return stop
 
 
+def is_bytes_part_header(line):
+    if lang.records.RECORD_HEADER_RE.match(line):
+        return True
+    return line.startswith('    data ')
+
+
+def is_part_header(line):
+    return bool(lang.FUNC_RE.match(line)) or is_bytes_part_header(line)
+
+
+def part_headers(block_text):
+    headers = []
+    for line in block_text.split('\n'):
+        if is_part_header(line):
+            headers.append(line)
+    return headers
+
+
+def build_full_block(data, name, block_text, block_off, size, limits):
+    _, end = lang.code_region(bytes(data), block_off, name, size)
+    end = room_end(bytes(data), end, limits)
+    _, block_bytes = lang.compile_block(block_text)
+    room = end - block_off
+    if len(block_bytes) > room:
+        raise ValueError(f'{name}: compiled block is {len(block_bytes)} bytes, only {room} available '
+                         f'(the original block plus the zero padding after it)')
+    warn_moved(name, block_text, original_function_offsets(data, block_off, name, size))
+    old_entry = size * 2 + 4
+    data[block_off:block_off + len(block_bytes)] = block_bytes
+    data[block_off + len(block_bytes):end] = bytes(room - len(block_bytes))
+    new_entry = struct.unpack_from('<H', data, block_off + 2)[0] * 2 + 4
+    if new_entry != old_entry:
+        print(f'  {name}: init entry 0x{old_entry:04X} -> 0x{new_entry:04X}')
+    print(f'{name}: {len(block_bytes)} of {room} bytes')
+
+
 def build_block(data, name, block_text, block_off, size, limits):
+    code_offset, code = lang.compile_block(block_text)
+    if code_offset == 0:
+        build_full_block(data, name, block_text, block_off, size, limits)
+        return
     start, end = lang.code_region(bytes(data), block_off, name, size)
     end = room_end(bytes(data), end, limits)
-    code_offset, code = lang.compile_block(block_text)
     if code_offset != start - block_off:
         raise ValueError(f'{name}: text says code 0x{code_offset:04X}, the file has 0x{start - block_off:04X}')
     room = end - start
     if len(code) > room:
         raise ValueError(f'{name}: compiled code is {len(code)} bytes, only {room} available '
                          f'(the original code plus the zero padding after it)')
-    warn_moved(name, block_text)
+    warn_moved(name, block_text, marked_function_offsets(block_text))
     data[start:start + len(code)] = code
     data[start + len(code):end] = bytes(room - len(code))
     move_init_entry(data, name, block_text, block_off, size)
@@ -69,12 +101,8 @@ def build_block(data, name, block_text, block_off, size, limits):
 
 def new_function_offsets(block_text):
     _, spans = lang.compile_block(block_text, with_spans=True)
-    part_headers = []
-    for line in block_text.split('\n'):
-        if lang.FUNC_RE.match(line) or line.startswith('    data {'):
-            part_headers.append(line)
     offsets = {}
-    for n, header in enumerate(part_headers):
+    for n, header in enumerate(part_headers(block_text)):
         old_offset_match = OLD_OFFSET_RE.search(header)
         if old_offset_match and n < len(spans):
             offsets[int(old_offset_match.group(1), 16)] = spans[n][0]
@@ -99,7 +127,7 @@ def build_file(bds_path, orig_path, out_path):
     limits = boundaries(bytes(data))
     block_texts = lang.split_blocks(text)
     if not block_texts:
-        raise ValueError(f'{Path(bds_path).name}: no `bd NAME code 0x... {{ }}` blocks')
+        raise ValueError(f'{Path(bds_path).name}: no `bd NAME {{ }}` blocks')
     for name, block_text in block_texts.items():
         if name not in blocks:
             raise ValueError(f'{name}: no such .bd block in {Path(orig_path).name}')
@@ -109,22 +137,51 @@ def build_file(bds_path, orig_path, out_path):
     Path(out_path).write_bytes(bytes(data))
 
 
-def warn_moved(name, block_text):
-    _, spans = lang.compile_block(block_text, with_spans=True)
-    part_headers = []
+def function_lines_only(block_text):
+    kept = []
+    inside_bytes_part = False
     for line in block_text.split('\n'):
-        if lang.FUNC_RE.match(line) or line.startswith('    data {'):
-            part_headers.append(line)
-    pushed_numbers = {int(number, 0) for number in NUMBER_IN_TEXT_RE.findall(block_text)}
-    moved = []
-    for n, header in enumerate(part_headers):
+        if is_bytes_part_header(line):
+            inside_bytes_part = True
+        elif inside_bytes_part and line == '    }':
+            inside_bytes_part = False
+        elif not inside_bytes_part:
+            kept.append(line)
+    return '\n'.join(kept)
+
+
+def marked_function_offsets(block_text):
+    offsets = {}
+    for header in part_headers(block_text):
+        function_match = lang.FUNC_RE.match(header)
         old_offset_match = OLD_OFFSET_RE.search(header)
-        if not old_offset_match or n >= len(spans):
+        if function_match and old_offset_match:
+            offsets[function_match.group(1)] = int(old_offset_match.group(1), 16)
+    return offsets
+
+
+def original_function_offsets(data, block_off, name, size):
+    original = lang.Block(bytes(data), block_off, name, size)
+    offsets = {}
+    for offset, routine in original.routines.items():
+        offsets[routine] = offset - block_off
+    return offsets
+
+
+def warn_moved(name, block_text, old_offsets):
+    _, spans = lang.compile_block(block_text, with_spans=True)
+    pushed_numbers = {int(number, 0) for number in NUMBER_IN_TEXT_RE.findall(function_lines_only(block_text))}
+    moved = []
+    for n, header in enumerate(part_headers(block_text)):
+        function_match = lang.FUNC_RE.match(header)
+        if not function_match or n >= len(spans):
             continue
-        old_offset = int(old_offset_match.group(1), 16)
+        function_name = function_match.group(1)
+        if function_name not in old_offsets:
+            continue
+        old_offset = old_offsets[function_name]
         new_offset = spans[n][0]
         if old_offset != new_offset and old_offset % 2 == 0 and old_offset // 2 in pushed_numbers:
-            function_name = lang.FUNC_RE.match(header).group(1)
             moved.append(f'{function_name} (0x{old_offset:04X} -> 0x{new_offset:04X})')
     if moved:
         print(f'  warning: {name}: moved functions whose old offset/2 appears as a number '
