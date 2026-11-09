@@ -436,12 +436,29 @@ def has_wdt_kgr_table(original, kgrs, section2):
     return u32(original, section2 + 8) == len(kgrs)
 
 
+def is_wdt_section_layout(original, section_count):
+    header_end = 0x10 + section_count * 8
+    if header_end > len(original):
+        return False
+    expected_start = u32(original, 0x10)
+    if expected_start < header_end:
+        return False
+    for section_index in range(section_count):
+        start = u32(original, 0x10 + section_index * 8)
+        size = u32(original, 0x14 + section_index * 8)
+        if start != expected_start:
+            return False
+        expected_start = start + size
+    return expected_start == len(original)
+
+
 def fix_wdt_pointers(original, output, kgrs, new_offsets):
     section_count = u32(original, 0)
     if not (2 <= section_count <= 16 and len(original) >= 0x1C):
         return
     section2 = u32(original, 0x18)
-    fix_wdt_section_pointers(original, output, kgrs, new_offsets, section_count)
+    if is_wdt_section_layout(original, section_count):
+        fix_wdt_section_pointers(original, output, kgrs, new_offsets, section_count)
     if has_wdt_kgr_table(original, kgrs, section2):
         fix_wdt_kgr_table(original, output, kgrs, new_offsets, section2)
 
