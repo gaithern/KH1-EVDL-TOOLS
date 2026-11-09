@@ -391,17 +391,28 @@ def offset_shift_at(position, kgrs, new_offsets):
     return shift
 
 
+def wdt_position_shift(position, original, output, kgrs, new_offsets):
+    if position < kgrs[0]['kgr_offset']:
+        return 0
+    if position > kgrs[-1]['kgr_offset']:
+        return len(output) - len(original)
+    return offset_shift_at(position, kgrs, new_offsets)
+
+
 def fix_wdt_section_pointers(original, output, kgrs, new_offsets, section_count):
     first_kgr = kgrs[0]['kgr_offset']
     for section_index in range(section_count):
-        pointer_offset = 0x10 + section_index * 4
-        if pointer_offset + 4 > first_kgr:
+        offset_field = 0x10 + section_index * 8
+        size_field = offset_field + 4
+        if size_field + 4 > first_kgr:
             break
-        old_pointer = u32(original, pointer_offset)
-        if first_kgr <= old_pointer < len(original):
-            shift = offset_shift_at(old_pointer, kgrs, new_offsets)
-            if shift:
-                write_u32(output, pointer_offset, old_pointer + shift)
+        old_start = u32(original, offset_field)
+        old_size = u32(original, size_field)
+        old_end = old_start + old_size
+        new_start = old_start + wdt_position_shift(old_start, original, output, kgrs, new_offsets)
+        new_end = old_end + wdt_position_shift(old_end, original, output, kgrs, new_offsets)
+        write_u32(output, offset_field, new_start)
+        write_u32(output, size_field, new_end - new_start)
 
 
 def fix_wdt_kgr_table(original, output, kgrs, new_offsets, section2):
